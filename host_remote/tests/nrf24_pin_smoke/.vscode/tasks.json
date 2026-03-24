@@ -1,0 +1,136 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "nRF24 Pin Smoke: Show Detected Serial Ports",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\..\\tools\\run_test_pio.ps1",
+                "-Action",
+                "ports",
+                "-ProjectPath",
+                ".",
+                "-Environment",
+                "nrf24_pin_smoke_esp32dev"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "nRF24 Pin Smoke: Build",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\..\\tools\\run_test_pio.ps1",
+                "-Action",
+                "build",
+                "-ProjectPath",
+                ".",
+                "-Environment",
+                "nrf24_pin_smoke_esp32dev"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "nRF24 Pin Smoke: Upload",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\..\\tools\\run_test_pio.ps1",
+                "-Action",
+                "upload",
+                "-ProjectPath",
+                ".",
+                "-Environment",
+                "nrf24_pin_smoke_esp32dev"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "nRF24 Pin Smoke: Open Serial Monitor",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\..\\tools\\run_test_pio.ps1",
+                "-Action",
+                "monitor",
+                "-ProjectPath",
+                ".",
+                "-Environment",
+                "nrf24_pin_smoke_esp32dev"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "nRF24 Pin Smoke: Upload And Open Monitor",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\..\\tools\\run_test_pio.ps1",
+                "-Action",
+                "upload-monitor",
+                "-ProjectPath",
+                ".",
+                "-Environment",
+                "nrf24_pin_smoke_esp32dev"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}

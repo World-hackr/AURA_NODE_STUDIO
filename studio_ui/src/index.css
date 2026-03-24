@@ -1,0 +1,369 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-aura-bg text-aura-ink antialiased overflow-hidden;
+  }
+
+  :root {
+    --aura-accent: #ffffff;
+  }
+}
+
+@layer components {
+  .studio-app-frame {
+    @apply relative h-full min-h-0;
+  }
+
+  .studio-inline-switch {
+    @apply inline-flex items-center gap-1 rounded-full border border-white bg-black p-0.5;
+    background-color: rgba(0, 0, 0, 0.92);
+  }
+
+  .mode-switch-button {
+    @apply inline-flex h-5 items-center justify-center rounded-full px-2 font-mono text-[8px] uppercase tracking-[0.14em] text-aura-muted transition;
+  }
+
+  .mode-switch-button-active {
+    @apply bg-white text-black;
+  }
+
+  .studio-shell {
+    @apply grid h-full min-h-0;
+    gap: clamp(8px, 0.8vw, 12px);
+    grid-template-columns: clamp(212px, 17vw, 274px) minmax(0, 1fr) clamp(228px, 18vw, 304px);
+  }
+
+  .creator-shell {
+    @apply grid h-full min-h-0;
+    gap: clamp(8px, 0.8vw, 12px);
+    grid-template-columns: clamp(220px, 18vw, 290px) minmax(0, 1fr) clamp(236px, 19vw, 316px);
+  }
+
+  .studio-rail {
+    @apply flex min-h-0 flex-col overflow-hidden rounded-[18px] border border-white bg-black;
+  }
+
+  .studio-rail-left {
+    overflow: visible;
+    position: relative;
+    z-index: 30;
+  }
+
+  .studio-rail-header {
+    @apply shrink-0;
+  }
+
+  .studio-rail-head-inner {
+    @apply mx-auto w-full max-w-[16.75rem];
+  }
+
+  .studio-rail-body-inner {
+    @apply mx-auto w-full max-w-[16.75rem];
+  }
+
+  .studio-rail-scroll {
+    @apply min-h-0 flex-1 overflow-y-auto;
+    scrollbar-gutter: stable;
+  }
+
+  .studio-rail-scroll-left {
+    direction: rtl;
+    overflow-x: visible;
+  }
+
+  .studio-rail-scroll-left > * {
+    direction: ltr;
+  }
+
+  .studio-section-card {
+    @apply rounded-xl border border-white bg-black p-2;
+  }
+
+  .studio-stat-grid {
+    @apply grid grid-cols-2 gap-2;
+  }
+
+  .studio-stat-card {
+    @apply rounded-lg border border-white bg-black px-2 py-1.5;
+  }
+
+  .studio-pill {
+    @apply inline-flex h-4 min-w-5 items-center justify-center rounded-full border border-white px-1.5 font-mono text-[8px] uppercase tracking-[0.12em] text-white;
+  }
+
+  .editor-eyebrow {
+    @apply text-[9px] uppercase tracking-[0.16em] font-bold text-white;
+  }
+
+  .editor-label {
+    @apply mb-1 block text-[9px] font-bold uppercase tracking-[0.16em] text-white;
+  }
+
+  .editor-input {
+    @apply w-full rounded-lg border border-white bg-black px-2.5 py-1.5 font-mono text-[11px] text-white outline-none transition focus:border-white;
+  }
+
+  .editor-color-input {
+    @apply h-10 w-full cursor-pointer rounded-lg border border-white bg-black p-1;
+  }
+
+  .editor-slider {
+    accent-color: #ffffff;
+    width: 100%;
+  }
+
+  .editor-action-button {
+    @apply inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-white bg-black px-2.5 py-1.5 text-[10px] font-medium text-white transition;
+  }
+
+  .editor-segmented {
+    @apply inline-flex items-center gap-1 rounded-full border border-white bg-black p-1;
+  }
+
+  .editor-segment-button {
+    @apply inline-flex h-5 min-w-[1.85rem] items-center justify-center rounded-full px-2 font-mono text-[9px] uppercase tracking-[0.14em] text-aura-muted transition;
+  }
+
+  .editor-segment-button-active {
+    @apply bg-white text-black;
+  }
+
+  .editor-action-button:hover {
+    border-color: var(--aura-accent);
+    background-color: var(--aura-accent);
+    color: #000000;
+  }
+
+  .canvas-chip {
+    @apply rounded-full border border-white bg-black px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-white shadow-[0_14px_40px_rgba(0,0,0,0.4)] backdrop-blur-sm;
+  }
+
+  .canvas-button {
+    @apply inline-flex items-center gap-2 rounded-full border border-white bg-black px-4 py-2 text-[11px] font-medium uppercase tracking-[0.16em] text-white shadow-[0_14px_40px_rgba(0,0,0,0.4)] backdrop-blur-sm transition hover:border-white hover:bg-white hover:text-black;
+  }
+
+  .canvas-button-active {
+    @apply border-white bg-white text-black;
+  }
+
+  .canvas-hud-group {
+    @apply flex items-center gap-1 rounded-xl border border-white bg-black px-1 py-1 shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm;
+  }
+
+  .canvas-status {
+    @apply flex items-center gap-2 rounded-xl border border-white bg-black px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.16em] text-white shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm;
+  }
+
+  .canvas-status-editing {
+    @apply border-white;
+  }
+
+  .canvas-status-dot {
+    @apply h-2 w-2 rounded-full;
+    background-color: var(--aura-accent);
+  }
+
+  .canvas-sep {
+    @apply mx-1 h-5 w-px bg-white/15;
+  }
+
+  .canvas-icon-button {
+    @apply inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/30 bg-white/5 text-white transition;
+  }
+
+  .canvas-text-button {
+    @apply inline-flex h-7 items-center justify-center rounded-lg border border-white/30 bg-white/5 px-2 font-mono text-[8px] uppercase tracking-[0.16em] text-white transition;
+  }
+
+  .canvas-control-active {
+    border-color: var(--aura-accent);
+    background-color: var(--aura-accent);
+    color: #000000;
+  }
+
+  .canvas-slider {
+    accent-color: #ffffff;
+    width: 62px;
+  }
+
+  .studio-panel-toggle {
+    @apply inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/20 bg-black text-white transition hover:border-white;
+  }
+
+  .studio-panel-title {
+    @apply font-mono text-[11px] uppercase tracking-[0.14em] text-white;
+  }
+
+  .studio-muted-note {
+    @apply text-[10px] leading-4 text-aura-muted;
+  }
+
+  .creator-stage {
+    @apply min-h-0 rounded-[22px] border border-white bg-black p-3;
+  }
+
+  .creator-stage-panel {
+    @apply flex h-full min-h-0 flex-col rounded-[18px] border border-white bg-[radial-gradient(circle_at_top,#181818_0%,#090909_72%)] p-3;
+  }
+
+  .creator-stage-head {
+    @apply flex shrink-0 items-start justify-between gap-3;
+  }
+
+  .creator-stage-toolbar {
+    @apply mt-3 flex shrink-0 flex-wrap items-center gap-1.5;
+  }
+
+  .creator-toolbar-group {
+    @apply inline-flex items-center gap-1 rounded-xl border border-white bg-black p-1;
+  }
+
+  .creator-preset-chip {
+    @apply inline-flex min-w-[4.5rem] items-center justify-center rounded-full border border-white px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-white;
+  }
+
+  .creator-accent-visual {
+    background: rgba(255, 90, 90, 0.16);
+  }
+
+  .creator-accent-motion {
+    background: rgba(110, 190, 255, 0.16);
+  }
+
+  .creator-accent-input {
+    background: rgba(120, 255, 180, 0.14);
+  }
+
+  .creator-accent-snap {
+    background: rgba(255, 214, 90, 0.16);
+  }
+
+  .creator-preview-card {
+    @apply relative mt-3 min-h-0 flex-1 overflow-hidden rounded-[20px] border border-white bg-black;
+  }
+
+  .creator-preview-title {
+    fill: #ffffff;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .creator-preview-meta {
+    fill: rgba(255, 255, 255, 0.72);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .creator-stage-footer {
+    @apply mt-3 grid shrink-0 grid-cols-2 gap-2;
+  }
+
+  .creator-target-row {
+    @apply flex w-full items-start justify-between gap-3 rounded-xl border border-white bg-black px-2.5 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-45;
+  }
+
+  .creator-target-row-active {
+    @apply bg-white text-black;
+  }
+
+  .creator-target-row-active .text-aura-muted {
+    color: rgba(0, 0, 0, 0.72);
+  }
+
+  .creator-preset-grid {
+    @apply grid grid-cols-2 gap-2;
+  }
+
+  .creator-choice-grid {
+    @apply grid grid-cols-2 gap-2;
+  }
+
+  .creator-choice-grid-tight {
+    @apply grid-cols-3;
+  }
+
+  .creator-choice-button {
+    @apply inline-flex min-h-[2.15rem] items-center justify-center rounded-xl border border-white bg-black px-2 py-1.5 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-white transition disabled:cursor-not-allowed disabled:opacity-45;
+  }
+
+  .creator-list-row {
+    @apply flex items-center gap-2 rounded-xl border bg-black px-2.5 py-2 text-left text-white transition;
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  .creator-list-row-active {
+    @apply border-white bg-white text-black;
+  }
+
+  .creator-stack-meta {
+    @apply font-mono text-[9px] uppercase tracking-[0.12em] opacity-70;
+  }
+
+  .creator-choice-button-active {
+    @apply bg-white text-black;
+  }
+
+  .creator-preset-card {
+    @apply rounded-xl border border-white bg-black px-2.5 py-2.5 text-left transition;
+  }
+
+  .creator-preset-card-active {
+    @apply bg-white text-black;
+  }
+
+  .creator-preset-card-active .text-aura-muted,
+  .creator-preset-card-active .text-white {
+    color: rgba(0, 0, 0, 0.84);
+  }
+
+  .creator-json-preview {
+    @apply overflow-x-auto rounded-xl border border-white bg-black p-3 font-mono text-[11px] leading-5 text-white;
+  }
+
+  .canvas-icon-button:hover,
+  .canvas-text-button:hover {
+    border-color: var(--aura-accent);
+    background-color: var(--aura-accent);
+    color: #000000;
+  }
+
+  @media (max-width: 1180px) {
+    .studio-shell {
+      gap: 10px;
+      grid-template-columns: 204px minmax(0, 1fr) 232px;
+    }
+
+    .creator-shell {
+      gap: 10px;
+      grid-template-columns: 210px minmax(0, 1fr) 244px;
+    }
+  }
+
+  @media (max-width: 960px) {
+    .studio-shell {
+      @apply flex flex-col;
+    }
+
+    .creator-shell {
+      @apply flex flex-col;
+    }
+
+    .creator-stage-footer,
+    .creator-preset-grid {
+      @apply grid-cols-1;
+    }
+  }
+}

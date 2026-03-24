@@ -1,0 +1,130 @@
+<mxfile host="65bd71144e">
+    <diagram id="aura-host-remote-software-layout" name="Page-1">
+        <mxGraphModel dx="1461" dy="498" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1400" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="AURA Host Remote&lt;br&gt;&lt;b&gt;Software Layout v1 Draft&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f2;strokeColor=#111111;fontSize=22;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="20" width="540" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="subtitle" value="Clean reading layout: foundations on the left, navigation in the middle, screen detail on the right" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="780" y="115" width="620" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="foundationGroup" value="Foundations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#333333;fontStyle=1;verticalAlign=top;spacingTop=8;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="190" width="520" height="980" as="geometry"/>
+                </mxCell>
+                <mxCell id="navGroup" value="Navigation Path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#333333;fontStyle=1;verticalAlign=top;spacingTop=8;" parent="1" vertex="1">
+                    <mxGeometry x="610" y="190" width="520" height="980" as="geometry"/>
+                </mxCell>
+                <mxCell id="detailGroup" value="Screen Detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#333333;fontStyle=1;verticalAlign=top;spacingTop=8;" parent="1" vertex="1">
+                    <mxGeometry x="1160" y="190" width="1200" height="1170" as="geometry"/>
+                </mxCell>
+                <mxCell id="shell" value="&lt;b&gt;Global Shell&lt;/b&gt;&lt;br&gt;Status bar&lt;br&gt;Screen title&lt;br&gt;List area&lt;br&gt;Detail strip&lt;br&gt;Footer hints" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;align=left;verticalAlign=top;spacingTop=8;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="250" width="420" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="input" value="&lt;b&gt;Joystick / Input Model&lt;/b&gt;&lt;br&gt;Up/down: move&lt;br&gt;Left: back&lt;br&gt;Press/right: select&lt;br&gt;Long press: quick action&lt;br&gt;Home: return to main menu" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;align=left;verticalAlign=top;spacingTop=8;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="430" width="420" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="feedback" value="&lt;b&gt;RF Feedback States&lt;/b&gt;&lt;br&gt;Sent&lt;br&gt;RF Ack&lt;br&gt;Confirmed&lt;br&gt;Retrying&lt;br&gt;No Response&lt;br&gt;Uncertain" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;align=left;verticalAlign=top;spacingTop=8;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="630" width="420" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="overlays" value="&lt;b&gt;Shared Overlays&lt;/b&gt;&lt;br&gt;Confirm save&lt;br&gt;Confirm remap&lt;br&gt;RF status toast&lt;br&gt;No-response alert&lt;br&gt;Quick help hint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;align=left;verticalAlign=top;spacingTop=8;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="840" width="420" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="rules" value="&lt;b&gt;Layout Rules&lt;/b&gt;&lt;br&gt;Max 3 layers deep&lt;br&gt;4 main sections&lt;br&gt;Expert hidden deeper&lt;br&gt;4 to 5 visible options&lt;br&gt;No long text input on host&lt;br&gt;Fast task-first interaction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;align=left;verticalAlign=top;spacingTop=8;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="1040" width="420" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="boot" value="Boot / Resume" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f2;strokeColor=#111111;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="250" width="220" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="home" value="Home / Main Menu" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="340" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="locate" value="Locate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f8f8;strokeColor=#111111;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="470" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="inventory" value="Inventory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f8f8;strokeColor=#111111;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="600" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="nodes" value="Nodes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f8f8;strokeColor=#111111;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="730" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="setup" value="Setup" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f8f8;strokeColor=#111111;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="860" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="expert" value="Expert" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;dashed=1;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="990" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="dailyTag" value="Daily use" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1010" y="470" width="90" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="dailyTag2" value="Daily use" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1010" y="600" width="90" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="installTag" value="Install / admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1010" y="730" width="110" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="installTag2" value="Install / admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1010" y="860" width="110" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="expertTag" value="Hidden deeper" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1010" y="990" width="100" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="locateFlow" value="&lt;b&gt;Locate Detail&lt;/b&gt;&lt;br&gt;1. Search / select part&lt;br&gt;2. Show stock + location summary&lt;br&gt;3. Start locate&lt;br&gt;4. Active locate session&lt;br&gt;5. Stop / retry / confirm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;align=left;verticalAlign=top;spacingTop=8;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="1250" y="430" width="520" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="inventoryFlow" value="&lt;b&gt;Inventory Detail&lt;/b&gt;&lt;br&gt;1. Search part&lt;br&gt;2. View current stock&lt;br&gt;3. Add / remove quantity&lt;br&gt;4. Move stock between known locations&lt;br&gt;5. Save result" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;align=left;verticalAlign=top;spacingTop=8;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="1250" y="590" width="520" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="nodesFlow" value="&lt;b&gt;Nodes Detail&lt;/b&gt;&lt;br&gt;1. Node list&lt;br&gt;2. Node detail&lt;br&gt;3. Test whole node&lt;br&gt;4. Test single output&lt;br&gt;5. Health / last seen" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;align=left;verticalAlign=top;spacingTop=8;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="1250" y="770" width="520" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="setupFlow" value="&lt;b&gt;Setup Detail&lt;/b&gt;&lt;br&gt;1. Add node&lt;br&gt;2. Enter output count&lt;br&gt;3. Test outputs physically&lt;br&gt;4. Map output to location&lt;br&gt;5. Save mapping&lt;br&gt;6. Radio settings" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;align=left;verticalAlign=top;spacingTop=8;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="1250" y="920" width="520" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="expertFlow" value="&lt;b&gt;Expert Detail&lt;/b&gt;&lt;br&gt;1. RF address&lt;br&gt;2. RF channel&lt;br&gt;3. Retry limit&lt;br&gt;4. Timeout / confirm mode&lt;br&gt;5. Diagnostics log&lt;br&gt;6. Low-level test actions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;align=left;verticalAlign=top;spacingTop=8;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="1250" y="1110" width="520" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend" value="Read it left to right:&lt;br&gt;foundation -&gt; navigation -&gt; screen detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f2;strokeColor=#666666;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="1900" y="250" width="360" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeBootHome" value="enter" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#111111;fontSize=12;labelBackgroundColor=#ffffff;" parent="1" source="boot" target="home" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeHomeLocate" value="main option" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#111111;fontSize=12;labelBackgroundColor=#ffffff;" parent="1" source="home" target="locate" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeHomeInventory" value="main option" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#111111;fontSize=12;labelBackgroundColor=#ffffff;" parent="1" source="home" target="inventory" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeHomeNodes" value="main option" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#111111;fontSize=12;labelBackgroundColor=#ffffff;" parent="1" source="home" target="nodes" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeHomeSetup" value="main option" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#111111;fontSize=12;labelBackgroundColor=#ffffff;" parent="1" source="home" target="setup" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeSetupExpert" value="deep menu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#111111;fontSize=12;labelBackgroundColor=#ffffff;" parent="1" source="setup" target="expert" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeLocateFlow" value="opens" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#111111;fontSize=12;labelBackgroundColor=#ffffff;" parent="1" source="locate" target="locateFlow" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeInventoryFlow" value="opens" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#111111;fontSize=12;labelBackgroundColor=#ffffff;" parent="1" source="inventory" target="inventoryFlow" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeNodesFlow" value="opens" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#111111;fontSize=12;labelBackgroundColor=#ffffff;" parent="1" source="nodes" target="nodesFlow" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeSetupFlow" value="opens" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#111111;fontSize=12;labelBackgroundColor=#ffffff;" parent="1" source="setup" target="setupFlow" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeExpertFlow" value="opens" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#111111;fontSize=12;labelBackgroundColor=#ffffff;" parent="1" source="expert" target="expertFlow" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="hghg" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1850" y="430" width="360" height="140" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

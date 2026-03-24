@@ -1,0 +1,421 @@
+{
+  "common": {
+    "department_header": "DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING",
+    "name": "Santosh Kumar",
+    "enrollment": "12196502722",
+    "class_section": "CSE-8A",
+    "department": "Computer Science and Engineering",
+    "faculty_supervisor": "Ms. Indu Sharma",
+    "project_title": "AURA : Autonomous User Realization & Assembly"
+  },
+  "weeks": [
+    {
+      "date_range": "16/1/2026 - 23/1/2026",
+      "week_number": "1",
+      "targets": [
+        "Define the problem statement and major objectives of AURA.",
+        "Review related work on electronics inventory management, maker workflows, and component retrieval issues.",
+        "Draft the high-level architecture for the host, node, inventory, and circuit workspace layers.",
+        "Shortlist the initial hardware and software stack required for the prototype.",
+        "Prepare the implementation direction and documentation roadmap for the coming weeks."
+      ],
+      "achievements": [
+        "Finalized the initial project scope around physical component localization and deterministic circuit assistance.",
+        "Completed the early literature review and documented the major pain points in existing workflows.",
+        "Prepared the first high-level architecture covering the host, distributed nodes, inventory layer, and workspace.",
+        "Shortlisted the initial prototype stack using ESP32, nRF24L01+, WS2812 indication, and a structured software workflow.",
+        "Created the first week-wise execution direction for implementation, documentation, and reporting."
+      ],
+      "future_work": [
+        "Begin designing the inventory data model and physical storage addressing strategy.",
+        "Refine the host-to-node communication flow and physical location mapping logic.",
+        "Draft the first UI flow for search, lookup, and component retrieval.",
+        "Start planning the deterministic JSON model for circuit representation."
+      ],
+      "week_summary": [
+        [
+          "Days/Time",
+          "5 Days a week Monday to Friday."
+        ],
+        [
+          "Monday",
+          "Defined the project problem, scope, and major objectives for AURA."
+        ],
+        [
+          "Tuesday",
+          "Reviewed related work on component management, maker workflows, and hardware retrieval challenges."
+        ],
+        [
+          "Wednesday",
+          "Sketched the first high-level architecture for host, node, inventory, and circuit workspace modules."
+        ],
+        [
+          "Thursday",
+          "Compared hardware options and shortlisted ESP32, nRF24L01+, WS2812, and low-power node control choices."
+        ],
+        [
+          "Friday",
+          "Organized reference notes, prepared the execution plan, and completed the first weekly progress documentation."
+        ]
+      ],
+      "research_status": "STATUS OF RESEARCH PAPER: Initial literature review started; foundational references on cyber-physical electronics assistance, component inventory workflows, and deterministic circuit representation were identified. Estimated overall project completion by the end of this week: 11%."
+    },
+    {
+      "date_range": "23/1/2026 - 30/1/2026",
+      "week_number": "2",
+      "targets": [
+        "Develop the first inventory model covering component type, value, quantity, and physical location.",
+        "Study storage addressing strategies for drawers, boxes, and distributed shelves.",
+        "Draft the communication flow between the ESP32 host and the distributed locator nodes.",
+        "List the primary user actions for search, locate, and inventory checking.",
+        "Prepare the initial component metadata structure for later circuit linkage."
+      ],
+      "achievements": [
+        "Designed the first version of the inventory record structure for value-aware and quantity-aware tracking.",
+        "Mapped the basic physical storage addressing logic for racks, drawers, and grouped component rows.",
+        "Prepared the host-to-node communication concept using addressed wireless triggering.",
+        "Defined the main user actions for manual search, guided lookup, and part-location confirmation.",
+        "Documented the initial metadata fields needed for component identity, value, quantity, and notes."
+      ],
+      "future_work": [
+        "Begin drafting the canonical JSON structure for circuit representation.",
+        "Refine the digital-to-physical handoff flow from selected parts to locator activation.",
+        "Start planning the host-side search interface and minimal control workflow.",
+        "Review data needed for linking inventory with future circuit suggestions."
+      ],
+      "week_summary": [
+        [
+          "Days/Time",
+          "5 Days a week Monday to Friday."
+        ],
+        [
+          "Monday",
+          "Defined the first inventory record structure covering part type, value, quantity, and location."
+        ],
+        [
+          "Tuesday",
+          "Worked on drawer and storage addressing logic for physically distributed component organization."
+        ],
+        [
+          "Wednesday",
+          "Outlined the host-to-node signaling model and locator-trigger workflow."
+        ],
+        [
+          "Thursday",
+          "Listed the main user actions for search, locate, confirm, and inventory review."
+        ],
+        [
+          "Friday",
+          "Compiled metadata requirements for linking physical stock with later circuit assistance."
+        ]
+      ],
+      "research_status": "STATUS OF RESEARCH PAPER: Literature review expanded with focus on inventory-aware hardware workflows and physical component retrieval systems. Estimated overall project completion by the end of this week: 19%."
+    },
+    {
+      "date_range": "30/1/2026 - 6/2/2026",
+      "week_number": "3",
+      "targets": [
+        "Design the canonical JSON structure for deterministic circuit representation.",
+        "List supported component metadata fields needed for pins, constraints, and inventory linkage.",
+        "Identify the first local calculation and rule-checking cases for supported circuit patterns.",
+        "Plan how AI-assisted circuit output will remain structured and reviewable.",
+        "Define the first bridge points between inventory records and circuit recommendations."
+      ],
+      "achievements": [
+        "Prepared the first draft of the canonical JSON model for structured circuit state.",
+        "Defined key metadata fields for pins, package constraints, and inventory association.",
+        "Selected initial deterministic checks for simple circuit reasoning and supported-pattern analysis.",
+        "Documented the requirement that AI suggestions must remain structured rather than free-form.",
+        "Outlined the first connection points between owned inventory and circuit recommendation logic."
+      ],
+      "future_work": [
+        "Refine the workspace flow for viewing and editing structured circuit data.",
+        "Begin planning the local-first editing model before backend synchronization.",
+        "Prepare the first concept for proposal compare and review behavior.",
+        "Continue narrowing the supported V1 feature set for deterministic operation."
+      ],
+      "week_summary": [
+        [
+          "Days/Time",
+          "5 Days a week Monday to Friday."
+        ],
+        [
+          "Monday",
+          "Drafted the canonical JSON structure for deterministic circuit representation."
+        ],
+        [
+          "Tuesday",
+          "Defined metadata fields for pins, package information, and component constraints."
+        ],
+        [
+          "Wednesday",
+          "Selected initial local rule-checking and supported-pattern cases for early analysis."
+        ],
+        [
+          "Thursday",
+          "Outlined how AI-assisted circuit suggestions should remain structured and reviewable."
+        ],
+        [
+          "Friday",
+          "Connected inventory constraints with the first circuit recommendation assumptions."
+        ]
+      ],
+      "research_status": "STATUS OF RESEARCH PAPER: Background notes were extended to deterministic circuit modeling, structured AI output, and constraint-driven workflows. Estimated overall project completion by the end of this week: 28%."
+    },
+    {
+      "date_range": "6/2/2026 - 13/2/2026",
+      "week_number": "4",
+      "targets": [
+        "Start shaping the workspace flow for circuit viewing, editing, and review.",
+        "Plan the analysis panel and inventory-linked explanation surfaces.",
+        "Define how compare, revise, and apply actions should behave in the prototype.",
+        "Refine the boundary between deterministic logic and AI assistance.",
+        "Organize the early backend responsibilities for persistence and validation."
+      ],
+      "achievements": [
+        "Prepared the initial workspace flow for displaying structured circuit data and editing actions.",
+        "Outlined how local analysis and inventory-linked explanation panels should be presented.",
+        "Defined the intended compare and apply behavior for structured revision proposals.",
+        "Clarified the trust boundary between local deterministic checks and AI-assisted suggestions.",
+        "Documented the backend role in persistence, validation, and proposal handling."
+      ],
+      "future_work": [
+        "Move from architectural planning into prototype implementation tasks.",
+        "Begin assembling the host-side hardware path and node-level signaling plan.",
+        "Refine the workspace interaction model for local-first editing.",
+        "Continue capturing diagrams and notes for later synopsis and report use."
+      ],
+      "week_summary": [
+        [
+          "Days/Time",
+          "5 Days a week Monday to Friday."
+        ],
+        [
+          "Monday",
+          "Planned the core workspace flow for structured circuit editing and review."
+        ],
+        [
+          "Tuesday",
+          "Outlined analysis-panel behavior and inventory-linked explanation surfaces."
+        ],
+        [
+          "Wednesday",
+          "Defined the compare, revise, and apply logic for structured proposals."
+        ],
+        [
+          "Thursday",
+          "Clarified the boundary between deterministic checks and AI-assisted reasoning."
+        ],
+        [
+          "Friday",
+          "Assigned backend responsibilities for persistence, validation, and proposal support."
+        ]
+      ],
+      "research_status": "STATUS OF RESEARCH PAPER: Core problem framing and proposed-system notes were drafted using the now stabilized architecture direction. Estimated overall project completion by the end of this week: 37%."
+    },
+    {
+      "date_range": "13/2/2026 - 20/2/2026",
+      "week_number": "5",
+      "targets": [
+        "Progress the hardware-side prototype using the ESP32 host and low-power node concept.",
+        "Refine node-level indication logic for grouped components and distributed storage.",
+        "Map how value-aware inventory checks should support part sufficiency decisions.",
+        "Document the whole-project highlighting workflow for selected builds.",
+        "Prepare clearer notes on how the host bridges smartphone interaction and node signaling."
+      ],
+      "achievements": [
+        "Advanced the host-and-node prototype direction for addressed physical component localization.",
+        "Refined the idea that one node can cover dense component rows while multiple nodes cover larger spaces.",
+        "Improved the inventory sufficiency logic to include value-specific quantity checks.",
+        "Documented the whole-project highlighting workflow for collecting all required parts together.",
+        "Clarified the ESP32 host role as the bridge between smartphone interaction and node communication."
+      ],
+      "future_work": [
+        "Strengthen the inventory-aware recommendation flow on the software side.",
+        "Continue refining the deterministic workspace and proposal-review path.",
+        "Prepare screenshots, diagrams, and notes for formal documentation.",
+        "Review how voice-assisted lookup could be integrated through the host bridge."
+      ],
+      "week_summary": [
+        [
+          "Days/Time",
+          "5 Days a week Monday to Friday."
+        ],
+        [
+          "Monday",
+          "Worked on the host-and-node prototype concept for addressed component localization."
+        ],
+        [
+          "Tuesday",
+          "Refined node coverage for both dense storage rows and distributed room layouts."
+        ],
+        [
+          "Wednesday",
+          "Improved inventory logic to include value-specific quantity sufficiency checks."
+        ],
+        [
+          "Thursday",
+          "Documented the whole-project highlighting workflow for selected circuit builds."
+        ],
+        [
+          "Friday",
+          "Clarified the ESP32 host role in bridging smartphone interaction and node signaling."
+        ]
+      ],
+      "research_status": "STATUS OF RESEARCH PAPER: The hardware architecture and inventory-aware problem statement were refined for use in synopsis and paper drafting. Estimated overall project completion by the end of this week: 49%."
+    },
+    {
+      "date_range": "20/2/2026 - 27/2/2026",
+      "week_number": "6",
+      "targets": [
+        "Consolidate the end-to-end AURA workflow from search to retrieval.",
+        "Refine the local-first editing model and structured backend synchronization concept.",
+        "Strengthen the proposal review path for compare, inspect, and apply decisions.",
+        "Organize the major sections needed for synopsis and report writing.",
+        "Capture believable prototype progress for both hardware and software subsystems."
+      ],
+      "achievements": [
+        "Integrated the overall AURA workflow into a clearer search-to-circuit-to-retrieval narrative.",
+        "Refined the local-first editing approach with backend synchronization reserved for meaningful changes.",
+        "Strengthened the structured proposal review direction for compare and apply behavior.",
+        "Organized the main synopsis and report sections based on the now-stabilized project architecture.",
+        "Collected progress notes showing balanced advancement across hardware, inventory, and workspace subsystems."
+      ],
+      "future_work": [
+        "Finalize more project documentation assets and screenshots.",
+        "Refine prototype language for conference-style presentation.",
+        "Continue aligning weekly work records with the actual AURA scope.",
+        "Prepare the next set of formal documents for academic review."
+      ],
+      "week_summary": [
+        [
+          "Days/Time",
+          "5 Days a week Monday to Friday."
+        ],
+        [
+          "Monday",
+          "Consolidated the complete AURA workflow from search and circuit planning to physical retrieval."
+        ],
+        [
+          "Tuesday",
+          "Refined the local-first editing and backend synchronization concept for the workspace."
+        ],
+        [
+          "Wednesday",
+          "Strengthened the compare-and-apply proposal review path for structured revisions."
+        ],
+        [
+          "Thursday",
+          "Organized synopsis and report sections around the current architecture and prototype scope."
+        ],
+        [
+          "Friday",
+          "Collected screenshots, notes, and progress markers for formal documentation work."
+        ]
+      ],
+      "research_status": "STATUS OF RESEARCH PAPER: The paper structure, contribution framing, and system-level storyline were organized in a more conference-ready form. Estimated overall project completion by the end of this week: 61%."
+    },
+    {
+      "date_range": "27/2/2026 - 6/3/2026",
+      "week_number": "7",
+      "targets": [
+        "Draft the synopsis and conference-paper content using the updated AURA scope.",
+        "Collect the most important architecture, workflow, and prototype points for presentation.",
+        "Refine the wording around complete prototype versus final deployable version.",
+        "Prepare documentation for faculty review and interim corrections.",
+        "Continue aligning the written material with the implemented and planned subsystems."
+      ],
+      "achievements": [
+        "Drafted the major synopsis and conference-paper direction using the updated cyber-physical AURA framing.",
+        "Collected the strongest architecture, workflow, and prototype points for academic presentation.",
+        "Refined the wording so AURA is presented as a complete prototype rather than a final packaged product.",
+        "Prepared documentation material suitable for faculty review and correction.",
+        "Aligned the written content with the implemented prototype and clearly marked future refinements."
+      ],
+      "future_work": [
+        "Finalize the synopsis formatting and section consistency.",
+        "Polish the conference paper draft with figures, tables, and validation framing.",
+        "Prepare the final weekly records and clean document formatting issues.",
+        "Continue strengthening the academic presentation quality of the project materials."
+      ],
+      "week_summary": [
+        [
+          "Days/Time",
+          "5 Days a week Monday to Friday."
+        ],
+        [
+          "Monday",
+          "Started drafting the synopsis and conference paper using the updated AURA scope."
+        ],
+        [
+          "Tuesday",
+          "Collected key architecture and workflow points for academic presentation."
+        ],
+        [
+          "Wednesday",
+          "Refined prototype wording to distinguish complete workflow from final deployment polish."
+        ],
+        [
+          "Thursday",
+          "Prepared documents for faculty review and noted needed corrections."
+        ],
+        [
+          "Friday",
+          "Aligned the written content with the actual hardware, inventory, and workspace scope."
+        ]
+      ],
+      "research_status": "STATUS OF RESEARCH PAPER: Abstract-level framing, architecture discussion, and prototype positioning were drafted for conference submission. Estimated overall project completion by the end of this week: 74%."
+    },
+    {
+      "date_range": "6/3/2026 - 13/3/2026",
+      "week_number": "8",
+      "targets": [
+        "Finalize the synopsis content and correct formatting inconsistencies.",
+        "Complete the conference paper draft with stronger structure and presentation value.",
+        "Prepare weekly progress documentation that reflects the actual project journey.",
+        "Tighten faculty references, tables, and formal academic wording.",
+        "Consolidate the prototype-level presentation material for immediate review."
+      ],
+      "achievements": [
+        "Completed the main synopsis updates so they reflect the latest AURA architecture and scope.",
+        "Improved the conference paper draft with clearer contribution framing, tables, and structured presentation.",
+        "Prepared the weekly progress records to match the actual development path of the project.",
+        "Corrected formatting issues involving headings, tables, faculty references, and academic consistency.",
+        "Consolidated the prototype-level presentation material for review and submission readiness."
+      ],
+      "future_work": [
+        "Continue polishing the final report and presentation artifacts.",
+        "Refine PCB-level hardware realization and packaging in later iterations.",
+        "Expand companion-app polish and broader deployment validation after the current submission phase.",
+        "Carry the present prototype toward a more mature deployable version in subsequent work."
+      ],
+      "week_summary": [
+        [
+          "Days/Time",
+          "5 Days a week Monday to Friday."
+        ],
+        [
+          "Monday",
+          "Finalized major synopsis updates and corrected the current AURA scope in the document set."
+        ],
+        [
+          "Tuesday",
+          "Strengthened the conference paper with better structure, tables, and clearer contribution framing."
+        ],
+        [
+          "Wednesday",
+          "Prepared and aligned weekly progress records with the actual project development path."
+        ],
+        [
+          "Thursday",
+          "Corrected heading, table, and faculty-format inconsistencies across the academic documents."
+        ],
+        [
+          "Friday",
+          "Consolidated the prototype-level presentation material for immediate review and submission readiness."
+        ]
+      ],
+      "research_status": "STATUS OF RESEARCH PAPER: Synopsis, weekly records, and the conference-paper draft were consolidated into a coherent academic submission set. Estimated overall project completion by the end of this week: 88%."
+    }
+  ]
+}

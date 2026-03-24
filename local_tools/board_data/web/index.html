@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Board Data</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="texture"></div>
+    <main class="shell">
+      <header class="topbar panel">
+        <div class="topbar-main">
+          <div>
+            <p class="eyebrow">Local Tools / Board Data</p>
+            <h1>Board Monitor</h1>
+            <p class="subtitle">Compact live view for quick board checks.</p>
+          </div>
+          <div class="hero-actions">
+            <button id="refreshButton" class="button">Refresh</button>
+            <label class="toggle">
+              <input id="autoRefreshToggle" type="checkbox" checked />
+              <span>Auto refresh</span>
+            </label>
+            <a class="button button-ghost nav-link" href="./archive.html">Archive</a>
+          </div>
+        </div>
+      </header>
+
+      <section class="summary-strip compact-summary" id="summaryStrip"></section>
+
+      <section class="panel controls-panel compact-controls">
+        <p id="snapshotStatus" class="snapshot-text">Waiting for first scan...</p>
+        <div class="legend">
+          <span class="legend-item"><span class="dot dot-live"></span>Live</span>
+          <span class="legend-item"><span class="dot dot-usb"></span>USB</span>
+          <span class="legend-item"><span class="dot dot-bluetooth"></span>Bluetooth</span>
+        </div>
+      </section>
+
+      <section id="boardGrid" class="board-grid live-grid"></section>
+
+      <template id="boardCardTemplate">
+        <article class="board-card board-card-live compact-card">
+          <div class="card-topline">
+            <div class="badge-group">
+              <span class="port-badge"></span>
+              <span class="connection-badge"></span>
+              <span class="state-badge live">Live</span>
+            </div>
+            <a class="button button-ghost detail-link" href="./archive.html">Details</a>
+          </div>
+
+          <h2 class="board-title"></h2>
+          <p class="board-subtitle"></p>
+
+          <div class="signal-strip"></div>
+          <div class="fact-list compact-facts live-facts"></div>
+
+          <p class="context-note compact-note"></p>
+        </article>
+      </template>
+    </main>
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

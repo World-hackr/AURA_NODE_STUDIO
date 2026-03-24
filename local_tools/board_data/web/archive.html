@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Board Data Archive</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="texture"></div>
+    <main class="shell">
+      <header class="topbar panel">
+        <div class="topbar-main">
+          <div>
+            <p class="eyebrow">Local Tools / Board Data / Archive</p>
+            <h1>Board Archive</h1>
+            <p class="subtitle">Dense reference view for live and remembered boards.</p>
+          </div>
+          <div class="hero-actions">
+            <button id="refreshButton" class="button">Refresh</button>
+            <a class="button button-ghost nav-link" href="./index.html">Live view</a>
+          </div>
+        </div>
+      </header>
+
+      <section class="summary-strip compact-summary" id="summaryStrip"></section>
+
+      <section class="panel controls-panel compact-controls">
+        <p id="snapshotStatus" class="snapshot-text">Waiting for first scan...</p>
+        <div class="legend">
+          <span class="legend-item"><span class="dot dot-live"></span>Live</span>
+          <span class="legend-item"><span class="dot dot-memory"></span>Remembered</span>
+          <span class="legend-item"><span class="dot dot-manual"></span>Manual profile</span>
+        </div>
+      </section>
+
+      <section id="boardGrid" class="board-grid board-grid-archive"></section>
+
+      <template id="boardCardTemplate">
+        <article class="board-card board-card-archive compact-card">
+          <div class="card-topline archive-topline">
+            <div class="badge-group">
+              <span class="port-badge"></span>
+              <span class="connection-badge"></span>
+              <span class="state-badge"></span>
+            </div>
+            <div class="archive-actions">
+              <label class="profile-selector-shell inline-selector">
+                <span class="profile-selector-label">Profile</span>
+                <select class="profile-selector"></select>
+              </label>
+              <button class="button button-ghost expand-toggle" type="button">Open</button>
+            </div>
+          </div>
+
+          <h2 class="board-title"></h2>
+          <p class="board-subtitle"></p>
+          <p class="profile-summary compact-note"></p>
+
+          <div class="archive-body hidden">
+            <div class="archive-grid">
+              <section class="data-group">
+                <p class="group-title">Identity</p>
+                <div class="fact-list compact-facts overview-facts"></div>
+              </section>
+
+              <section class="data-group">
+                <p class="group-title">Capabilities</p>
+                <div class="fact-list compact-facts capability-facts"></div>
+              </section>
+
+              <section class="data-group asset-group">
+                <div class="image-shell mini-image-shell hidden">
+                  <img class="board-image" alt="Board preview" />
+                </div>
+                <div class="image-actions compact-actions">
+                  <label class="button button-ghost import-label">
+                    <span>Import PNG</span>
+                    <input class="image-input" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" hidden />
+                  </label>
+                  <button class="button button-ghost remove-image hidden" type="button">Remove image</button>
+                </div>
+                <div class="source-links"></div>
+              </section>
+            </div>
+
+            <div class="notes-block hidden"></div>
+
+            <details class="raw-details">
+              <summary>Raw data</summary>
+              <div class="fact-list compact-facts raw-facts"></div>
+            </details>
+          </div>
+        </article>
+      </template>
+    </main>
+    <script src="./archive.js" type="module"></script>
+  </body>
+</html>

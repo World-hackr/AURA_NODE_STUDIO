@@ -1,0 +1,100 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="simple-icon-ui-v2" name="Page-1">
+    <mxGraphModel dx="1800" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3600" pageHeight="2200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="AURA Host Remote UI - Simple Icon Style (160x128 ratio, 2x scale)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f2;strokeColor=#111111;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="20" width="1180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="Old feature-phone style: icon-first, minimal text, only essential actions." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="960" y="100" width="980" height="42" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="home-frame" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d1117;strokeColor=#0d1117;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="80" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+        <mxCell id="home-content" value="RF OK   BLE ON   BAT 82%&#xa;&#xa;AURA REMOTE&#xa;&#xa;&#x1F50D; Locate      &#x1F4E6; Stock&#xa;&#xa;&#x1F4F1; Sync        &#9881; Settings&#xa;&#xa;^v Move   &gt; Open   &lt; Back" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#f5f8fb;fontSize=13;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="locate-frame" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d1117;strokeColor=#0d1117;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="470" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+        <mxCell id="locate-content" value="&#x1F50D; QUICK LOCATE&#xa;&#xa;&gt; 220R Resistor&#xa;  LED Red 5mm&#xa;  100nF Capacitor&#xa;  1N4148 Diode&#xa;&#xa;Node: N02  Drawer: A3&#xa;&#xa;Press &gt; to Blink Node" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#f5f8fb;fontSize=13;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="470" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="blink-frame" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d1117;strokeColor=#0d1117;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="860" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+        <mxCell id="blink-content" value="&#x1F4CD; LOCATING...&#xa;&#xa;Part: 220R Resistor&#xa;Node: N02&#xa;Drawer: A3&#xa;&#xa;Status: Blinking LED&#xa;&#xa;&gt; Stop   &lt; Back" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#f5f8fb;fontSize=13;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="stock-frame" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d1117;strokeColor=#0d1117;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+        <mxCell id="stock-content" value="&#x1F4E6; STOCK QUICK EDIT&#xa;&#xa;&gt; 220R Resistor   43&#xa;  LED Red 5mm    26&#xa;  100nF Cap      71&#xa;&#xa;Left/Right = -/+&#xa;Press = Save" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#f5f8fb;fontSize=13;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="sync-frame" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d1117;strokeColor=#0d1117;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="1640" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+        <mxCell id="sync-content" value="&#x1F4F1; PHONE SYNC&#xa;&#xa;BLE: Connected&#xa;Last Sync: 2m ago&#xa;&#xa;&gt; Sync Now&#xa;  Pull Updates&#xa;  Push Changes&#xa;&#xa;&lt; Back" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#f5f8fb;fontSize=13;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="1640" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="settings-frame" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d1117;strokeColor=#0d1117;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="2030" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+        <mxCell id="settings-content" value="&#9881; SETTINGS&#xa;&#xa;&gt; Radio Check&#xa;  Brightness&#xa;  Joystick Calib&#xa;  About&#xa;&#xa;Version: Host v1&#xa;&#xa;&lt; Back" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#f5f8fb;fontSize=13;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="2030" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="radio-frame" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d1117;strokeColor=#0d1117;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="2420" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+        <mxCell id="radio-content" value="&#128246; RADIO CHECK&#xa;&#xa;nRF24: PASS&#xa;Channel: 108&#xa;Power: LOW&#xa;&#xa;&gt; Re-test&#xa;  View Detail&#xa;&#xa;&lt; Back" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#f5f8fb;fontSize=13;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="2420" y="210" width="320" height="256" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" value="Locate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2a7fff;fontSize=11;" edge="1" parent="1" source="home-frame" target="locate-frame">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="Open Part" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2a7fff;fontSize=11;" edge="1" parent="1" source="locate-frame" target="blink-frame">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="Back" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7a7a7a;fontSize=11;" edge="1" parent="1" source="blink-frame" target="locate-frame">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="Stock" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2a7fff;fontSize=11;" edge="1" parent="1" source="home-frame" target="stock-frame">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="Sync" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2a7fff;fontSize=11;" edge="1" parent="1" source="home-frame" target="sync-frame">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="Settings" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2a7fff;fontSize=11;" edge="1" parent="1" source="home-frame" target="settings-frame">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="Radio Check" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2a7fff;fontSize=11;" edge="1" parent="1" source="settings-frame" target="radio-frame">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="Back Home" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7a7a7a;fontSize=11;" edge="1" parent="1" source="locate-frame" target="home-frame">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" value="Back Home" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7a7a7a;fontSize=11;" edge="1" parent="1" source="stock-frame" target="home-frame">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" value="Back Home" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7a7a7a;fontSize=11;" edge="1" parent="1" source="sync-frame" target="home-frame">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" value="Back Home" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7a7a7a;fontSize=11;" edge="1" parent="1" source="settings-frame" target="home-frame">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

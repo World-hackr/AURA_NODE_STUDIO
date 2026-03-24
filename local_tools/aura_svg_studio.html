@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA SVG Studio - Systematic Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0d0d0d; color: #e0e0e0; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .canvas-container {
+            position: relative;
+            background-color: #1a1a1a;
+            background-image: 
+                radial-gradient(circle, #333 1px, transparent 1px),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            background-size: 20px 20px, 100px 100px;
+            opacity: 0.95;
+            cursor: crosshair;
+        }
+        .svg-preview { stroke: white; stroke-width: 1.5; fill: none; }
+        .code-panel { font-family: 'Fira Code', monospace; font-size: 12px; }
+        input[type="number"] { background: #2a2a2a; border: 1px solid #444; color: white; padding: 2px 4px; border-radius: 4px; width: 60px; }
+        .active-tool { border-color: #00bcd4 !important; color: #00bcd4 !important; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col">
+
+    <!-- Top Bar -->
+    <div class="h-12 border-b border-white/10 flex items-center px-4 justify-between bg-black/50">
+        <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-cyan-400 rounded-full"></div>
+            <span class="font-bold tracking-tighter text-sm uppercase">AURA SVG STUDIO <span class="text-white/30 font-normal">v0.1</span></span>
+        </div>
+        
+        <!-- Color Selector -->
+        <div class="flex items-center gap-2 bg-black/40 p-1 rounded border border-white/10">
+            <span class="text-[9px] uppercase tracking-widest text-white/40 px-2">Stroke:</span>
+            <button onclick="setStroke('white')" class="w-4 h-4 rounded-full bg-white border border-white/20"></button>
+            <button onclick="setStroke('#ff3b3b')" class="w-4 h-4 rounded-full bg-red-500 border border-white/20"></button>
+            <button onclick="setStroke('#00bcd4')" class="w-4 h-4 rounded-full bg-cyan-400 border border-white/20"></button>
+            <button onclick="setStroke('black')" class="w-4 h-4 rounded-full bg-black border border-white/40"></button>
+        </div>
+
+        <div class="flex gap-4 text-xs font-mono">
+            <button onclick="clearCanvas()" class="hover:text-red-400">CLEAR</button>
+            <button onclick="downloadSVG()" class="text-cyan-400 hover:text-cyan-300">EXPORT SVG</button>
+        </div>
+    </div>
+
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Tools -->
+        <div class="w-16 border-r border-white/10 flex flex-col items-center py-4 gap-6 bg-black/20">
+            <button onclick="setTool('rect')" id="tool-rect" class="tool-btn w-10 h-10 border border-white/20 rounded flex items-center justify-center hover:bg-white/5 active-tool">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            </button>
+            <button onclick="setTool('circle')" id="tool-circle" class="tool-btn w-10 h-10 border border-white/20 rounded flex items-center justify-center hover:bg-white/5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+            </button>
+            <button onclick="setTool('line')" id="tool-line" class="tool-btn w-10 h-10 border border-white/20 rounded flex items-center justify-center hover:bg-white/5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="5" x2="19" y2="19"/></svg>
+            </button>
+            <button onclick="setTool('text')" id="tool-text" class="tool-btn w-10 h-10 border border-white/20 rounded flex items-center justify-center hover:bg-white/5">
+                <span class="font-serif font-bold">T</span>
+            </button>
+        </div>
+
+        <!-- Center Canvas -->
+        <div class="flex-1 relative overflow-auto p-8 flex items-center justify-center">
+            <div id="canvas" class="canvas-container w-[600px] h-[400px] shadow-2xl relative" onmousedown="handleMouseDown(event)">
+                <svg id="main-svg" width="600" height="400" class="absolute inset-0 pointer-events-none"></svg>
+            </div>
+        </div>
+
+        <!-- Right Panels -->
+        <div class="w-80 border-l border-white/10 flex flex-col bg-black/20">
+            
+            <!-- Properties Panel -->
+            <div class="flex-1 border-b border-white/10 p-4 overflow-y-auto">
+                <h3 class="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-4">Properties</h3>
+                <div id="properties-list" class="space-y-4">
+                    <!-- Dynamic Properties -->
+                </div>
+            </div>
+
+            <!-- Lopaka Code Panel -->
+            <div class="h-1/3 p-4 flex flex-col border-b border-white/10">
+                <h3 class="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-2 flex justify-between">
+                    Live SVG Output
+                    <span class="text-[8px] opacity-50">DETERMINISTIC</span>
+                </h3>
+                <textarea id="svg-output" readonly class="code-panel flex-1 bg-black/40 border border-white/5 p-2 rounded text-cyan-200 outline-none resize-none"></textarea>
+            </div>
+
+            <!-- Verification Preview (The fix for the white browser problem) -->
+            <div class="h-1/3 p-4 flex flex-col bg-black/40">
+                <h3 class="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-2">Verification Preview (Dark Surface)</h3>
+                <div id="export-preview" class="flex-1 border border-white/10 rounded overflow-hidden flex items-center justify-center bg-[#1a1a1a] relative">
+                    <!-- The cropped SVG will be injected here -->
+                    <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 10px 10px;"></div>
+                </div>
+                <p class="text-[8px] text-white/30 mt-2 italic text-center">This is exactly how your file looks on a dark surface.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let elements = [];
+        let currentTool = 'rect';
+        let strokeColor = 'white';
+        let isDrawing = false;
+        let startPos = { x: 0, y: 0 };
+        let activeId = null;
+
+        function setStroke(color) {
+            strokeColor = color;
+            render();
+            updateProperties();
+        }
+
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active-tool'));
+            document.getElementById(`tool-${tool}`).classList.add('active-tool');
+        }
+
+        function handleMouseDown(e) {
+            const rect = document.getElementById('canvas').getBoundingClientRect();
+            startPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            isDrawing = true;
+            activeId = Date.now();
+
+            const newEl = {
+                id: activeId,
+                type: currentTool,
+                x: startPos.x,
+                y: startPos.y,
+                x2: startPos.x,
+                y2: startPos.y,
+                w: 0,
+                h: 0,
+                r: 0,
+                text: "PART_NAME"
+            };
+            elements.push(newEl);
+            render();
+
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+        }
+
+        function handleMouseMove(e) {
+            if (!isDrawing) return;
+            const rect = document.getElementById('canvas').getBoundingClientRect();
+            const currentPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            
+            const el = elements.find(item => item.id === activeId);
+            if (!el) return;
+
+            if (currentTool === 'rect') {
+                el.w = currentPos.x - startPos.x;
+                el.h = currentPos.y - startPos.y;
+            } else if (currentTool === 'circle') {
+                el.r = Math.sqrt(Math.pow(currentPos.x - startPos.x, 2) + Math.pow(currentPos.y - startPos.y, 2));
+            } else if (currentTool === 'line') {
+                el.x2 = currentPos.x;
+                el.y2 = currentPos.y;
+            } else if (currentTool === 'text') {
+                el.x = currentPos.x;
+                el.y = currentPos.y;
+            }
+            render();
+        }
+
+        function handleMouseUp() {
+            isDrawing = false;
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+            updateProperties();
+        }
+
+        function render() {
+            const svg = document.getElementById('main-svg');
+            let html = '';
+            
+            // Calculate Bounding Box for "Deterministic Cropping"
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            const padding = 5; 
+
+            elements.forEach(el => {
+                if (el.type === 'rect') {
+                    const x = el.w < 0 ? el.x + el.w : el.x;
+                    const y = el.h < 0 ? el.y + el.h : el.y;
+                    const w = Math.abs(el.w);
+                    const h = Math.abs(el.h);
+                    minX = Math.min(minX, x); minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x + w); maxY = Math.max(maxY, y + h);
+                } else if (el.type === 'circle') {
+                    minX = Math.min(minX, el.x - el.r); minY = Math.min(minY, el.y - el.r);
+                    maxX = Math.max(maxX, el.x + el.r); maxY = Math.max(maxY, el.y + el.r);
+                } else if (el.type === 'line') {
+                    minX = Math.min(minX, el.x, el.x2); minY = Math.min(minY, el.y, el.y2);
+                    maxX = Math.max(maxX, el.x, el.x2); maxY = Math.max(maxY, el.y, el.y2);
+                } else if (el.type === 'text') {
+                    minX = Math.min(minX, el.x); minY = Math.min(minY, el.y - 12);
+                    maxX = Math.max(maxX, el.x + (el.text.length * 7)); maxY = Math.max(maxY, el.y);
+                }
+            });
+
+            if (elements.length === 0) { minX = 0; minY = 0; maxX = 100; maxY = 100; }
+
+            const vX = minX - padding;
+            const vY = minY - padding;
+            const vW = (maxX - minX) + (padding * 2);
+            const vH = (maxY - minY) + (padding * 2);
+
+            let code = `<svg width="${vW.toFixed(0)}" height="${vH.toFixed(0)}" viewBox="${vX.toFixed(0)} ${vY.toFixed(0)} ${vW.toFixed(0)} ${vH.toFixed(0)}" xmlns="http://www.w3.org/2000/svg">\n`;
+
+            elements.forEach(el => {
+                if (el.type === 'rect') {
+                    const x = el.w < 0 ? el.x + el.w : el.x;
+                    const y = el.h < 0 ? el.y + el.h : el.y;
+                    const w = Math.abs(el.w);
+                    const h = Math.abs(el.h);
+                    const shape = `<rect x="${x}" y="${y}" width="${w}" height="${h}" stroke="${strokeColor}" stroke-width="1.5" fill="none" />`;
+                    html += shape;
+                    code += `  ${shape}\n`;
+                } else if (el.type === 'circle') {
+                    const shape = `<circle cx="${el.x}" cy="${el.y}" r="${el.r.toFixed(1)}" stroke="${strokeColor}" stroke-width="1.5" fill="none" />`;
+                    html += shape;
+                    code += `  ${shape}\n`;
+                } else if (el.type === 'line') {
+                    const shape = `<line x1="${el.x}" y1="${el.y}" x2="${el.x2}" y2="${el.y2}" stroke="${strokeColor}" stroke-width="1.5" />`;
+                    html += shape;
+                    code += `  ${shape}\n`;
+                } else if (el.type === 'text') {
+                    const shape = `<text x="${el.x}" y="${el.y}" fill="${strokeColor}" font-family="monospace" font-size="12">${el.text}</text>`;
+                    html += shape;
+                    code += `  ${shape}\n`;
+                }
+            });
+
+            svg.innerHTML = html;
+            code += '</svg>';
+            document.getElementById('svg-output').value = code;
+            document.getElementById('export-preview').innerHTML = code; // Real-time Verification
+        }
+
+        function updateProperties() {
+            const list = document.getElementById('properties-list');
+            list.innerHTML = elements.map((el, index) => `
+                <div class="bg-black/40 p-3 rounded border border-white/5 text-[10px]">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-white/60 font-mono">${el.type.toUpperCase()} #${index}</span>
+                        <button onclick="removeElement(${el.id})" class="text-red-400 hover:text-red-300">DEL</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        ${el.type === 'text' ? `
+                            <div class="col-span-2">
+                                <label class="block opacity-40 mb-1">VALUE</label>
+                                <input type="text" value="${el.text}" oninput="updateEl(${el.id}, 'text', this.value)" class="w-full bg-[#2a2a2a] border border-[#444] rounded px-1">
+                            </div>
+                        ` : ''}
+                        <div><label class="block opacity-40 mb-1">X</label><input type="number" value="${Math.round(el.x)}" oninput="updateEl(${el.id}, 'x', this.value)"></div>
+                        <div><label class="block opacity-40 mb-1">Y</label><input type="number" value="${Math.round(el.y)}" oninput="updateEl(${el.id}, 'y', this.value)"></div>
+                        ${el.type === 'rect' ? `
+                            <div><label class="block opacity-40 mb-1">W</label><input type="number" value="${Math.round(el.w)}" oninput="updateEl(${el.id}, 'w', this.value)"></div>
+                            <div><label class="block opacity-40 mb-1">H</label><input type="number" value="${Math.round(el.h)}" oninput="updateEl(${el.id}, 'h', this.value)"></div>
+                        ` : ''}
+                        ${el.type === 'circle' ? `
+                            <div><label class="block opacity-40 mb-1">R</label><input type="number" value="${Math.round(el.r)}" oninput="updateEl(${el.id}, 'r', this.value)"></div>
+                        ` : ''}
+                        ${el.type === 'line' ? `
+                            <div><label class="block opacity-40 mb-1">X2</label><input type="number" value="${Math.round(el.x2)}" oninput="updateEl(${el.id}, 'x2', this.value)"></div>
+                            <div><label class="block opacity-40 mb-1">Y2</label><input type="number" value="${Math.round(el.y2)}" oninput="updateEl(${el.id}, 'y2', this.value)"></div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateEl(id, key, val) {
+            const el = elements.find(item => item.id === id);
+            if (el) {
+                el[key] = key === 'text' ? val : parseFloat(val);
+                render();
+            }
+        }
+
+        function removeElement(id) {
+            elements = elements.filter(el => el.id !== id);
+            render();
+            updateProperties();
+        }
+
+        function clearCanvas() {
+            elements = [];
+            render();
+            updateProperties();
+        }
+
+        function downloadSVG() {
+            const svgContent = document.getElementById('svg-output').value;
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'aura_component.svg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        render();
+    </script>
+</body>
+</html>

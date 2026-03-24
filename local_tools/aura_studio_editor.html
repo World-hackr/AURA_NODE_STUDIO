@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA Node Studio - Package Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            /* Inherited from AURA_ui_core 'Cyan/Toxic' mix */
+            --bg: #030705;
+            --bg-2: #08100b;
+            --panel: rgba(6, 12, 18, 0.85);
+            --panel-border: rgba(92, 251, 255, 0.14);
+            --text: #f1fdff;
+            --accent: #00f0ff; /* Cyan */
+            --accent-glow: rgba(0, 240, 255, 0.22);
+            --warn: #ffd76a;
+            --danger: #ff718c;
+            --grid-line: rgba(255, 255, 255, 0.05);
+            --grid-dot: rgba(255, 255, 255, 0.15);
+        }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow: hidden; }
+        
+        /* 1 Logical Unit (0.1 inch) = 20px visually */
+        .canvas-area {
+            background-color: var(--bg-2);
+            /* A 0.1" breadboard-style dot grid */
+            background-image: radial-gradient(circle, var(--grid-dot) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 10px 10px; /* offset to put pins on dots */
+            position: relative;
+            cursor: crosshair;
+        }
+
+        .panel { background: var(--panel); border: 1px solid var(--panel-border); backdrop-filter: blur(10px); }
+        .code-panel { font-family: 'Fira Code', monospace; font-size: 11px; background: rgba(0,0,0,0.5); }
+        
+        .component-body { fill: #1a1a1a; stroke: white; stroke-width: 2px; }
+        .component-body.selected { stroke: var(--accent); filter: drop-shadow(0 0 5px var(--accent-glow)); }
+        .component-pin { stroke: #aaa; stroke-width: 2px; }
+        .component-pin.selected { stroke: var(--accent); }
+        .component-text { font-size: 10px; font-family: monospace; fill: white; pointer-events: none; }
+        
+        .drag-handle { fill: var(--accent); cursor: nwse-resize; pointer-events: all; }
+        .drag-handle:hover { transform: scale(1.5); transform-origin: center; transition: 0.1s; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col">
+
+    <!-- Header -->
+    <div class="h-12 border-b border-[var(--panel-border)] flex items-center px-4 justify-between bg-black/80">
+        <div class="flex items-center gap-3">
+            <div class="w-4 h-4 bg-[var(--accent)] rounded-sm rotate-45 shadow-[0_0_10px_var(--accent-glow)]"></div>
+            <span class="font-bold tracking-[0.2em] text-xs uppercase">AURA NODE STUDIO</span>
+            <span class="text-[9px] text-[var(--accent)] border border-[var(--accent)] px-1 rounded opacity-70">PKG_EDITOR</span>
+        </div>
+        <div class="flex gap-4 text-[10px] font-mono tracking-widest">
+            <button onclick="downloadJSON()" class="text-[var(--accent)] hover:text-white transition-colors">EXPORT_MANIFEST</button>
+            <button onclick="components=[] ; render()" class="text-[var(--danger)] hover:text-white transition-colors">CLEAR</button>
+        </div>
+    </div>
+
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Tool Palette -->
+        <div class="w-20 border-r border-[var(--panel-border)] flex flex-col items-center py-6 gap-6 panel z-10">
+            <button onclick="spawn('DIP')" class="w-12 h-12 rounded border border-[var(--panel-border)] hover:bg-white/5 flex flex-col items-center justify-center gap-1 group">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-white/70 group-hover:text-[var(--accent)]"><rect x="6" y="4" width="12" height="16" rx="1"/><path d="M 9 4 Q 12 8 15 4"/><line x1="4" y1="6" x2="6" y2="6"/><line x1="4" y1="10" x2="6" y2="10"/><line x1="4" y1="14" x2="6" y2="14"/><line x1="4" y1="18" x2="6" y2="18"/><line x1="18" y1="6" x2="20" y2="6"/><line x1="18" y1="10" x2="20" y2="10"/><line x1="18" y1="14" x2="20" y2="14"/><line x1="18" y1="18" x2="20" y2="18"/></svg>
+                <span class="text-[8px] text-white/50">DIP</span>
+            </button>
+            <button onclick="spawn('TO220')" class="w-12 h-12 rounded border border-[var(--panel-border)] hover:bg-white/5 flex flex-col items-center justify-center gap-1 group">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-white/70 group-hover:text-[var(--accent)]"><path d="M7 16V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v10"/><line x1="7" y1="8" x2="17" y2="8"/><circle cx="12" cy="12" r="1.5"/><line x1="9" y1="16" x2="9" y2="22"/><line x1="12" y1="16" x2="12" y2="22"/><line x1="15" y1="16" x2="15" y2="22"/></svg>
+                <span class="text-[8px] text-white/50">TO-220</span>
+            </button>
+            <button onclick="spawn('HEADER')" class="w-12 h-12 rounded border border-[var(--panel-border)] hover:bg-white/5 flex flex-col items-center justify-center gap-1 group">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-white/70 group-hover:text-[var(--accent)]"><rect x="10" y="3" width="4" height="18" rx="1"/><circle cx="12" cy="6" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="18" r="1"/></svg>
+                <span class="text-[8px] text-white/50">HDR</span>
+            </button>
+        </div>
+
+        <!-- Center Canvas -->
+        <div class="flex-1 relative overflow-auto flex items-center justify-center bg-[var(--bg-2)] p-8">
+            <div id="editor-canvas" class="canvas-area w-[800px] h-[600px] shadow-2xl border border-[var(--panel-border)]" onmousedown="handleMouseDown(event)">
+                <svg id="svg-layer" width="800" height="600" class="absolute inset-0 select-none"></svg>
+            </div>
+        </div>
+
+        <!-- Right Properties & Output -->
+        <div class="w-[350px] border-l border-[var(--panel-border)] flex flex-col panel z-10">
+            
+            <!-- Properties Panel -->
+            <div class="h-[40%] p-4 border-b border-[var(--panel-border)] overflow-y-auto">
+                <h3 class="text-[9px] uppercase tracking-widest text-[var(--accent)] mb-4 flex items-center gap-2">
+                    <div class="w-1 h-1 bg-[var(--accent)]"></div> Selected Package
+                </h3>
+                <div id="prop-ui" class="space-y-4">
+                    <p class="text-[10px] text-white/30 italic">Click a component on the grid...</p>
+                </div>
+            </div>
+
+            <!-- Deterministic JSON Output -->
+            <div class="flex-1 p-4 flex flex-col">
+                <h3 class="text-[9px] uppercase tracking-widest text-white/50 mb-2">AURA Component Manifest (JSON)</h3>
+                <p class="text-[8px] text-white/30 mb-2">Grid Unit = 0.1" (2.54mm). No floats.</p>
+                <textarea id="json-out" readonly class="code-panel flex-1 border border-[var(--panel-border)] p-3 rounded text-[var(--accent)] outline-none resize-none"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const U = 20; // 1 Logical Unit (0.1") = 20px
+        let components = [];
+        let selectedId = null;
+        let isDragging = false;
+        let dragMode = null; // 'move' or 'resize'
+        let startPos = { x: 0, y: 0 };
+
+        // Real-world package rules
+        const DIP_PIN_STEPS = [4, 6, 8, 14, 16, 18, 20, 24, 28, 32, 40, 48, 64];
+        const DIP_WIDTH_STEPS = [3, 4, 6, 9]; // 0.3" (Narrow), 0.4", 0.6" (Wide), 0.9"
+
+        function spawn(type) {
+            const id = Date.now();
+            let comp = { id, type, x: 10, y: 10, label: "U_" + Math.floor(Math.random()*100) };
+            
+            if (type === 'DIP') {
+                comp.pins = 8;
+                comp.width = 3; // 0.3" narrow pitch
+            } else if (type === 'TO220') {
+                comp.pins = 3;
+                comp.width = 3; // TO-220 is ~0.4" wide, but pins are 0.1" apart (3 units total width visually)
+            } else if (type === 'HEADER') {
+                comp.pins = 4;
+            }
+
+            components.push(comp);
+            selectedId = id;
+            render();
+        }
+
+        function handleMouseDown(e) {
+            const rect = document.getElementById('editor-canvas').getBoundingClientRect();
+            // Snap mouse to Grid Unit coordinates
+            const uX = Math.round((e.clientX - rect.left) / U);
+            const uY = Math.round((e.clientY - rect.top) / U);
+
+            // Handle Resizing first
+            if (e.target.classList.contains('drag-handle')) {
+                isDragging = true;
+                dragMode = 'resize';
+                startPos = { uX, uY };
+                return;
+            }
+
+            // Hit testing (bounding box in units)
+            const hit = components.slice().reverse().find(c => {
+                let w = 0, h = 0;
+                if (c.type === 'DIP') { w = c.width; h = c.pins / 2; }
+                else if (c.type === 'TO220') { w = c.width; h = 2; }
+                else if (c.type === 'HEADER') { w = 1; h = c.pins; }
+                
+                // Allow a tiny margin for clicking pins
+                return uX >= c.x - 1 && uX <= c.x + w + 1 && uY >= c.y && uY <= c.y + h;
+            });
+
+            if (hit) {
+                selectedId = hit.id;
+                isDragging = true;
+                dragMode = 'move';
+                startPos = { dx: uX - hit.x, dy: uY - hit.y };
+            } else {
+                selectedId = null;
+            }
+
+            render();
+            window.addEventListener('mousemove', handleDrag);
+            window.addEventListener('mouseup', endDrag);
+        }
+
+        function handleDrag(e) {
+            if (!isDragging || !selectedId) return;
+            const rect = document.getElementById('editor-canvas').getBoundingClientRect();
+            const uX = Math.round((e.clientX - rect.left) / U);
+            const uY = Math.round((e.clientY - rect.top) / U);
+
+            const c = components.find(c => c.id === selectedId);
+
+            if (dragMode === 'move') {
+                c.x = uX - startPos.dx;
+                c.y = uY - startPos.dy;
+            } else if (dragMode === 'resize') {
+                if (c.type === 'DIP') {
+                    // Height controls pins
+                    const rowsNeeded = uY - c.y;
+                    const pinsNeeded = Math.max(4, rowsNeeded * 2);
+                    // Find nearest standard DIP step
+                    c.pins = DIP_PIN_STEPS.reduce((prev, curr) => 
+                        Math.abs(curr - pinsNeeded) < Math.abs(prev - pinsNeeded) ? curr : prev
+                    );
+
+                    // Width controls package width (0.3" vs 0.6")
+                    const wNeeded = uX - c.x;
+                    c.width = DIP_WIDTH_STEPS.reduce((prev, curr) => 
+                        Math.abs(curr - wNeeded) < Math.abs(prev - wNeeded) ? curr : prev
+                    );
+                } else if (c.type === 'HEADER') {
+                    c.pins = Math.max(1, uY - c.y);
+                }
+            }
+            render();
+        }
+
+        function endDrag() {
+            isDragging = false;
+            window.removeEventListener('mousemove', handleDrag);
+            window.removeEventListener('mouseup', endDrag);
+            render();
+        }
+
+        function render() {
+            const svg = document.getElementById('svg-layer');
+            let html = '';
+
+            components.forEach(c => {
+                const isSel = c.id === selectedId;
+                const bodyClass = isSel ? 'component-body selected' : 'component-body';
+                const pinClass = isSel ? 'component-pin selected' : 'component-pin';
+                
+                // Base pixels
+                const pX = c.x * U;
+                const pY = c.y * U;
+
+                if (c.type === 'DIP') {
+                    const rowPins = c.pins / 2;
+                    const pW = c.width * U;
+                    const pH = rowPins * U;
+
+                    // Body
+                    html += `<rect x="${pX}" y="${pY}" width="${pW}" height="${pH}" rx="2" class="${bodyClass}" />`;
+                    // Pin 1 Indicator Notch
+                    html += `<path d="M ${pX + pW/2 - 6} ${pY} A 6 6 0 0 0 ${pX + pW/2 + 6} ${pY}" fill="none" class="${pinClass}" />`;
+                    
+                    // Pins
+                    for(let i=0; i<rowPins; i++) {
+                        const yOff = pY + (i * U) + (U/2);
+                        // Left Pin (1 to N/2)
+                        html += `<line x1="${pX - 10}" y1="${yOff}" x2="${pX}" y2="${yOff}" class="${pinClass}" />`;
+                        // Right Pin (N to N/2+1)
+                        html += `<line x1="${pX + pW}" y1="${yOff}" x2="${pX + pW + 10}" y2="${yOff}" class="${pinClass}" />`;
+                    }
+                    
+                    // Label
+                    html += `<text x="${pX + pW/2}" y="${pY + pH/2}" text-anchor="middle" dominant-baseline="middle" class="component-text" transform="rotate(-90 ${pX + pW/2} ${pY + pH/2})">${c.label}</text>`;
+                    
+                    if (isSel) html += `<rect x="${pX + pW - 5}" y="${pY + pH - 5}" width="10" height="10" class="drag-handle" />`;
+                
+                } else if (c.type === 'TO220') {
+                    const pW = 3 * U; // Physical width approx 0.4", but pins are 0.1" pitch (3 units across 3 pins)
+                    const pH = 2 * U;
+                    // Metal Tab
+                    html += `<rect x="${pX}" y="${pY - U}" width="${pW}" height="${U}" rx="1" class="${bodyClass}" fill="#333" />`;
+                    html += `<circle cx="${pX + pW/2}" cy="${pY - U/2}" r="3" fill="none" class="${pinClass}" />`;
+                    // Plastic Body
+                    html += `<rect x="${pX}" y="${pY}" width="${pW}" height="${pH}" rx="1" class="${bodyClass}" />`;
+                    
+                    // 3 Pins (0.1" pitch = 1U apart)
+                    for(let i=0; i<3; i++) {
+                        const xOff = pX + (U/2) + (i * U);
+                        html += `<line x1="${xOff}" y1="${pY + pH}" x2="${xOff}" y2="${pY + pH + 15}" class="${pinClass}" />`;
+                    }
+                    html += `<text x="${pX + pW/2}" y="${pY + pH/2}" text-anchor="middle" dominant-baseline="middle" class="component-text">${c.label}</text>`;
+                
+                } else if (c.type === 'HEADER') {
+                    const pW = U;
+                    const pH = c.pins * U;
+                    html += `<rect x="${pX}" y="${pY}" width="${pW}" height="${pH}" class="${bodyClass}" />`;
+                    for(let i=0; i<c.pins; i++) {
+                        html += `<circle cx="${pX + U/2}" cy="${pY + i*U + U/2}" r="3" fill="#888" />`;
+                    }
+                    if (isSel) html += `<rect x="${pX + pW/2 - 5}" y="${pY + pH - 5}" width="10" height="10" class="drag-handle" />`;
+                }
+            });
+
+            svg.innerHTML = html;
+            updateUI();
+            updateOutput();
+        }
+
+        function updateUI() {
+            const ui = document.getElementById('prop-ui');
+            const c = components.find(c => c.id === selectedId);
+            
+            if (!c) {
+                ui.innerHTML = '<p class="text-[10px] text-white/30 italic">Click a component on the grid...</p>';
+                return;
+            }
+
+            let html = `
+                <div>
+                    <label class="text-[9px] text-white/50 block mb-1">PART LABEL</label>
+                    <input type="text" value="${c.label}" oninput="updateComp('label', this.value)" class="w-full bg-black/50 border border-[var(--panel-border)] rounded px-2 py-1 text-xs text-white outline-none focus:border-[var(--accent)]">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[9px] text-[var(--accent)] block mb-1">PIN COUNT</label>
+                        <div class="text-xs font-mono bg-black/30 border border-white/5 rounded px-2 py-1">${c.pins}</div>
+                    </div>
+            `;
+
+            if (c.type === 'DIP') {
+                const wInch = (c.width * 0.1).toFixed(1);
+                html += `
+                    <div>
+                        <label class="text-[9px] text-[var(--accent)] block mb-1">WIDTH (0.1" Pitch)</label>
+                        <div class="text-xs font-mono bg-black/30 border border-white/5 rounded px-2 py-1">${c.width}U (${wInch}")</div>
+                    </div>
+                `;
+            }
+
+            html += `
+                </div>
+                <div class="pt-4 border-t border-[var(--panel-border)]">
+                    <p class="text-[8px] text-white/40 mb-2">Location: ${c.x}U, ${c.y}U</p>
+                    <button onclick="removeComp()" class="w-full bg-[var(--danger)]/10 border border-[var(--danger)]/50 text-[var(--danger)] text-[9px] py-1.5 rounded hover:bg-[var(--danger)] hover:text-white transition-colors uppercase tracking-widest">Delete Package</button>
+                </div>
+            `;
+            
+            ui.innerHTML = html;
+        }
+
+        function updateComp(key, val) {
+            const c = components.find(c => c.id === selectedId);
+            if (c) {
+                c[key] = val;
+                render();
+            }
+        }
+
+        function removeComp() {
+            components = components.filter(c => c.id !== selectedId);
+            selectedId = null;
+            render();
+        }
+
+        function updateOutput() {
+            // Generate the deterministic, float-free manifest
+            const manifest = {
+                aura_manifest_version: "2.0",
+                grid_unit: "0.1_inch",
+                components: components.map(c => {
+                    let pkg = "";
+                    if (c.type === 'DIP') pkg = `DIP-${c.pins}_W${c.width}`;
+                    if (c.type === 'TO220') pkg = `TO-220-${c.pins}`;
+                    if (c.type === 'HEADER') pkg = `HDR-1x${c.pins}`;
+
+                    return {
+                        id: c.label,
+                        package: pkg,
+                        position: { uX: c.x, uY: c.y } // No floats! Strict grid units.
+                    };
+                })
+            };
+            document.getElementById('json-out').value = JSON.stringify(manifest, null, 2);
+        }
+
+        function downloadJSON() {
+            const val = document.getElementById('json-out').value;
+            const blob = new Blob([val], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'aura_hardware_manifest.json';
+            a.click();
+        }
+
+        // Init
+        render();
+    </script>
+</body>
+</html>

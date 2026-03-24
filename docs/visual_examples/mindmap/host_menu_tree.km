@@ -1,0 +1,113 @@
+{
+    "root": {
+        "data": {
+            "text": "AURA Host"
+        },
+        "children": [
+            {
+                "data": {
+                    "text": "Locate"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "text": "Find Part"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "text": "Recent Locate"
+                        },
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "text": "Inventory"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "text": "Add Item"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "text": "Move Item"
+                        },
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "text": "Nodes"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "text": "Test Node"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "text": "Test Output"
+                        },
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "text": "Setup"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "text": "Add Node"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "text": "Map Outputs"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "text": "Expert"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "text": "RF Address"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "text": "Retries"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "text": "Diagnostics"
+                                },
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "template": "default",
+    "theme": "fresh-blue",
+    "version": "1.4.43"
+}

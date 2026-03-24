@@ -1,0 +1,76 @@
+<mxfile host="65bd71144e">
+    <diagram id="aura-host-remote-screen-boards" name="Page-1">
+        <mxGraphModel dx="1662" dy="945" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1400" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+
+                <mxCell id="title" value="AURA Host Remote&lt;br&gt;&lt;b&gt;Screen Boards&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f2;strokeColor=#111111;fontSize=22;fontStyle=1;" vertex="1" parent="1">
+                    <mxGeometry x="820" y="20" width="500" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="subtitle" value="Disconnected boards on purpose. Think of this like a Figma page wall for the host display." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=14;" vertex="1" parent="1">
+                    <mxGeometry x="710" y="115" width="720" height="40" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="section1" value="01 Core Navigation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#333333;fontStyle=1;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="190" width="1120" height="470" as="geometry"/>
+                </mxCell>
+                <mxCell id="section2" value="02 Inventory and Nodes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#333333;fontStyle=1;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="190" width="1120" height="470" as="geometry"/>
+                </mxCell>
+                <mxCell id="section3" value="03 Setup and Expert" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#333333;fontStyle=1;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="700" width="1120" height="520" as="geometry"/>
+                </mxCell>
+                <mxCell id="section4" value="04 Notes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#333333;fontStyle=1;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="700" width="1120" height="520" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="home" value="&lt;b&gt;HOME&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;LINK OK  BAT 82%&lt;/font&gt;&lt;br&gt;&lt;br&gt;&gt; Locate Parts&lt;br&gt;&amp;nbsp;&amp;nbsp; Inventory&lt;br&gt;&amp;nbsp;&amp;nbsp; Nodes&lt;br&gt;&amp;nbsp;&amp;nbsp; Setup&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;Press = select&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="90" y="250" width="220" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="locateSearch" value="&lt;b&gt;LOCATE SEARCH&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;LINK OK  BAT 82%&lt;/font&gt;&lt;br&gt;&lt;br&gt;Query: 220R&lt;br&gt;&lt;br&gt;&gt; Resistor 220R 1/4W&lt;br&gt;&amp;nbsp;&amp;nbsp; Resistor 220R 1/8W&lt;br&gt;&amp;nbsp;&amp;nbsp; Resistor pack 220R&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;Left = back&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="350" y="250" width="220" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="locateResult" value="&lt;b&gt;PART SUMMARY&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;LINK OK  BAT 82%&lt;/font&gt;&lt;br&gt;&lt;br&gt;Part: Resistor 220R&lt;br&gt;Stock: 43&lt;br&gt;Place: Drawer A3&lt;br&gt;Node: N02 / Output 14&lt;br&gt;&lt;br&gt;&gt; Start Locate&lt;br&gt;&amp;nbsp;&amp;nbsp; View Other Locations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="610" y="250" width="220" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="activeLocate" value="&lt;b&gt;ACTIVE LOCATE&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;RF CONFIRMED&lt;/font&gt;&lt;br&gt;&lt;br&gt;Part: Resistor 220R&lt;br&gt;Location: Drawer A3&lt;br&gt;Node: N02&lt;br&gt;Output: 14 blinking&lt;br&gt;&lt;br&gt;&gt; Stop Locate&lt;br&gt;&amp;nbsp;&amp;nbsp; Retry Signal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="870" y="250" width="220" height="300" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="inventory" value="&lt;b&gt;INVENTORY&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;LOCAL DATA&lt;/font&gt;&lt;br&gt;&lt;br&gt;Part: 220R resistor&lt;br&gt;Current: 43&lt;br&gt;Location: Drawer A3&lt;br&gt;&lt;br&gt;&gt; Add Quantity&lt;br&gt;&amp;nbsp;&amp;nbsp; Remove Quantity&lt;br&gt;&amp;nbsp;&amp;nbsp; Move Stock" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="1250" y="250" width="220" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="nodeList" value="&lt;b&gt;NODES&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;4 NODES REGISTERED&lt;/font&gt;&lt;br&gt;&lt;br&gt;&gt; N01 Shelf Left&lt;br&gt;&amp;nbsp;&amp;nbsp; N02 Drawer Rack A&lt;br&gt;&amp;nbsp;&amp;nbsp; N03 Shelf Right&lt;br&gt;&amp;nbsp;&amp;nbsp; N04 Spare" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="1510" y="250" width="220" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="nodeDetail" value="&lt;b&gt;NODE DETAIL&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;N02 ONLINE&lt;/font&gt;&lt;br&gt;&lt;br&gt;Outputs: 24&lt;br&gt;Last seen: 2s ago&lt;br&gt;Mode: LED only&lt;br&gt;&lt;br&gt;&gt; Test Whole Node&lt;br&gt;&amp;nbsp;&amp;nbsp; Test Single Output" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="1770" y="250" width="220" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="outputTest" value="&lt;b&gt;OUTPUT TEST&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;N02&lt;/font&gt;&lt;br&gt;&lt;br&gt;Selected output: 14&lt;br&gt;Action: blink 3x&lt;br&gt;Status: confirmed&lt;br&gt;&lt;br&gt;&gt; Save Mapping&lt;br&gt;&amp;nbsp;&amp;nbsp; Try Another Output" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="2030" y="250" width="220" height="300" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="setupHome" value="&lt;b&gt;SETUP&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;INSTALL / ADMIN&lt;/font&gt;&lt;br&gt;&lt;br&gt;&gt; Add Node&lt;br&gt;&amp;nbsp;&amp;nbsp; Map Outputs&lt;br&gt;&amp;nbsp;&amp;nbsp; Test Node&lt;br&gt;&amp;nbsp;&amp;nbsp; Radio&lt;br&gt;&amp;nbsp;&amp;nbsp; Expert" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="90" y="760" width="220" height="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="addNode" value="&lt;b&gt;ADD NODE&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;NEW REGISTRATION&lt;/font&gt;&lt;br&gt;&lt;br&gt;Node ID: N05&lt;br&gt;Outputs: 16&lt;br&gt;Type: LED strip&lt;br&gt;&lt;br&gt;&gt; Test Now&lt;br&gt;&amp;nbsp;&amp;nbsp; Save Node" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="350" y="760" width="220" height="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="mapOutput" value="&lt;b&gt;MAP OUTPUT&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;PHYSICAL BINDING&lt;/font&gt;&lt;br&gt;&lt;br&gt;Node: N02&lt;br&gt;Output: 14&lt;br&gt;Location: Drawer A3&lt;br&gt;&lt;br&gt;&gt; Blink Output&lt;br&gt;&amp;nbsp;&amp;nbsp; Confirm Location" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="610" y="760" width="220" height="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="expertRf" value="&lt;b&gt;EXPERT RF&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;LOW LEVEL&lt;/font&gt;&lt;br&gt;&lt;br&gt;Channel: 112&lt;br&gt;Retries: 5&lt;br&gt;Timeout: 900ms&lt;br&gt;Ack mode: dual confirm&lt;br&gt;&lt;br&gt;&gt; Apply&lt;br&gt;&amp;nbsp;&amp;nbsp; Restore Default" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=14;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="870" y="760" width="220" height="320" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="notes1" value="&lt;b&gt;How to use this canvas&lt;/b&gt;&lt;br&gt;&lt;br&gt;1. Each card is one host screen&lt;br&gt;2. No lines between cards on purpose&lt;br&gt;3. Add new screens nearby when flow expands&lt;br&gt;4. Use the .km file for logic tree&lt;br&gt;5. Use this file for visual screen boards" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=15;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="1250" y="780" width="460" height="260" as="geometry"/>
+                </mxCell>
+                <mxCell id="notes2" value="&lt;b&gt;Next expansion idea&lt;/b&gt;&lt;br&gt;&lt;br&gt;Add a second row later for:&lt;br&gt;- active toasts&lt;br&gt;- confirm dialogs&lt;br&gt;- quantity editor&lt;br&gt;- project / build locate mode&lt;br&gt;- phone handoff state" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#111111;fontSize=15;align=left;spacingLeft=12;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="1770" y="780" width="460" height="260" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
