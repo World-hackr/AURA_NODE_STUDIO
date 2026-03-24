@@ -8,16 +8,7 @@ import { Sidebar } from "./components/Sidebar";
 function App() {
   const [workspaceMode, setWorkspaceMode] = useState<"creator" | "editor">("editor");
   const modeSwitch: ReactNode = (
-    <div className="studio-inline-switch" role="tablist" aria-label="Primary workspaces">
-      <button
-        type="button"
-        role="tab"
-        aria-selected={workspaceMode === "creator"}
-        onClick={() => setWorkspaceMode("creator")}
-        className={`mode-switch-button ${workspaceMode === "creator" ? "mode-switch-button-active" : ""}`}
-      >
-        Creator
-      </button>
+    <div className="studio-inline-switch" role="tablist" aria-label="Studio workspaces">
       <button
         type="button"
         role="tab"
@@ -25,7 +16,16 @@ function App() {
         onClick={() => setWorkspaceMode("editor")}
         className={`mode-switch-button ${workspaceMode === "editor" ? "mode-switch-button-active" : ""}`}
       >
-        Editor
+        Circuit Studio
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={workspaceMode === "creator"}
+        onClick={() => setWorkspaceMode("creator")}
+        className={`mode-switch-button ${workspaceMode === "creator" ? "mode-switch-button-active" : ""}`}
+      >
+        Component Lab
       </button>
     </div>
   );
@@ -38,9 +38,9 @@ function App() {
             <ComponentCreatorWorkspace modeSwitch={modeSwitch} />
           ) : (
             <div className="studio-shell">
-              <Sidebar modeSwitch={modeSwitch} workspaceMode={workspaceMode} />
-              <Canvas workspaceMode={workspaceMode} />
-              <PropertiesPanel workspaceMode={workspaceMode} />
+              <Sidebar modeSwitch={modeSwitch} />
+              <Canvas />
+              <PropertiesPanel />
             </div>
           )}
         </div>

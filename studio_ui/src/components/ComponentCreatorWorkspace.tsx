@@ -2784,8 +2784,8 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
         <div className="studio-rail-header border-b border-white px-3 py-3">
           <div className="studio-rail-head-inner flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="editor-eyebrow">Component Creator</p>
-              <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-white">Component Editor</h2>
+              <p className="editor-eyebrow">Component Lab</p>
+              <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-white">Reusable Part Authoring</h2>
             </div>
             {modeSwitch ? <div className="shrink-0">{modeSwitch}</div> : null}
           </div>
@@ -2875,9 +2875,9 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
         <div className="creator-stage-panel">
           <div className="creator-stage-head">
             <div className="min-w-0">
-              <p className="editor-eyebrow">SVG Component Editor</p>
+              <p className="editor-eyebrow">Deterministic Package Authoring</p>
               <h2 className="mt-1.5 truncate font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-white">{componentName}</h2>
-              <p className="mt-1.5 text-[10px] leading-4 text-aura-muted">Middle mouse pans. Wheel zooms. Place real parts, then reshape or explode them into editable layers.</p>
+              <p className="mt-1.5 text-[10px] leading-4 text-aura-muted">Middle mouse pans. Wheel zooms. Start from a known package, then convert only the layers you need to edit.</p>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
               <span className="creator-preset-chip">{selectedBaseId === NO_BASE_ID ? "EMPTY" : selectedPackage?.packageKey ?? "BLANK-BOARD"}</span>

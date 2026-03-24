@@ -8,6 +8,7 @@ This folder is intentionally structured as a small monorepo.
 
 That is professional if the boundaries are clear:
 - host remote firmware lives in its own root-level product folder
+- browser-side studio tooling lives in its own root-level product folder
 - phone UI lives in its own root-level product folder
 - shared contracts live in one place
 - docs explain the system instead of letting the root become ambiguous
@@ -15,6 +16,7 @@ That is professional if the boundaries are clear:
 ## Structure
 
 - `host_remote/` - ESP32 host remote firmware, host-specific tests, and host-specific helper scripts
+- `studio_ui/` - browser-side deterministic circuit and component authoring tool for advanced/internal workflows
 - `phone_ui/` - future phone UI workspace, plus phone-side placeholder organization for tests and tools
 - `shared/` - shared models and contracts
 - `docs/` - system planning docs for this restart
@@ -28,6 +30,7 @@ The active implementation center is:
 - `host_remote/`
 - `docs/`
 - `local_tools/`
+- `studio_ui/`
 
 `phone_ui/` and `shared/` are intentionally reserved but still light.
 
@@ -71,3 +74,13 @@ That slice focuses on:
 - PlatformIO based development in VS Code
 
 `host_remote/` should be treated as a standalone PlatformIO firmware project during host development sessions.
+
+## Surface Roles
+
+The product should be read as three distinct surfaces:
+
+- `AURA Host` - the primary normal-user interface for search, stock review, and physical locate
+- `AURA Phone` - the later richer user interface for deeper search and workflow support
+- `AURA Studio` - the supporting deterministic browser tool for circuit review and reusable part authoring
+
+The browser studio is important, but it is not the first user-facing proof point. The hardware host remains the front door for V1.

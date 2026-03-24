@@ -12,7 +12,6 @@ import {
 
 import {
   LIBRARY_FAMILIES,
-  getLibraryItem,
   listLibrarySeriesByFamily,
 } from "../data/componentCatalog";
 import { useEditorStore } from "../store/useEditorStore";
@@ -37,24 +36,14 @@ function downloadManifest() {
   URL.revokeObjectURL(url);
 }
 
-export function Sidebar({ modeSwitch, workspaceMode = "editor" }: { modeSwitch?: ReactNode; workspaceMode?: "creator" | "editor" }) {
+export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
   const asideRef = useRef<HTMLElement>(null);
   const clearAll = useEditorStore((state) => state.clearAll);
   const components = useEditorStore((state) => state.components);
   const connections = useEditorStore((state) => state.connections);
-  const componentDrafts = useEditorStore((state) => state.componentDrafts);
-  const pendingLibraryItemId = useEditorStore((state) => state.pendingLibraryItemId);
-  const pendingDraftId = useEditorStore((state) => state.pendingDraftId);
   const setPendingLibraryItem = useEditorStore((state) => state.setPendingLibraryItem);
-  const setPendingDraft = useEditorStore((state) => state.setPendingDraft);
-  const deleteDraft = useEditorStore((state) => state.deleteDraft);
   const selectComponent = useEditorStore((state) => state.selectComponent);
   const [expandedSeries, setExpandedSeries] = useState<Record<string, boolean>>({});
-  const [expandedFamilies, setExpandedFamilies] = useState<Record<string, boolean>>({});
-  const [creatorPanels, setCreatorPanels] = useState({
-    drafts: true,
-    filters: true,
-  });
   const [searchValue, setSearchValue] = useState("");
   const [expandableOnly, setExpandableOnly] = useState(false);
   const [hoveredDescription, setHoveredDescription] = useState<{
@@ -93,27 +82,8 @@ export function Sidebar({ modeSwitch, workspaceMode = "editor" }: { modeSwitch?:
     }));
   };
 
-  const toggleFamily = (familyId: string) => {
-    setExpandedFamilies((current) => ({
-      ...current,
-      [familyId]: !current[familyId],
-    }));
-  };
-
-  const toggleCreatorPanel = (panel: "drafts" | "filters") => {
-    setCreatorPanels((current) => ({
-      ...current,
-      [panel]: !current[panel],
-    }));
-  };
-
   const armLibraryItem = (libraryItemId: string) => {
     setPendingLibraryItem(libraryItemId);
-    selectComponent(null);
-  };
-
-  const armDraft = (draftId: string) => {
-    setPendingDraft(draftId);
     selectComponent(null);
   };
 
@@ -175,236 +145,94 @@ export function Sidebar({ modeSwitch, workspaceMode = "editor" }: { modeSwitch?:
     (count, entry) => count + entry.seriesList.length,
     0,
   );
-  const pendingSourceLabel = pendingDraftId
-    ? componentDrafts.find((draft) => draft.id === pendingDraftId)?.title ?? "Draft"
-    : pendingLibraryItemId
-      ? getLibraryItem(pendingLibraryItemId).title
-      : null;
-
   return (
     <aside ref={asideRef} className="studio-rail studio-rail-left">
       <div className="studio-rail-header border-b border-white px-3 py-3">
         <div className="studio-rail-head-inner">
           <div className="min-w-0">
-            <p className="editor-eyebrow">{workspaceMode === "creator" ? "Creator Workspace" : "Editor Workspace"}</p>
+            <p className="editor-eyebrow">Circuit Studio</p>
             <h1 className="mt-1.5 font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] leading-none text-white">
-              {workspaceMode === "creator" ? "Component Source" : "Circuit Library"}
+              Circuit Library
             </h1>
           </div>
           {modeSwitch ? <div className="mt-2">{modeSwitch}</div> : null}
         </div>
       </div>
 
-      {workspaceMode === "editor" ? (
-        <div className="border-b border-white px-3 py-2">
-          <div className="studio-rail-body-inner">
-            <div className="grid grid-cols-2 gap-1.5">
-              <div className="rounded-lg border border-white bg-black px-2 py-1.5">
-                <div className="editor-eyebrow">Placed</div>
-                <div className="mt-1 font-mono text-[15px] leading-none text-aura-ink">
-                  {components.length}
-                </div>
-              </div>
-              <div className="rounded-lg border border-white bg-black px-2 py-1.5">
-                <div className="editor-eyebrow">Nets</div>
-                <div className="mt-1 font-mono text-[15px] leading-none text-aura-ink">
-                  {connections.length}
-                </div>
+      <div className="border-b border-white px-3 py-2">
+        <div className="studio-rail-body-inner">
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="rounded-lg border border-white bg-black px-2 py-1.5">
+              <div className="editor-eyebrow">Placed</div>
+              <div className="mt-1 font-mono text-[15px] leading-none text-aura-ink">
+                {components.length}
               </div>
             </div>
-
-            <div className="mt-1.5 grid grid-cols-2 gap-1.5">
-              <button
-                onClick={downloadManifest}
-                className="editor-action-button !px-2 !py-1.5 !text-[11px]"
-                title="Export Manifest"
-              >
-                <Download className="h-3.5 w-3.5" /> Export
-              </button>
-              <button
-                onClick={clearAll}
-                className="editor-action-button border-red-400/50 text-red-400 hover:bg-red-400 hover:text-black !px-2 !py-1.5 !text-[11px]"
-                title="Clear All"
-              >
-                <Trash2 className="h-3.5 w-3.5" /> Clear
-              </button>
+            <div className="rounded-lg border border-white bg-black px-2 py-1.5">
+              <div className="editor-eyebrow">Nets</div>
+              <div className="mt-1 font-mono text-[15px] leading-none text-aura-ink">
+                {connections.length}
+              </div>
             </div>
           </div>
+          <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+            <button
+              onClick={downloadManifest}
+              className="editor-action-button !px-2 !py-1.5 !text-[11px]"
+              title="Export Manifest"
+            >
+              <Download className="h-3.5 w-3.5" /> Export
+            </button>
+            <button
+              onClick={clearAll}
+              className="editor-action-button border-red-400/50 text-red-400 hover:bg-red-400 hover:text-black !px-2 !py-1.5 !text-[11px]"
+              title="Clear All"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Clear
+            </button>
+          </div>
         </div>
-      ) : null}
+      </div>
 
       <div className="border-b border-white px-3 py-2">
         <div className="studio-rail-body-inner space-y-1.5">
-          {workspaceMode === "creator" ? (
-            <>
-              <div className="rounded-lg border border-white/20 bg-black/60 px-2.5 py-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="editor-eyebrow">Placement</span>
-                  <span className="studio-pill">{pendingSourceLabel ? "armed" : "idle"}</span>
-                </div>
-                <div className="mt-1.5 text-[10px] leading-4 text-aura-muted">
-                  {pendingSourceLabel
-                    ? `${pendingSourceLabel} is armed. Place it on the shared stage.`
-                    : "Choose a real component or draft, then place it manually on the stage."}
-                </div>
-              </div>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-aura-muted" />
+            <input
+              type="text"
+              value={searchValue}
+              onChange={(event) => setSearchValue(event.target.value)}
+              placeholder="Search components"
+              className="editor-input !py-1.5 !pl-8 !pr-8 !text-[11px]"
+            />
+            {searchValue ? (
+              <button
+                type="button"
+                onClick={() => setSearchValue("")}
+                className="absolute right-2 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md border border-white/15 bg-black text-aura-muted transition hover:border-white hover:text-white"
+                title="Clear search"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            ) : null}
+          </div>
 
-              <div className="rounded-lg border border-white/20 bg-black/60">
-                <button
-                  type="button"
-                  onClick={() => toggleCreatorPanel("drafts")}
-                  className="flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left"
-                >
-                  <span className="studio-panel-title">Drafts</span>
-                  <div className="flex items-center gap-2">
-                    <span className="studio-pill">{componentDrafts.length}</span>
-                    <span className="studio-panel-toggle">
-                      {creatorPanels.drafts ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                    </span>
-                  </div>
-                </button>
-                {creatorPanels.drafts ? (
-                  componentDrafts.length > 0 ? (
-                    <div className="border-t border-white/10 px-2.5 py-2">
-                      <div className="max-h-[7rem] space-y-1.5 overflow-y-auto pr-1">
-                        {componentDrafts.map((draft) => (
-                          <div
-                            key={draft.id}
-                            className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${
-                              pendingDraftId === draft.id
-                                ? "border-white bg-white text-black"
-                                : "border-white/20 bg-black text-white"
-                            }`}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => armDraft(draft.id)}
-                              className="min-w-0 flex-1 text-left"
-                            >
-                              <div className="truncate font-mono text-[10px] uppercase tracking-[0.12em]">
-                                {draft.title}
-                              </div>
-                              <div className="mt-0.5 text-[9px] uppercase tracking-[0.12em] opacity-70">
-                                {draft.libraryItemId}
-                              </div>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => deleteDraft(draft.id)}
-                              className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-current"
-                              title="Delete draft"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="border-t border-white/10 px-2.5 py-2">
-                      <div className="studio-muted-note">
-                        Save edited components from the right inspector and they will appear here.
-                      </div>
-                    </div>
-                  )
-                ) : null}
-              </div>
-
-              <div className="rounded-lg border border-white/20 bg-black/60">
-                <button
-                  type="button"
-                  onClick={() => toggleCreatorPanel("filters")}
-                  className="flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left"
-                >
-                  <span className="studio-panel-title">Catalog Tools</span>
-                  <span className="studio-panel-toggle">
-                    {creatorPanels.filters ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                  </span>
-                </button>
-                {creatorPanels.filters ? (
-                  <div className="space-y-1.5 border-t border-white/10 px-2.5 py-2">
-                    <div className="relative">
-                      <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-aura-muted" />
-                      <input
-                        type="text"
-                        value={searchValue}
-                        onChange={(event) => setSearchValue(event.target.value)}
-                        placeholder="Search components"
-                        className="editor-input !py-1.5 !pl-8 !pr-8 !text-[11px]"
-                      />
-                      {searchValue ? (
-                        <button
-                          type="button"
-                          onClick={() => setSearchValue("")}
-                          className="absolute right-2 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md border border-white/15 bg-black text-aura-muted transition hover:border-white hover:text-white"
-                          title="Clear search"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      ) : null}
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setExpandableOnly((value) => !value)}
-                        className={`inline-flex h-6 items-center justify-center rounded-full border px-2.5 font-mono text-[9px] uppercase tracking-[0.14em] transition ${
-                          expandableOnly
-                            ? "border-white bg-white text-black"
-                            : "border-white/35 bg-black text-aura-muted hover:border-white hover:text-white"
-                        }`}
-                      >
-                        Expandable
-                      </button>
-                      <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-aura-muted">
-                        {visibleSeriesCount} series
-                      </span>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-aura-muted" />
-                <input
-                  type="text"
-                  value={searchValue}
-                  onChange={(event) => setSearchValue(event.target.value)}
-                  placeholder="Search components"
-                  className="editor-input !py-1.5 !pl-8 !pr-8 !text-[11px]"
-                />
-                {searchValue ? (
-                  <button
-                    type="button"
-                    onClick={() => setSearchValue("")}
-                    className="absolute right-2 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md border border-white/15 bg-black text-aura-muted transition hover:border-white hover:text-white"
-                    title="Clear search"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                ) : null}
-              </div>
-
-              <div className="flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => setExpandableOnly((value) => !value)}
-                  className={`inline-flex h-6 items-center justify-center rounded-full border px-2.5 font-mono text-[9px] uppercase tracking-[0.14em] transition ${
-                    expandableOnly
-                      ? "border-white bg-white text-black"
-                      : "border-white/35 bg-black text-aura-muted hover:border-white hover:text-white"
-                  }`}
-                >
-                  Expandable
-                </button>
-                <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-aura-muted">
-                  {visibleSeriesCount} series
-                </span>
-              </div>
-            </>
-          )}
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => setExpandableOnly((value) => !value)}
+              className={`inline-flex h-6 items-center justify-center rounded-full border px-2.5 font-mono text-[9px] uppercase tracking-[0.14em] transition ${
+                expandableOnly
+                  ? "border-white bg-white text-black"
+                  : "border-white/35 bg-black text-aura-muted hover:border-white hover:text-white"
+              }`}
+            >
+              Expandable
+            </button>
+            <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-aura-muted">
+              {visibleSeriesCount} series
+            </span>
+          </div>
         </div>
       </div>
 
@@ -429,33 +257,12 @@ export function Sidebar({ modeSwitch, workspaceMode = "editor" }: { modeSwitch?:
               key={family.id}
               className="overflow-hidden rounded-xl border border-white/40 bg-[#0a0a0a] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
             >
-              {workspaceMode === "creator" ? (
-                <button
-                  type="button"
-                  onClick={() => toggleFamily(family.id)}
-                  className="flex w-full items-start justify-between gap-3 border-b border-white/15 bg-white/[0.04] px-3 py-2 text-left"
-                >
-                  <p className="editor-eyebrow">{family.label}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="studio-pill">{seriesList.length}</span>
-                    <span className="studio-panel-toggle">
-                      {(searchQuery.length > 0 || expandedFamilies[family.id]) ? (
-                        <ChevronDown className="h-3 w-3" />
-                      ) : (
-                        <ChevronRight className="h-3 w-3" />
-                      )}
-                    </span>
-                  </div>
-                </button>
-              ) : (
-                <div className="flex items-start justify-between gap-3 border-b border-white/15 bg-white/[0.04] px-3 py-2">
-                  <p className="editor-eyebrow">{family.label}</p>
-                  <span className="studio-pill">{seriesList.length}</span>
-                </div>
-              )}
+              <div className="flex items-start justify-between gap-3 border-b border-white/15 bg-white/[0.04] px-3 py-2">
+                <p className="editor-eyebrow">{family.label}</p>
+                <span className="studio-pill">{seriesList.length}</span>
+              </div>
 
-              {(workspaceMode !== "creator" || searchQuery.length > 0 || expandedFamilies[family.id]) ? (
-                <div className="space-y-1.5 px-2 py-2">
+              <div className="space-y-1.5 px-2 py-2">
                   {seriesList.map((series) => {
                   const isExpandableGroup = series.items.length > 1;
                   const isExpanded =
@@ -578,7 +385,6 @@ export function Sidebar({ modeSwitch, workspaceMode = "editor" }: { modeSwitch?:
                   );
                   })}
                 </div>
-              ) : null}
             </section>
           ))}
         </div>

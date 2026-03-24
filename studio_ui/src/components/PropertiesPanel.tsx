@@ -1,5 +1,4 @@
-import { Box, FileJson, Package2, RotateCcw, RotateCw, Save, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Box, FileJson, Package2, RotateCcw, RotateCw, Trash2 } from "lucide-react";
 
 import {
   getLibraryItem,
@@ -35,9 +34,8 @@ function getEndpointDetails(
   };
 }
 
-export function PropertiesPanel({ workspaceMode = "editor" }: { workspaceMode?: "creator" | "editor" }) {
+export function PropertiesPanel() {
   const components = useEditorStore((state) => state.components);
-  const componentDrafts = useEditorStore((state) => state.componentDrafts);
   const junctions = useEditorStore((state) => state.junctions);
   const connections = useEditorStore((state) => state.connections);
   const selectedComponentId = useEditorStore((state) => state.selectedComponentId);
@@ -51,7 +49,6 @@ export function PropertiesPanel({ workspaceMode = "editor" }: { workspaceMode?: 
   const removeComponent = useEditorStore((state) => state.removeComponent);
   const removeJunction = useEditorStore((state) => state.removeJunction);
   const removeConnection = useEditorStore((state) => state.removeConnection);
-  const saveDraftFromComponent = useEditorStore((state) => state.saveDraftFromComponent);
   const clearConnectionRoutePoints = useEditorStore((state) => state.clearConnectionRoutePoints);
   const alternateDisplayUnit = getAlternateDisplayUnit(displayUnit);
 
@@ -63,8 +60,6 @@ export function PropertiesPanel({ workspaceMode = "editor" }: { workspaceMode?: 
   const selectedConnection = selectedConnectionId
     ? connections.find((connection) => connection.id === selectedConnectionId) ?? null
     : null;
-  const [draftTitles, setDraftTitles] = useState<Record<string, string>>({});
-
   if (!selectedComponent) {
     if (selectedConnection) {
       const fromDetails = getEndpointDetails(selectedConnection.from, components);
@@ -224,39 +219,6 @@ export function PropertiesPanel({ workspaceMode = "editor" }: { workspaceMode?: 
       );
     }
 
-    if (workspaceMode === "creator") {
-      return (
-        <aside className="studio-rail">
-          <div className="studio-rail-header border-b border-white px-3 py-3">
-            <div className="studio-rail-head-inner flex items-start justify-between gap-3">
-              <div>
-                <p className="editor-eyebrow">Inspector</p>
-                <h2 className="mt-1.5 font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-white">
-                  Component Editing
-                </h2>
-              </div>
-              <UnitToggle displayUnit={displayUnit} onChange={setDisplayUnit} />
-            </div>
-          </div>
-
-          <div className="studio-rail-scroll px-3 py-3">
-            <div className="studio-rail-body-inner space-y-3">
-              <div className="studio-section-card">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <p className="editor-eyebrow">Creator Mode</p>
-                  <span className="studio-pill">{components.length} placed</span>
-                </div>
-
-                <div className="rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[10px] leading-4 text-aura-muted">
-                  Creator mode uses the same real library and same stage as editor mode. Place a component manually, then edit its package, spacing, and draft state here.
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
-      );
-    }
-
     const manifest = buildCircuitManifest({ components, junctions, connections });
 
     return (
@@ -311,14 +273,6 @@ export function PropertiesPanel({ workspaceMode = "editor" }: { workspaceMode?: 
   }
 
   const libraryItem = getLibraryItem(selectedComponent.libraryItemId);
-  const linkedDraft =
-    selectedComponent.sourceDraftId != null
-      ? componentDrafts.find((draft) => draft.id === selectedComponent.sourceDraftId) ?? null
-      : null;
-  const draftTitle =
-    draftTitles[selectedComponent.id] ??
-    linkedDraft?.title ??
-    `${libraryItem.title} Draft`;
   const resolvedPackage = resolvePackageByItemId(
     selectedComponent.libraryItemId,
     selectedComponent.packageState,
@@ -342,7 +296,7 @@ export function PropertiesPanel({ workspaceMode = "editor" }: { workspaceMode?: 
       <div className="studio-rail-header border-b border-white px-3 py-3">
         <div className="studio-rail-head-inner">
           <div className="flex items-start justify-between gap-3">
-            <p className="editor-eyebrow">{workspaceMode === "creator" ? "Component Editor" : "Inspector"}</p>
+            <p className="editor-eyebrow">Inspector</p>
             <UnitToggle displayUnit={displayUnit} onChange={setDisplayUnit} />
           </div>
           <div className="mt-1.5 rounded-xl border border-white bg-black p-2.5">
@@ -371,9 +325,9 @@ export function PropertiesPanel({ workspaceMode = "editor" }: { workspaceMode?: 
           <div className="studio-section-card">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <p className="editor-eyebrow">{workspaceMode === "creator" ? "Physical Edit" : "Placement"}</p>
+                <p className="editor-eyebrow">Placement</p>
               </div>
-              <span className="studio-pill">{workspaceMode === "creator" ? `${resolvedPackage.pins.length} pins` : `${connectionCount} nets`}</span>
+              <span className="studio-pill">{connectionCount} nets</span>
             </div>
 
             <label className="editor-label">Reference</label>
@@ -616,47 +570,6 @@ export function PropertiesPanel({ workspaceMode = "editor" }: { workspaceMode?: 
               ))}
             </div>
           </div>
-
-          {workspaceMode === "creator" ? (
-            <div className="studio-section-card">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <p className="editor-eyebrow">Draft Library</p>
-                <span className="studio-pill">{linkedDraft ? "linked" : "new"}</span>
-              </div>
-
-              <label className="editor-label">Draft Name</label>
-              <input
-                type="text"
-                value={draftTitle}
-                onChange={(event) =>
-                  setDraftTitles((current) => ({
-                    ...current,
-                    [selectedComponent.id]: event.target.value,
-                  }))
-                }
-                className="editor-input"
-              />
-
-              <div className="mt-3 rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[10px] leading-4 text-aura-muted">
-                Drafts keep edited package size, spacing, and rotation separate from the built-in library. Promotion to the main library still needs the future generic component-template system.
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  saveDraftFromComponent(
-                    selectedComponent.id,
-                    draftTitle,
-                    linkedDraft?.id,
-                  )
-                }
-                className="editor-action-button mt-3"
-              >
-                <Save className="h-4 w-4" />
-                {linkedDraft ? "Update Draft" : "Save As Draft"}
-              </button>
-            </div>
-          ) : null}
 
           <button
             type="button"
