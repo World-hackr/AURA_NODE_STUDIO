@@ -1558,7 +1558,7 @@ function RenderComponent({
   );
 }
 
-export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator" | "editor" }) {
+export function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const initializedViewportRef = useRef(false);
   const dragRef = useRef<DragState | null>(null);
@@ -1634,8 +1634,6 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
     y: 0,
     zoom: 1,
   });
-  const creatorMode = workspaceMode === "creator";
-
   const stopCanvasGesturePropagation = (
     event:
       | React.MouseEvent<HTMLElement>
@@ -1644,16 +1642,6 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
   ) => {
     event.stopPropagation();
   };
-
-  useEffect(() => {
-    if (!creatorMode) {
-      return;
-    }
-
-    cancelWire();
-    selectConnection(null);
-    selectJunction(null);
-  }, [cancelWire, creatorMode, selectConnection, selectJunction]);
 
   useEffect(() => {
     if (!containerRef.current) {
@@ -1755,7 +1743,7 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
         if (pendingDraftId) {
           setPendingDraft(null);
         }
-        if (!creatorMode && activeWire) {
+        if (activeWire) {
           cancelWire();
           setCursor(textureEditMode ? "move" : "default");
         }
@@ -1763,13 +1751,13 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
       }
 
       if ((event.key === "Delete" || event.key === "Backspace") && !activeWire) {
-        if (!creatorMode && selectedConnectionId) {
+        if (selectedConnectionId) {
           event.preventDefault();
           removeConnection(selectedConnectionId);
           return;
         }
 
-        if (!creatorMode && selectedJunctionId) {
+        if (selectedJunctionId) {
           event.preventDefault();
           removeJunction(selectedJunctionId);
           return;
@@ -1793,8 +1781,6 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
   }, [
     activeWire,
     cancelWire,
-    componentDrafts,
-    creatorMode,
     pendingDraftId,
     pendingLibraryItemId,
     removeComponent,
@@ -2048,14 +2034,14 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
         setCursor(textureEditMode ? "move" : "default");
         return;
       }
-      if (!creatorMode && activeWire) {
+      if (activeWire) {
         cancelWire();
         setCursor(textureEditMode ? "move" : "default");
       }
       return;
     }
 
-    if (!creatorMode && activeWire && event.button === 0 && containerRef.current) {
+    if (activeWire && event.button === 0 && containerRef.current) {
       event.preventDefault();
       const routePointUm = activeWireSnapPoint
         ? {
@@ -2118,7 +2104,7 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
       return;
     }
 
-    if (!creatorMode && junctionEditMode && event.button === 0 && containerRef.current) {
+    if (junctionEditMode && event.button === 0 && containerRef.current) {
       event.preventDefault();
       const pointer = pointerToCanvasUnits(
         event,
@@ -2320,12 +2306,6 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
     event.preventDefault();
     event.stopPropagation();
 
-    if (creatorMode) {
-      selectComponent(componentId);
-      setCursor(textureEditMode ? "move" : "default");
-      return;
-    }
-
     if (activeWire) {
       completeWire({ kind: "pin", componentId, pinId });
       setCursor(
@@ -2352,10 +2332,6 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
 
     event.preventDefault();
     event.stopPropagation();
-
-    if (creatorMode) {
-      return;
-    }
 
     if (junctionEditMode) {
       const junction = junctions.find((entry) => entry.id === junctionId);
@@ -2588,13 +2564,6 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
       : textureEditMode
         ? "ALIGN"
         : "GRID";
-  const creatorStatusLabel = pendingDraftId || pendingLibraryItemId
-    ? "PLACE"
-    : textureEditMode
-      ? "ALIGN"
-      : selectedComponentId
-        ? "EDIT"
-        : "GRID";
   const resetFrame = () => {
     if (!containerRef.current) {
       setViewport({ x: 0, y: 0, zoom: 1 });
@@ -2663,19 +2632,15 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
             >
               <RotateCw className="h-4 w-4" />
             </button>
-            {!creatorMode ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setJunctionEditMode((value) => !value)}
-                  className={`canvas-text-button ${junctionEditMode ? "canvas-control-active" : ""}`}
-                  title="Place and move explicit junctions"
-                >
-                  Junction
-                </button>
-                <div className="canvas-sep" />
-              </>
-            ) : null}
+            <button
+              type="button"
+              onClick={() => setJunctionEditMode((value) => !value)}
+              className={`canvas-text-button ${junctionEditMode ? "canvas-control-active" : ""}`}
+              title="Place and move explicit junctions"
+            >
+              Junction
+            </button>
+            <div className="canvas-sep" />
             <button
               type="button"
               onClick={() => setTextureEditMode((value) => !value)}
@@ -2716,7 +2681,7 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
 
         <div className={`canvas-status ${textureEditMode ? "canvas-status-editing" : ""}`}>
           <span className="canvas-status-dot" />
-          <span>{creatorMode ? creatorStatusLabel : statusLabel}</span>
+          <span>{statusLabel}</span>
           <span>{pointerLabel}</span>
         </div>
       </div>
@@ -2727,19 +2692,17 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
             ? "Move over the stage, then click and drag to place the pending draft. Drafts reuse the same real package geometry as built-in components."
             : pendingLibraryItemId
             ? "Move over the stage, then click and drag to place the pending part. Dashed guides and light snap appear near aligned pins, edges, and centers."
-            : !creatorMode && activeWire
+            : activeWire
             ? "Click a pin or junction to finish the net. Click empty canvas to add free-angle route points. Locked endpoints glow, and nearby pins or edges get light snap."
-            : !creatorMode && junctionEditMode
+            : junctionEditMode
               ? "Click empty canvas to place a junction. Drag a junction to move it."
-            : !creatorMode && selectedConnection
+            : selectedConnection
               ? "Selected net. Drag white bend handles freely to shape it. Nearby package pins and edges get stronger snap and dashed guides. Double-click the wire to add an aligned bend, double-click a bend to remove it."
-            : !creatorMode && selectedJunction
+            : selectedJunction
               ? "Selected junction. Use Delete to remove it, or enable Junction mode to move it."
             : textureEditMode
               ? "Drag and zoom to align the background texture."
-              : creatorMode
-                ? "Drag empty space to pan. Place real components from the library, then edit body size, package structure, spacing, and rotation on the same stage."
-                : "Drag empty space to pan. Drag bodies to move with alignment guides. Click pins or junctions to wire. Click a net to inspect it. Press R to rotate selected parts."}
+              : "Drag empty space to pan. Drag bodies to move with alignment guides. Click pins or junctions to wire. Click a net to inspect it. Press R to rotate selected parts."}
         </div>
       </div>
 
@@ -2752,7 +2715,7 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
             </h3>
             <p className="mt-3 text-sm leading-6 text-aura-muted">
               Add a DIP body, SMD IC, connector, or support part from the left rail.
-              {creatorMode ? " Resize packages directly on the canvas, then refine the component in the right inspector." : " Resize packages directly on the canvas, then wire pin to pin."}
+              {" "}Resize packages directly on the canvas, then wire pin to pin.
             </p>
           </div>
         </div>
@@ -2851,7 +2814,7 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
             </>
           ) : null}
 
-          {!creatorMode ? connections.map((connection) => {
+          {connections.map((connection) => {
             const start = getEndpointPoint(connection.from, components, junctions);
             const end = getEndpointPoint(connection.to, components, junctions);
             if (!start || !end) {
@@ -2952,9 +2915,9 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
                 ))}
               </g>
             );
-          }) : null}
+          })}
 
-          {!creatorMode ? junctionPoints.map((point, index) => (
+          {junctionPoints.map((point, index) => (
             <circle
               key={`junction_${index}`}
               cx={point.xPx}
@@ -2965,9 +2928,9 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
               strokeWidth={0.9}
               pointerEvents="none"
             />
-          )) : null}
+          ))}
 
-          {!creatorMode ? junctions.map((junction) => {
+          {junctions.map((junction) => {
             const point = getJunctionPoint(junction);
             const selected = junction.id === selectedJunctionId;
 
@@ -2984,9 +2947,9 @@ export function Canvas({ workspaceMode = "editor" }: { workspaceMode?: "creator"
                 onMouseDown={(event) => handleJunctionMouseDown(event, junction.id)}
               />
             );
-          }) : null}
+          })}
 
-          {!creatorMode && activeWire && activeWireStart ? (
+          {activeWire && activeWireStart ? (
             <>
               {activeWireAlignmentGuides.x != null ? (
                 <line

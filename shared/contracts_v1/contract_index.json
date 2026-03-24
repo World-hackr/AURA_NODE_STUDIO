@@ -1,0 +1,25 @@
+{
+  "version": "v1",
+  "contracts": [
+    {
+      "id": "InventoryItem",
+      "path": "./inventory_item.schema.json"
+    },
+    {
+      "id": "StorageLocation",
+      "path": "./storage_location.schema.json"
+    },
+    {
+      "id": "LocateTarget",
+      "path": "./locate_target.schema.json"
+    },
+    {
+      "id": "LocateSession",
+      "path": "./locate_session.schema.json"
+    },
+    {
+      "id": "PartLookupResult",
+      "path": "./part_lookup_result.schema.json"
+    }
+  ]
+}

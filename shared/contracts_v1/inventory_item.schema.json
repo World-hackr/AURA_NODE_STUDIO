@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aura/contracts/v1/inventory_item",
+  "title": "InventoryItem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "part_number",
+    "display_name",
+    "category",
+    "value_label",
+    "package_key",
+    "quantity_on_hand",
+    "storage_location_id",
+    "locate_target_id",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "part_number": {
+      "type": "string",
+      "minLength": 1
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "category": {
+      "type": "string",
+      "minLength": 1
+    },
+    "value_label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "package_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "quantity_on_hand": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "storage_location_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "locate_target_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "empty", "archived"]
+    }
+  }
+}

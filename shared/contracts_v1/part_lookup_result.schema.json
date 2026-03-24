@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aura/contracts/v1/part_lookup_result",
+  "title": "PartLookupResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "query",
+    "match_state",
+    "inventory_item_id",
+    "quantity_on_hand",
+    "storage_location_id",
+    "locate_target_id"
+  ],
+  "properties": {
+    "query": {
+      "type": "string",
+      "minLength": 1
+    },
+    "match_state": {
+      "type": "string",
+      "enum": ["exact", "family_only", "not_found"]
+    },
+    "inventory_item_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "quantity_on_hand": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "storage_location_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "locate_target_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

@@ -6,6 +6,10 @@ The current source-of-truth planning doc for those contracts is:
 
 - `docs/DATA_CONTRACTS_V1.md`
 
+The current machine-readable contract artifacts live in:
+
+- `shared/contracts_v1/`
+
 Examples:
 - inventory item schema
 - storage location schema
@@ -21,4 +25,4 @@ The first frozen V1 contract set is:
 - `LocateSession`
 - `PartLookupResult`
 
-Machine-readable shared contract files can be added here later once the V1 shapes stop moving.
+The first machine-readable schemas now exist under `shared/contracts_v1/`. Add stricter validation or code generation only after host and phone begin consuming these exact shapes directly.

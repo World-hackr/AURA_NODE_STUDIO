@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aura/contracts/v1/locate_session",
+  "title": "LocateSession",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "inventory_item_id",
+    "locate_target_id",
+    "state",
+    "started_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inventory_item_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "locate_target_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "type": "string",
+      "enum": ["idle", "active", "completed", "failed"]
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stopped_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "requested_by": {
+      "type": "string"
+    },
+    "stop_reason": {
+      "type": "string"
+    }
+  }
+}

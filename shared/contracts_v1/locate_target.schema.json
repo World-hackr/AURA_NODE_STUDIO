@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aura/contracts/v1/locate_target",
+  "title": "LocateTarget",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "location_id",
+    "node_id",
+    "channel",
+    "capability",
+    "online"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "location_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "node_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "channel": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "capability": {
+      "type": "string",
+      "minLength": 1
+    },
+    "online": {
+      "type": "boolean"
+    }
+  }
+}
