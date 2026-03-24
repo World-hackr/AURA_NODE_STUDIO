@@ -107,6 +107,17 @@ const PACKAGE_METAL = "#8f8f8f";
 const PACKAGE_METAL_LIGHT = "#b7b7b7";
 const PACKAGE_DETAIL = "#3a3a3a";
 const PACKAGE_SOCKET_FILL = "#2a2a2a";
+const STAGE_GRID_COLOR = "#9c9588";
+const STAGE_AXIS_COLOR = "#7d7669";
+const STAGE_SELECTION_COLOR = "#24211d";
+const STAGE_SELECTION_SOFT = "#6c675d";
+const STAGE_LABEL_COLOR = "#2f2b25";
+const STAGE_WIRE_COLOR = "#65798e";
+const STAGE_WIRE_SELECTED = "#24211d";
+const STAGE_WIRE_GLOW = "#aab4be";
+const STAGE_HANDLE_FILL = "#fffaf2";
+const STAGE_HANDLE_STROKE = "#24211d";
+const STAGE_GUIDE_COLOR = "#82908a";
 
 function snapToGrid(valueUm: number) {
   return Math.round(valueUm / GRID_UM) * GRID_UM;
@@ -1298,7 +1309,7 @@ function renderComponentShape(
                   height={4.6}
                   rx={0.9}
                   fill={PACKAGE_SOCKET_FILL}
-                  stroke="#ffffff"
+                  stroke={STAGE_GUIDE_COLOR}
                   strokeWidth={0.55}
                 />
               ))}
@@ -1472,7 +1483,7 @@ function renderResizeAffordance(
         cx={bounds.right}
         cy={bounds.bottom}
         r={4.5}
-        fill="#ffffff"
+        fill={STAGE_HANDLE_FILL}
       />
     );
   }
@@ -1482,15 +1493,15 @@ function renderResizeAffordance(
       <path
         d={`M ${bounds.right - 12} ${bounds.bottom} L ${bounds.right} ${bounds.bottom} L ${bounds.right} ${bounds.bottom - 12}`}
         fill="none"
-        stroke="#ffffff"
+        stroke={STAGE_SELECTION_COLOR}
         strokeWidth={1.4}
         opacity={selected ? 0.95 : 0.45}
       />
       {selected ? (
         <>
-          {showEastHandle ? <circle cx={bounds.right} cy={bounds.centerY} r={3.5} fill="#ffffff" /> : null}
-          {showSouthHandle ? <circle cx={bounds.centerX} cy={bounds.bottom} r={3.5} fill="#ffffff" /> : null}
-          <circle cx={bounds.right} cy={bounds.bottom} r={4.5} fill="#ffffff" />
+          {showEastHandle ? <circle cx={bounds.right} cy={bounds.centerY} r={3.5} fill={STAGE_HANDLE_FILL} stroke={STAGE_HANDLE_STROKE} strokeWidth={1} /> : null}
+          {showSouthHandle ? <circle cx={bounds.centerX} cy={bounds.bottom} r={3.5} fill={STAGE_HANDLE_FILL} stroke={STAGE_HANDLE_STROKE} strokeWidth={1} /> : null}
+          <circle cx={bounds.right} cy={bounds.bottom} r={4.5} fill={STAGE_HANDLE_FILL} stroke={STAGE_HANDLE_STROKE} strokeWidth={1} />
         </>
       ) : null}
     </>
@@ -1526,7 +1537,7 @@ function RenderComponent({
           height={bounds.height + 20}
           rx={10}
           fill="none"
-          stroke="#ffffff"
+          stroke={STAGE_SELECTION_COLOR}
           strokeWidth={1.1}
           strokeDasharray="5 4"
           opacity={0.85}
@@ -1550,7 +1561,8 @@ function RenderComponent({
         x={bounds.centerX}
         y={bounds.top - 14}
         textAnchor="middle"
-        className="pointer-events-none font-mono text-[11px] fill-[#f1f4f8]"
+        className="pointer-events-none font-mono text-[11px]"
+        fill={STAGE_LABEL_COLOR}
       >
         {component.reference}
       </text>
@@ -2579,7 +2591,7 @@ export function Canvas() {
   return (
     <main
       ref={containerRef}
-      className="relative min-h-0 overflow-hidden rounded-[24px] border border-white bg-[radial-gradient(circle_at_center,#1a1a1a_0%,#0a0a0a_100%)]"
+      className="relative min-h-0 overflow-hidden rounded-[26px] border border-aura-border/40 bg-[radial-gradient(circle_at_top,#fbf7ef_0%,#eee5d7_58%,#e3d9c9_100%)] shadow-[0_22px_55px_rgba(71,59,44,0.14)]"
       onMouseDown={handleBackgroundMouseDown}
       onContextMenu={(event) => event.preventDefault()}
     >
@@ -2708,9 +2720,9 @@ export function Canvas() {
 
       {components.length === 0 && !pendingLibraryItemId && !pendingDraftId ? (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-          <div className="max-w-md rounded-2xl border border-white bg-black px-8 py-8 text-center shadow-[0_24px_90px_rgba(0,0,0,0.55)] backdrop-blur-sm">
+          <div className="max-w-md rounded-[1.6rem] border border-aura-border/35 bg-aura-surface/92 px-8 py-8 text-center shadow-[0_24px_90px_rgba(71,59,44,0.18)] backdrop-blur-sm">
             <p className="editor-eyebrow">Empty Stage</p>
-            <h3 className="mt-2 font-mono text-xl text-white">
+            <h3 className="mt-2 font-mono text-xl text-aura-ink">
               Start with a real package
             </h3>
             <p className="mt-3 text-sm leading-6 text-aura-muted">
@@ -2751,7 +2763,7 @@ export function Canvas() {
             <path
               d={`M ${GRID_PX} 0 L 0 0 0 ${GRID_PX}`}
               fill="none"
-              stroke="#ffffff"
+              stroke={STAGE_GRID_COLOR}
               strokeWidth="0.8"
             />
           </pattern>
@@ -2766,7 +2778,7 @@ export function Canvas() {
             <path
               d={`M ${GRID_PX * 8} 0 L 0 0 0 ${GRID_PX * 8}`}
               fill="none"
-              stroke="#ffffff"
+              stroke={STAGE_GRID_COLOR}
               strokeWidth="1"
             />
           </pattern>
@@ -2798,7 +2810,7 @@ export function Canvas() {
                 y1={-STAGE_HALF_EXTENT_PX}
                 x2={0}
                 y2={STAGE_HALF_EXTENT_PX}
-                stroke="#ffffff"
+                stroke={STAGE_AXIS_COLOR}
                 strokeWidth={1.1}
                 opacity={gridOpacity}
               />
@@ -2807,7 +2819,7 @@ export function Canvas() {
                 y1={0}
                 x2={STAGE_HALF_EXTENT_PX}
                 y2={0}
-                stroke="#ffffff"
+                stroke={STAGE_AXIS_COLOR}
                 strokeWidth={1.1}
                 opacity={gridOpacity}
               />
@@ -2854,7 +2866,7 @@ export function Canvas() {
                     routePointsUmToPx(connection.routePointsUm),
                   )}
                   fill="none"
-                  stroke={selected ? "#ffffff" : "#d7d7d7"}
+                  stroke={selected ? STAGE_WIRE_SELECTED : STAGE_WIRE_COLOR}
                   strokeWidth={selected ? 3.1 : 2.1}
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -2877,7 +2889,7 @@ export function Canvas() {
                       routePointsUmToPx(connection.routePointsUm),
                     )}
                     fill="none"
-                    stroke="#ffffff"
+                    stroke={STAGE_WIRE_GLOW}
                     strokeWidth={8}
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -2891,8 +2903,8 @@ export function Canvas() {
                     cx={bendPoint.point.x}
                     cy={bendPoint.point.y}
                     r={4.8}
-                    fill="#ffffff"
-                    stroke="#111111"
+                    fill={STAGE_HANDLE_FILL}
+                    stroke={STAGE_HANDLE_STROKE}
                     strokeWidth={1.2}
                     className="cursor-move"
                     onMouseDown={(event) =>
@@ -2923,8 +2935,8 @@ export function Canvas() {
               cx={point.xPx}
               cy={point.yPx}
               r={2.4}
-              fill="#ffffff"
-              stroke="#111111"
+              fill={STAGE_HANDLE_FILL}
+              stroke={STAGE_HANDLE_STROKE}
               strokeWidth={0.9}
               pointerEvents="none"
             />
@@ -2940,8 +2952,8 @@ export function Canvas() {
                 cx={point.xPx}
                 cy={point.yPx}
                 r={selected ? 5.8 : 4.8}
-                fill="#ffffff"
-                stroke={selected ? "#ffffff" : "#111111"}
+                fill={selected ? STAGE_SELECTION_COLOR : STAGE_HANDLE_FILL}
+                stroke={selected ? STAGE_SELECTION_SOFT : STAGE_HANDLE_STROKE}
                 strokeWidth={selected ? 1.6 : 1.1}
                 className={junctionEditMode || activeWire ? "cursor-crosshair" : "cursor-pointer"}
                 onMouseDown={(event) => handleJunctionMouseDown(event, junction.id)}
@@ -2957,7 +2969,7 @@ export function Canvas() {
                   y1={-STAGE_HALF_EXTENT_PX}
                   x2={activeWireAlignmentGuides.x}
                   y2={STAGE_HALF_EXTENT_PX}
-                  stroke="#ffffff"
+                  stroke={STAGE_GUIDE_COLOR}
                   strokeWidth={0.9}
                   strokeDasharray="8 6"
                   opacity={0.4}
@@ -2970,7 +2982,7 @@ export function Canvas() {
                   y1={activeWireAlignmentGuides.y}
                   x2={STAGE_HALF_EXTENT_PX}
                   y2={activeWireAlignmentGuides.y}
-                  stroke="#ffffff"
+                  stroke={STAGE_GUIDE_COLOR}
                   strokeWidth={0.9}
                   strokeDasharray="8 6"
                   opacity={0.4}
@@ -2987,7 +2999,7 @@ export function Canvas() {
                   },
                 ])}
                 fill="none"
-                stroke="#ffffff"
+                stroke={STAGE_WIRE_SELECTED}
                 strokeWidth={1.5}
                 strokeDasharray="5 4"
                 opacity={0.86}
@@ -3000,8 +3012,8 @@ export function Canvas() {
                   cx={point.x}
                   cy={point.y}
                   r={4}
-                  fill="#ffffff"
-                  stroke="#111111"
+                  fill={STAGE_HANDLE_FILL}
+                  stroke={STAGE_HANDLE_STROKE}
                   strokeWidth={1}
                   pointerEvents="none"
                 />
@@ -3013,7 +3025,7 @@ export function Canvas() {
                       cx={activeWireSnapPoint.x}
                       cy={activeWireSnapPoint.y}
                       r={10.5}
-                      fill="#ffffff"
+                      fill={STAGE_WIRE_GLOW}
                       opacity={0.12}
                     />
                     <circle
@@ -3021,7 +3033,7 @@ export function Canvas() {
                       cy={activeWireSnapPoint.y}
                       r={8.4}
                       fill="none"
-                      stroke="#ffffff"
+                      stroke={STAGE_GUIDE_COLOR}
                       strokeWidth={1}
                       opacity={0.4}
                     />
@@ -3032,7 +3044,7 @@ export function Canvas() {
                   cy={activeWireSnapPoint?.y ?? wirePointer.yPx}
                   r={activeWireSnapPoint?.kind === "grid" ? 5.2 : 7}
                   fill="none"
-                  stroke="#ffffff"
+                  stroke={STAGE_WIRE_SELECTED}
                   strokeWidth={1.2}
                   opacity={0.92}
                 />
@@ -3040,7 +3052,7 @@ export function Canvas() {
                   cx={activeWireSnapPoint?.x ?? wirePointer.xPx}
                   cy={activeWireSnapPoint?.y ?? wirePointer.yPx}
                   r={2.2}
-                  fill="#ffffff"
+                  fill={STAGE_SELECTION_COLOR}
                   opacity={0.96}
                 />
                 <line
@@ -3048,7 +3060,7 @@ export function Canvas() {
                   y1={activeWireSnapPoint?.y ?? wirePointer.yPx}
                   x2={(activeWireSnapPoint?.x ?? wirePointer.xPx) + 8}
                   y2={activeWireSnapPoint?.y ?? wirePointer.yPx}
-                  stroke="#ffffff"
+                  stroke={STAGE_GUIDE_COLOR}
                   strokeWidth={0.85}
                   opacity={0.55}
                 />
@@ -3057,7 +3069,7 @@ export function Canvas() {
                   y1={(activeWireSnapPoint?.y ?? wirePointer.yPx) - 8}
                   x2={activeWireSnapPoint?.x ?? wirePointer.xPx}
                   y2={(activeWireSnapPoint?.y ?? wirePointer.yPx) + 8}
-                  stroke="#ffffff"
+                  stroke={STAGE_GUIDE_COLOR}
                   strokeWidth={0.85}
                   opacity={0.55}
                 />
@@ -3073,7 +3085,7 @@ export function Canvas() {
                   y1={-STAGE_HALF_EXTENT_PX}
                   x2={placementAlignmentGuides.x}
                   y2={STAGE_HALF_EXTENT_PX}
-                  stroke="#ffffff"
+                  stroke={STAGE_GUIDE_COLOR}
                   strokeWidth={0.9}
                   strokeDasharray="8 6"
                   opacity={0.32}
@@ -3086,7 +3098,7 @@ export function Canvas() {
                   y1={placementAlignmentGuides.y}
                   x2={STAGE_HALF_EXTENT_PX}
                   y2={placementAlignmentGuides.y}
-                  stroke="#ffffff"
+                  stroke={STAGE_GUIDE_COLOR}
                   strokeWidth={0.9}
                   strokeDasharray="8 6"
                   opacity={0.32}
@@ -3104,7 +3116,7 @@ export function Canvas() {
                   y1={-STAGE_HALF_EXTENT_PX}
                   x2={routeDragGuides.x}
                   y2={STAGE_HALF_EXTENT_PX}
-                  stroke="#ffffff"
+                  stroke={STAGE_GUIDE_COLOR}
                   strokeWidth={0.9}
                   strokeDasharray="8 6"
                   opacity={0.38}
@@ -3117,7 +3129,7 @@ export function Canvas() {
                   y1={routeDragGuides.y}
                   x2={STAGE_HALF_EXTENT_PX}
                   y2={routeDragGuides.y}
-                  stroke="#ffffff"
+                  stroke={STAGE_GUIDE_COLOR}
                   strokeWidth={0.9}
                   strokeDasharray="8 6"
                   opacity={0.38}
