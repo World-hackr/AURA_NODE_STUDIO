@@ -8,6 +8,7 @@ Current docs:
 - `WORKSPACE_AUDIT_2026-03-20.md`
 - `NORMAL_USER_PRODUCT_MODEL_2026-03-24.md`
 - `DATA_CONTRACTS_V1.md`
+- `COMPONENT_DEFINITION_V1.md`
 - `node_prototypes/`
 - `ui/`
 - `visual_examples/`

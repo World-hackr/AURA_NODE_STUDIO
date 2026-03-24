@@ -12,6 +12,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 
 import {
   BEHAVIOR_PRESETS,
+  createBehaviorDraftEntry,
   createDefaultBehaviorDraftState,
   getBehaviorPreset,
   getCompatibleBehaviorTargets,
@@ -32,6 +33,8 @@ const STAGE_WIDTH = 700;
 const STAGE_HEIGHT = 460;
 const NO_BASE_ID = "__no_base__";
 const BLANK_BOARD_ID = "__blank_board__";
+const DEFAULT_BLANK_BOARD: BlankBoardState = { widthUm: 18000, heightUm: 42000, cornerUm: 1200 };
+const DEFAULT_CREATOR_OVERLAYS = { pins: false, snaps: false, behavior: false, dimensions: true };
 
 type Point = { x: number; y: number };
 type Rect = { x: number; y: number; width: number; height: number };
@@ -198,6 +201,26 @@ type PreviewShape =
   | { kind: "circle"; cx: number; cy: number; r: number }
   | { kind: "pinGroup"; pins: PreviewPin[]; r: number };
 
+type ComponentDefinitionBase =
+  | { kind: "none" }
+  | { kind: "blank_board"; blankBoard: BlankBoardState; override?: BaseOverride; offset?: Point; pinOverrides?: Record<string, PinOverride> }
+  | { kind: "library_item"; itemId: string; packageState?: ComponentPackageState; override?: BaseOverride; offset?: Point; pinOverrides?: Record<string, PinOverride> };
+
+type ComponentDefinitionV1 = {
+  schema: "aura.component_definition.v1";
+  metadata: {
+    name: string;
+    description?: string;
+    tags?: string[];
+  };
+  base: ComponentDefinitionBase;
+  children: ChildInstance[];
+  shapeLayers: ShapeLayer[];
+  persistentDimensions: PersistentDimension[];
+  behaviorDraft: BehaviorDraftState;
+  compiledBehavior: ReturnType<typeof createBehaviorDraftEntry>;
+};
+
 const TOOL_OPTIONS: { id: ShapeTool; label: string }[] = [
   { id: "select", label: "Select" },
   { id: "rect", label: "Rect" },
@@ -257,6 +280,359 @@ function round(value: number, digits = 1) {
 function formatMm(valueUm: number) {
   return `${(valueUm / 1000).toFixed(2)} mm`;
 }
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value != null && typeof value === "object" && !Array.isArray(value);
+}
+
+function toJsonReady<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function isKnownLibraryItemId(itemId: string) {
+  return LIBRARY_ITEMS.some((item) => item.id === itemId);
+}
+
+function createComponentDefinition(
+  componentName: string,
+  selectedBaseId: string,
+  blankBoard: BlankBoardState,
+  packageState: ComponentPackageState,
+  baseOverride: BaseOverride,
+  baseOffset: Point,
+  selectedPinOverrides: Record<string, PinOverride>,
+  children: ChildInstance[],
+  shapeLayers: ShapeLayer[],
+  persistentDimensions: PersistentDimension[],
+  draft: BehaviorDraftState,
+): ComponentDefinitionV1 {
+  const base: ComponentDefinitionBase =
+    selectedBaseId === NO_BASE_ID
+      ? { kind: "none" }
+      : selectedBaseId === BLANK_BOARD_ID
+        ? {
+            kind: "blank_board",
+            blankBoard: toJsonReady(blankBoard),
+            ...(Object.keys(baseOverride).length > 0 ? { override: toJsonReady(baseOverride) } : {}),
+            ...(baseOffset.x !== 0 || baseOffset.y !== 0 ? { offset: toJsonReady(baseOffset) } : {}),
+            ...(Object.keys(selectedPinOverrides).length > 0 ? { pinOverrides: toJsonReady(selectedPinOverrides) } : {}),
+          }
+        : {
+            kind: "library_item",
+            itemId: selectedBaseId,
+            ...(Object.keys(packageState).length > 0 ? { packageState: toJsonReady(packageState) } : {}),
+            ...(Object.keys(baseOverride).length > 0 ? { override: toJsonReady(baseOverride) } : {}),
+            ...(baseOffset.x !== 0 || baseOffset.y !== 0 ? { offset: toJsonReady(baseOffset) } : {}),
+            ...(Object.keys(selectedPinOverrides).length > 0 ? { pinOverrides: toJsonReady(selectedPinOverrides) } : {}),
+          };
+
+  return {
+    schema: "aura.component_definition.v1",
+    metadata: {
+      name: componentName.trim() || "Custom Component",
+    },
+    base,
+    children: toJsonReady(children),
+    shapeLayers: toJsonReady(shapeLayers),
+    persistentDimensions: toJsonReady(persistentDimensions),
+    behaviorDraft: toJsonReady(draft),
+    compiledBehavior: createBehaviorDraftEntry(draft),
+  };
+}
+
+function parseComponentDefinition(input: string): ComponentDefinitionV1 {
+  const parsed = JSON.parse(input) as unknown;
+  if (!isRecord(parsed) || parsed.schema !== "aura.component_definition.v1") {
+    throw new Error("Expected schema aura.component_definition.v1.");
+  }
+
+  const metadata = isRecord(parsed.metadata) ? parsed.metadata : {};
+  const name = typeof metadata.name === "string" && metadata.name.trim().length > 0 ? metadata.name.trim() : "Custom Component";
+  const description = typeof metadata.description === "string" ? metadata.description : undefined;
+  const tags = Array.isArray(metadata.tags) ? metadata.tags.filter((entry): entry is string => typeof entry === "string") : undefined;
+
+  if (!isRecord(parsed.base) || typeof parsed.base.kind !== "string") {
+    throw new Error("Definition base is missing.");
+  }
+
+  let base: ComponentDefinitionBase;
+  if (parsed.base.kind === "none") {
+    base = { kind: "none" };
+  } else if (parsed.base.kind === "blank_board") {
+    const nextBlank = isRecord(parsed.base.blankBoard) ? parsed.base.blankBoard : {};
+    base = {
+      kind: "blank_board",
+      blankBoard: {
+        widthUm: Math.max(3000, Math.round(Number(nextBlank.widthUm) || DEFAULT_BLANK_BOARD.widthUm)),
+        heightUm: Math.max(3000, Math.round(Number(nextBlank.heightUm) || DEFAULT_BLANK_BOARD.heightUm)),
+        cornerUm: Math.max(0, Math.round(Number(nextBlank.cornerUm) || DEFAULT_BLANK_BOARD.cornerUm)),
+      },
+      ...(isRecord(parsed.base.override) ? { override: parsed.base.override as BaseOverride } : {}),
+      ...(isRecord(parsed.base.offset) ? { offset: { x: Number(parsed.base.offset.x) || 0, y: Number(parsed.base.offset.y) || 0 } } : {}),
+      ...(isRecord(parsed.base.pinOverrides) ? { pinOverrides: parsed.base.pinOverrides as Record<string, PinOverride> } : {}),
+    };
+  } else if (parsed.base.kind === "library_item") {
+    const itemId = typeof parsed.base.itemId === "string" ? parsed.base.itemId : "";
+    if (!isKnownLibraryItemId(itemId)) {
+      throw new Error(`Unknown base item: ${itemId || "missing itemId"}`);
+    }
+    base = {
+      kind: "library_item",
+      itemId,
+      ...(isRecord(parsed.base.packageState) ? { packageState: parsed.base.packageState as ComponentPackageState } : {}),
+      ...(isRecord(parsed.base.override) ? { override: parsed.base.override as BaseOverride } : {}),
+      ...(isRecord(parsed.base.offset) ? { offset: { x: Number(parsed.base.offset.x) || 0, y: Number(parsed.base.offset.y) || 0 } } : {}),
+      ...(isRecord(parsed.base.pinOverrides) ? { pinOverrides: parsed.base.pinOverrides as Record<string, PinOverride> } : {}),
+    };
+  } else {
+    throw new Error(`Unsupported base kind: ${String(parsed.base.kind)}`);
+  }
+
+  const children = Array.isArray(parsed.children)
+    ? parsed.children.map((entry, index) => {
+        if (!isRecord(entry)) {
+          throw new Error(`Child ${index + 1} is invalid.`);
+        }
+        const itemId = typeof entry.itemId === "string" ? entry.itemId : "";
+        if (!isKnownLibraryItemId(itemId)) {
+          throw new Error(`Unknown child item: ${itemId || `child ${index + 1}`}`);
+        }
+        const anchor = isRecord(entry.anchor)
+          ? { x: Number(entry.anchor.x) || 0, y: Number(entry.anchor.y) || 0 }
+          : { x: 0, y: 0 };
+        return {
+          id: typeof entry.id === "string" && entry.id.trim().length > 0 ? entry.id : `child_${index + 1}`,
+          itemId,
+          title: typeof entry.title === "string" && entry.title.trim().length > 0 ? entry.title : getLibraryItem(itemId).title,
+          anchor,
+          packageState: isRecord(entry.packageState) ? (entry.packageState as ComponentPackageState) : {},
+          ...(isRecord(entry.override) ? { override: entry.override as BaseOverride } : {}),
+          ...(isRecord(entry.pinOverrides) ? { pinOverrides: entry.pinOverrides as Record<string, PinOverride> } : {}),
+          ...(Array.isArray(entry.customLayers) ? { customLayers: entry.customLayers as ShapeLayer[] } : {}),
+        } satisfies ChildInstance;
+      })
+    : [];
+
+  const shapeLayers = Array.isArray(parsed.shapeLayers) ? (parsed.shapeLayers as ShapeLayer[]) : [];
+  const shapeIds = new Set(shapeLayers.map((shape) => shape.id));
+  const persistentDimensions = Array.isArray(parsed.persistentDimensions)
+    ? (parsed.persistentDimensions as PersistentDimension[]).filter((dimension) => shapeIds.has(dimension.shapeId))
+    : [];
+  const behaviorDraft = isRecord(parsed.behaviorDraft)
+    ? ({ ...createDefaultBehaviorDraftState(), ...(parsed.behaviorDraft as Partial<BehaviorDraftState>) })
+    : createDefaultBehaviorDraftState();
+
+  return {
+    schema: "aura.component_definition.v1",
+    metadata: {
+      name,
+      ...(description ? { description } : {}),
+      ...(tags && tags.length > 0 ? { tags } : {}),
+    },
+    base,
+    children,
+    shapeLayers,
+    persistentDimensions,
+    behaviorDraft,
+    compiledBehavior: createBehaviorDraftEntry(behaviorDraft),
+  };
+}
+
+const EXAMPLE_COMPONENT_DEFINITIONS: Array<{
+  id: string;
+  label: string;
+  description: string;
+  definition: ComponentDefinitionV1;
+}> = [
+  {
+    id: "led_indicator",
+    label: "LED Indicator",
+    description: "Shows a simple package-backed indicator with a readable behavior draft.",
+    definition: {
+      schema: "aura.component_definition.v1",
+      metadata: {
+        name: "Example LED Indicator",
+        description: "Simple readable component definition with package-backed geometry and one lighting behavior.",
+        tags: ["example", "indicator", "light"],
+      },
+      base: {
+        kind: "library_item",
+        itemId: "led_5mm",
+        override: { fill: "#f1f1f1", stroke: "#111111" },
+      },
+      children: [],
+      shapeLayers: [
+        {
+          id: "mark_polarity",
+          name: "Polarity Mark",
+          kind: "text",
+          x: 307,
+          y: 140,
+          width: 40,
+          height: 22,
+          text: "+",
+          fill: "#111111",
+          fontSize: 18,
+        },
+        {
+          id: "lens_ring",
+          name: "Lens Ring",
+          kind: "ellipse",
+          x: 292,
+          y: 166,
+          width: 116,
+          height: 116,
+          fill: "#ffffff",
+          stroke: "#111111",
+          strokeWidth: 2,
+        },
+      ],
+      persistentDimensions: [],
+      behaviorDraft: {
+        ...createDefaultBehaviorDraftState(),
+        presetId: "light_emitter",
+        targetId: "indicator_primary",
+        property: "brightness",
+        baseColor: "#ffffff",
+        opacityMin: 0.14,
+        opacityMax: 0.92,
+        glowEnabled: true,
+        glowRadius: 26,
+        glowBlur: 16,
+      },
+      compiledBehavior: createBehaviorDraftEntry({
+        ...createDefaultBehaviorDraftState(),
+        presetId: "light_emitter",
+        targetId: "indicator_primary",
+        property: "brightness",
+        baseColor: "#ffffff",
+        opacityMin: 0.14,
+        opacityMax: 0.92,
+        glowEnabled: true,
+        glowRadius: 26,
+        glowBlur: 16,
+      }),
+    },
+  },
+  {
+    id: "dev_board",
+    label: "Dev Board",
+    description: "Shows a board-style definition made from a blank base, child parts, and simple 2D detail layers.",
+    definition: {
+      schema: "aura.component_definition.v1",
+      metadata: {
+        name: "Example Dev Board",
+        description: "Board-style aggregate example with headers, MCU package, LED, button, and printed 2D detail.",
+        tags: ["example", "board", "module"],
+      },
+      base: {
+        kind: "blank_board",
+        blankBoard: { widthUm: 18000, heightUm: 44000, cornerUm: 1400 },
+        override: { form: "rect", fill: "#ececec", stroke: "#111111" },
+      },
+      children: [
+        {
+          id: "child_left_header",
+          itemId: "header_strip",
+          title: "Male Header",
+          anchor: { x: 206, y: 108 },
+          packageState: { pinCount: 15 },
+        },
+        {
+          id: "child_right_header",
+          itemId: "header_strip",
+          title: "Male Header",
+          anchor: { x: 482, y: 108 },
+          packageState: { pinCount: 15 },
+        },
+        {
+          id: "child_mcu",
+          itemId: "soic_ic",
+          title: "SOIC IC",
+          anchor: { x: 350, y: 202 },
+          packageState: { pinCount: 16 },
+          override: { fill: "#d8d8d8", stroke: "#111111" },
+        },
+        {
+          id: "child_button",
+          itemId: "button_tact_smd",
+          title: "Tact Switch SMD",
+          anchor: { x: 350, y: 118 },
+          packageState: {},
+        },
+        {
+          id: "child_led",
+          itemId: "led_0603",
+          title: "LED 0603",
+          anchor: { x: 438, y: 104 },
+          packageState: {},
+        },
+      ],
+      shapeLayers: [
+        {
+          id: "usb_outline",
+          name: "USB Outline",
+          kind: "rect",
+          x: 304,
+          y: 36,
+          width: 92,
+          height: 42,
+          radius: 6,
+          fill: "#ffffff",
+          stroke: "#111111",
+          strokeWidth: 2,
+        },
+        {
+          id: "label_top",
+          name: "Board Label",
+          kind: "text",
+          x: 266,
+          y: 86,
+          width: 168,
+          height: 24,
+          text: "DEV CTRL",
+          fill: "#111111",
+          fontSize: 15,
+        },
+        {
+          id: "silk_split",
+          name: "Section Line",
+          kind: "line",
+          x1: 246,
+          y1: 154,
+          x2: 454,
+          y2: 154,
+          stroke: "#111111",
+          strokeWidth: 2,
+          construction: true,
+        },
+      ],
+      persistentDimensions: [],
+      behaviorDraft: {
+        ...createDefaultBehaviorDraftState(),
+        presetId: "blink_output",
+        targetId: "indicator_primary",
+        property: "status",
+        glowColor: "#ffffff",
+        opacityMin: 0.1,
+        opacityMax: 0.85,
+        blinkPeriodMs: 900,
+        blinkDutyCycle: 42,
+      },
+      compiledBehavior: createBehaviorDraftEntry({
+        ...createDefaultBehaviorDraftState(),
+        presetId: "blink_output",
+        targetId: "indicator_primary",
+        property: "status",
+        glowColor: "#ffffff",
+        opacityMin: 0.1,
+        opacityMax: 0.85,
+        blinkPeriodMs: 900,
+        blinkDutyCycle: 42,
+      }),
+    },
+  },
+];
 
 function constrainMeasurePoint(start: Point, point: Point, axis: MeasureAxis): Point {
   if (axis === "horizontal") {
@@ -2082,7 +2458,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   const [componentName, setComponentName] = useState("Custom Component");
   const [childQuery, setChildQuery] = useState("");
   const [selectedBaseId, setSelectedBaseId] = useState(NO_BASE_ID);
-  const [blankBoard, setBlankBoard] = useState<BlankBoardState>({ widthUm: 18000, heightUm: 42000, cornerUm: 1200 });
+  const [blankBoard, setBlankBoard] = useState<BlankBoardState>(DEFAULT_BLANK_BOARD);
   const [packageStates, setPackageStates] = useState<Record<string, ComponentPackageState>>({});
   const [baseOverrides, setBaseOverrides] = useState<Record<string, BaseOverride>>({});
   const [baseOffsets, setBaseOffsets] = useState<Record<string, Point>>({});
@@ -2097,7 +2473,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   const [selectedChildPinId, setSelectedChildPinId] = useState<string | null>(null);
   const [hiddenLayers, setHiddenLayers] = useState<Record<string, boolean>>({});
-  const [overlayState, setOverlayState] = useState({ pins: false, snaps: false, behavior: false, dimensions: true });
+  const [overlayState, setOverlayState] = useState(DEFAULT_CREATOR_OVERLAYS);
   const [pointerState, setPointerState] = useState<PointerState>(null);
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 });
   const [activeSnapPoint, setActiveSnapPoint] = useState<Point | null>(null);
@@ -2113,8 +2489,11 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   });
   const [rightSections, setRightSections] = useState({
     selection: true,
+    definition: true,
     behaviors: false,
   });
+  const [definitionText, setDefinitionText] = useState("");
+  const [definitionNotice, setDefinitionNotice] = useState<string | null>(null);
 
   const hasBase = selectedBaseId !== NO_BASE_ID;
   const blankBase = selectedBaseId === BLANK_BOARD_ID;
@@ -2162,6 +2541,124 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     const targetId = selectedLayer?.kind === "base" ? selectedLayer.id : draft.targetId;
     return getBuiltInShape((compatibleTargets.find((target) => target.id === targetId)?.id as BuiltInLayerId) ?? "body_primary", baseLayout, selectedPackage, baseOverride);
   }, [baseLayout, baseOverride, childAnchorOrigin, compatibleTargets, draft.targetId, selectedChild, selectedLayer, selectedPackage, selectedShape]);
+  const compiledBehaviorEntry = useMemo(() => createBehaviorDraftEntry(draft), [draft]);
+  const exportedDefinition = useMemo(
+    () =>
+      createComponentDefinition(
+        componentName,
+        selectedBaseId,
+        blankBoard,
+        packageState,
+        baseOverride,
+        baseOffset,
+        selectedPinOverrides,
+        children,
+        shapeLayers,
+        persistentDimensions,
+        draft,
+      ),
+    [
+      baseOffset,
+      baseOverride,
+      blankBoard,
+      children,
+      componentName,
+      draft,
+      packageState,
+      persistentDimensions,
+      selectedBaseId,
+      selectedPinOverrides,
+      shapeLayers,
+    ],
+  );
+
+  const loadDefinitionIntoEditor = (definition: ComponentDefinitionV1, message: string) => {
+    setDefinitionText(JSON.stringify(definition, null, 2));
+    setDefinitionNotice(message);
+  };
+
+  const applyDefinition = (definition: ComponentDefinitionV1) => {
+    setComponentName(definition.metadata.name);
+    setChildQuery("");
+    setChildEditSession(null);
+    setPendingChildItemId(null);
+    setShapeTool("select");
+    setSelectedPinId(null);
+    setSelectedChildPinId(null);
+    setHiddenLayers({});
+    setOverlayState(DEFAULT_CREATOR_OVERLAYS);
+    setPointerState(null);
+    setViewport({ x: 0, y: 0, zoom: 1 });
+    setActiveSnapPoint(null);
+    setMeasureAxis("free");
+    setMeasureStart(null);
+    setMeasureEnd(null);
+    setOffsetDistance(12);
+    setDraft({ ...createDefaultBehaviorDraftState(), ...toJsonReady(definition.behaviorDraft) });
+
+    if (definition.base.kind === "none") {
+      setSelectedBaseId(NO_BASE_ID);
+      setBlankBoard(DEFAULT_BLANK_BOARD);
+      setPackageStates({});
+      setBaseOverrides({});
+      setBaseOffsets({});
+      setPinOverrides({});
+    } else if (definition.base.kind === "blank_board") {
+      setSelectedBaseId(BLANK_BOARD_ID);
+      setBlankBoard(toJsonReady(definition.base.blankBoard));
+      setPackageStates({});
+      setBaseOverrides(definition.base.override ? { [BLANK_BOARD_ID]: toJsonReady(definition.base.override) } : {});
+      setBaseOffsets(definition.base.offset ? { [BLANK_BOARD_ID]: toJsonReady(definition.base.offset) } : {});
+      setPinOverrides(definition.base.pinOverrides ? { [BLANK_BOARD_ID]: toJsonReady(definition.base.pinOverrides) } : {});
+    } else {
+      setSelectedBaseId(definition.base.itemId);
+      setBlankBoard(DEFAULT_BLANK_BOARD);
+      setPackageStates(definition.base.packageState ? { [definition.base.itemId]: toJsonReady(definition.base.packageState) } : {});
+      setBaseOverrides(definition.base.override ? { [definition.base.itemId]: toJsonReady(definition.base.override) } : {});
+      setBaseOffsets(definition.base.offset ? { [definition.base.itemId]: toJsonReady(definition.base.offset) } : {});
+      setPinOverrides(definition.base.pinOverrides ? { [definition.base.itemId]: toJsonReady(definition.base.pinOverrides) } : {});
+    }
+
+    const nextChildren = toJsonReady(definition.children);
+    const nextShapes = resolveShapeConstraints(toJsonReady(definition.shapeLayers));
+    const nextShapeIds = new Set(nextShapes.map((shape) => shape.id));
+    const nextDimensions = toJsonReady(definition.persistentDimensions).filter((dimension) => nextShapeIds.has(dimension.shapeId));
+
+    setChildren(nextChildren);
+    setShapeLayers(nextShapes);
+    setPersistentDimensions(nextDimensions);
+    setSelectedLayer(
+      definition.base.kind !== "none"
+        ? { kind: "base", id: "body_primary" }
+        : nextShapes[0]
+          ? { kind: "shape", id: nextShapes[0].id }
+          : nextChildren[0]
+            ? { kind: "child", id: nextChildren[0].id }
+            : null,
+    );
+  };
+
+  const applyDefinitionText = () => {
+    try {
+      const parsed = parseComponentDefinition(definitionText);
+      applyDefinition(parsed);
+      setDefinitionText(JSON.stringify(parsed, null, 2));
+      setDefinitionNotice(`Applied ${parsed.metadata.name}.`);
+    } catch (error) {
+      setDefinitionNotice(error instanceof Error ? error.message : "Definition import failed.");
+    }
+  };
+
+  const copyDefinitionText = async () => {
+    const text = definitionText.trim().length > 0 ? definitionText : JSON.stringify(exportedDefinition, null, 2);
+    try {
+      await navigator.clipboard.writeText(text);
+      setDefinitionNotice("Definition JSON copied.");
+    } catch {
+      setDefinitionText(text);
+      setDefinitionNotice("Clipboard unavailable. Use the JSON editor below.");
+    }
+  };
 
   const snapCandidates = useMemo(() => {
     const candidates = hasBase && baseLayout.bodyRect.width > 0 && baseLayout.bodyRect.height > 0 ? [...getRectSnapPoints(baseLayout.bodyRect), ...baseLayout.previewPins] : [...baseLayout.previewPins];
@@ -4335,6 +4832,74 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
             </CreatorSection>
 
             <CreatorSection
+              title="Definition JSON"
+              count="v1"
+              open={rightSections.definition}
+              onToggle={() => setRightSections((current) => ({ ...current, definition: !current.definition }))}
+            >
+              <div className="rounded-xl border border-white/12 px-3 py-3 text-[11px] leading-5 text-aura-muted">
+                Use this as the deterministic round-trip format for library growth. Build visually, export JSON, refine it, then re-apply it without hidden creator-only state.
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => loadDefinitionIntoEditor(exportedDefinition, "Loaded current component definition.")}
+                  className="editor-action-button"
+                >
+                  Load Current
+                </button>
+                <button
+                  type="button"
+                  onClick={copyDefinitionText}
+                  className="editor-action-button"
+                >
+                  Copy JSON
+                </button>
+                <button
+                  type="button"
+                  onClick={applyDefinitionText}
+                  className="editor-action-button"
+                >
+                  Apply JSON
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDefinitionText("")}
+                  className="editor-action-button"
+                >
+                  Clear Editor
+                </button>
+              </div>
+              <div className="space-y-2">
+                <div className="editor-label !mb-0">Examples</div>
+                <div className="creator-choice-grid creator-choice-grid-tight">
+                  {EXAMPLE_COMPONENT_DEFINITIONS.map((example) => (
+                    <button
+                      key={example.id}
+                      type="button"
+                      onClick={() => loadDefinitionIntoEditor(example.definition, `Loaded example: ${example.label}.`)}
+                      className="creator-choice-button"
+                      title={example.description}
+                    >
+                      {example.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <textarea
+                value={definitionText}
+                onChange={(event) => setDefinitionText(event.target.value)}
+                spellCheck={false}
+                className="creator-json-preview h-[22rem] w-full resize-y bg-black outline-none"
+              />
+              {definitionNotice ? (
+                <div className="rounded-xl border border-white/12 px-3 py-2 text-[11px] leading-5 text-aura-muted">
+                  {definitionNotice}
+                </div>
+              ) : null}
+            </CreatorSection>
+
+            <CreatorSection
               title="Advanced Behavior"
               count={selectedPreset.short}
               open={rightSections.behaviors}
@@ -4361,6 +4926,10 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                 </>
               ) : null}
               {(selectedPreset.id === "translate_actor" || selectedPreset.id === "linear_slider") ? <div><label className="editor-label">Axis</label><div className="editor-segmented">{(["x", "y"] as const).map((axis) => <button key={axis} type="button" onClick={() => setDraft((current) => ({ ...current, axis }))} className={`editor-segment-button ${draft.axis === axis ? "editor-segment-button-active" : ""}`}>{axis}</button>)}</div></div> : null}
+              <div>
+                <div className="editor-label">Compiled Behavior</div>
+                <pre className="creator-json-preview whitespace-pre-wrap break-all">{JSON.stringify(compiledBehaviorEntry, null, 2)}</pre>
+              </div>
             </CreatorSection>
           </div>
         </div>
