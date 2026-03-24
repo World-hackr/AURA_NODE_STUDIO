@@ -11,38 +11,24 @@
 
   body {
     @apply bg-aura-bg text-aura-ink antialiased overflow-hidden;
-    background-image:
-      radial-gradient(circle at top left, rgba(223, 231, 218, 0.9), transparent 32%),
-      radial-gradient(circle at top right, rgba(221, 231, 235, 0.72), transparent 30%),
-      linear-gradient(180deg, #f5efe4 0%, #e8e1d3 100%);
   }
 
   :root {
-    --aura-accent: #24211d;
-    --aura-paper: #fbf7f0;
-    --aura-paper-strong: #fffaf2;
-    --aura-border-soft: rgba(140, 133, 120, 0.38);
-    --aura-shadow: 0 22px 55px rgba(69, 58, 44, 0.12);
-    --aura-sage-wash: rgba(223, 231, 218, 0.78);
-    --aura-blue-wash: rgba(221, 231, 235, 0.78);
-    --aura-rose-wash: rgba(234, 223, 213, 0.78);
-    --aura-amber-wash: rgba(235, 226, 198, 0.72);
+    --aura-accent: #ffffff;
   }
 }
 
 @layer components {
   .studio-app-frame {
-    @apply relative h-full min-h-0 rounded-[28px] border p-2;
-    border-color: rgba(140, 133, 120, 0.35);
-    background: linear-gradient(180deg, rgba(255, 250, 242, 0.78) 0%, rgba(246, 239, 228, 0.72) 100%);
-    box-shadow: var(--aura-shadow);
+    @apply relative h-full min-h-0 rounded-[24px] border border-white bg-black p-2;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 18px 40px rgba(0, 0, 0, 0.35);
   }
 
   .studio-inline-switch {
-    @apply inline-flex items-center gap-1 rounded-full border p-0.5;
-    border-color: rgba(140, 133, 120, 0.35);
-    background: rgba(255, 250, 242, 0.92);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    @apply inline-flex items-center gap-1 rounded-full border border-white bg-black p-0.5;
+    background-color: rgba(0, 0, 0, 0.92);
   }
 
   .mode-switch-button {
@@ -50,9 +36,7 @@
   }
 
   .mode-switch-button-active {
-    @apply text-white;
-    background: var(--aura-accent);
-    box-shadow: 0 6px 16px rgba(31, 28, 24, 0.18);
+    @apply bg-white text-black;
   }
 
   .studio-shell {
@@ -68,10 +52,8 @@
   }
 
   .studio-rail {
-    @apply flex min-h-0 flex-col overflow-hidden rounded-[20px] border text-aura-ink;
-    border-color: rgba(140, 133, 120, 0.45);
-    background: linear-gradient(180deg, rgba(255, 250, 242, 0.94) 0%, rgba(245, 238, 228, 0.98) 100%);
-    box-shadow: var(--aura-shadow);
+    @apply flex min-h-0 flex-col overflow-hidden rounded-[18px] border border-white bg-black;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   .studio-rail-left {
@@ -81,27 +63,32 @@
   }
 
   .studio-rail-library {
-    background:
-      linear-gradient(180deg, rgba(223, 231, 218, 0.88) 0%, rgba(255, 250, 242, 0.96) 30%, rgba(245, 238, 228, 0.98) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 56px 84px rgba(120, 255, 180, 0.05);
   }
 
   .studio-rail-inspector {
-    background:
-      linear-gradient(180deg, rgba(221, 231, 235, 0.88) 0%, rgba(255, 250, 242, 0.96) 32%, rgba(244, 238, 230, 0.98) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 56px 84px rgba(110, 190, 255, 0.055);
   }
 
   .studio-rail-authoring {
-    background:
-      linear-gradient(180deg, rgba(235, 226, 198, 0.82) 0%, rgba(255, 250, 242, 0.96) 30%, rgba(247, 242, 233, 0.98) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 56px 84px rgba(255, 214, 90, 0.055);
   }
 
   .studio-rail-detail {
-    background:
-      linear-gradient(180deg, rgba(234, 223, 213, 0.84) 0%, rgba(255, 250, 242, 0.96) 30%, rgba(245, 238, 228, 0.98) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 56px 84px rgba(255, 160, 160, 0.045);
   }
 
   .studio-rail-header {
     @apply shrink-0;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent);
   }
 
   .studio-rail-head-inner {
@@ -127,10 +114,7 @@
   }
 
   .studio-section-card {
-    @apply rounded-2xl border p-2.5;
-    border-color: rgba(140, 133, 120, 0.3);
-    background: rgba(255, 250, 242, 0.84);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    @apply rounded-xl border border-white bg-black p-2;
   }
 
   .studio-stat-grid {
@@ -138,53 +122,40 @@
   }
 
   .studio-stat-card {
-    @apply rounded-xl border px-2.5 py-2;
-    border-color: rgba(140, 133, 120, 0.28);
-    background: rgba(255, 255, 255, 0.58);
+    @apply rounded-lg border border-white bg-black px-2 py-1.5;
   }
 
   .studio-pill {
-    @apply inline-flex h-5 min-w-5 items-center justify-center rounded-full border px-1.5 font-mono text-[8px] uppercase tracking-[0.12em] text-aura-ink;
-    border-color: rgba(140, 133, 120, 0.35);
-    background: rgba(235, 226, 198, 0.72);
+    @apply inline-flex h-4 min-w-5 items-center justify-center rounded-full border border-white px-1.5 font-mono text-[8px] uppercase tracking-[0.12em] text-white;
   }
 
   .editor-eyebrow {
-    @apply text-[9px] uppercase tracking-[0.16em] font-bold text-aura-muted;
+    @apply text-[9px] uppercase tracking-[0.16em] font-bold text-white;
   }
 
   .editor-label {
-    @apply mb-1 block text-[9px] font-bold uppercase tracking-[0.16em] text-aura-muted;
+    @apply mb-1 block text-[9px] font-bold uppercase tracking-[0.16em] text-white;
   }
 
   .editor-input {
-    @apply w-full rounded-xl border px-2.5 py-1.5 font-mono text-[11px] text-aura-ink outline-none transition;
-    border-color: rgba(140, 133, 120, 0.35);
-    background: rgba(255, 250, 242, 0.9);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    @apply w-full rounded-lg border border-white bg-black px-2.5 py-1.5 font-mono text-[11px] text-white outline-none transition focus:border-white;
   }
 
   .editor-color-input {
-    @apply h-10 w-full cursor-pointer rounded-xl border p-1;
-    border-color: rgba(140, 133, 120, 0.35);
-    background: rgba(255, 250, 242, 0.9);
+    @apply h-10 w-full cursor-pointer rounded-lg border border-white bg-black p-1;
   }
 
   .editor-slider {
-    accent-color: #24211d;
+    accent-color: #ffffff;
     width: 100%;
   }
 
   .editor-action-button {
-    @apply inline-flex w-full items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[10px] font-medium text-aura-ink transition;
-    border-color: rgba(140, 133, 120, 0.38);
-    background: rgba(255, 250, 242, 0.88);
+    @apply inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-white bg-black px-2.5 py-1.5 text-[10px] font-medium text-white transition;
   }
 
   .editor-segmented {
-    @apply inline-flex items-center gap-1 rounded-full border p-1;
-    border-color: rgba(140, 133, 120, 0.35);
-    background: rgba(255, 250, 242, 0.9);
+    @apply inline-flex items-center gap-1 rounded-full border border-white bg-black p-1;
   }
 
   .editor-segment-button {
@@ -192,49 +163,37 @@
   }
 
   .editor-segment-button-active {
-    @apply text-white;
-    background: var(--aura-accent);
+    @apply bg-white text-black;
   }
 
   .editor-action-button:hover {
     border-color: var(--aura-accent);
-    background-color: #f0e7d7;
-    color: #181512;
+    background-color: var(--aura-accent);
+    color: #000000;
   }
 
   .canvas-chip {
-    @apply rounded-full border px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-aura-ink shadow-[0_14px_40px_rgba(71,59,44,0.14)] backdrop-blur-sm;
-    border-color: rgba(140, 133, 120, 0.35);
-    background: rgba(255, 250, 242, 0.88);
+    @apply rounded-full border border-white bg-black px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-white shadow-[0_14px_40px_rgba(0,0,0,0.4)] backdrop-blur-sm;
   }
 
   .canvas-button {
-    @apply inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-medium uppercase tracking-[0.16em] text-aura-ink shadow-[0_14px_40px_rgba(71,59,44,0.14)] backdrop-blur-sm transition;
-    border-color: rgba(140, 133, 120, 0.35);
-    background: rgba(255, 250, 242, 0.9);
+    @apply inline-flex items-center gap-2 rounded-full border border-white bg-black px-4 py-2 text-[11px] font-medium uppercase tracking-[0.16em] text-white shadow-[0_14px_40px_rgba(0,0,0,0.4)] backdrop-blur-sm transition hover:border-white hover:bg-white hover:text-black;
   }
 
   .canvas-button-active {
-    @apply text-white;
-    background: var(--aura-accent);
-    border-color: var(--aura-accent);
+    @apply border-white bg-white text-black;
   }
 
   .canvas-hud-group {
-    @apply flex items-center gap-1 rounded-2xl border px-1 py-1 shadow-[0_14px_40px_rgba(71,59,44,0.14)] backdrop-blur-sm;
-    border-color: rgba(140, 133, 120, 0.35);
-    background: rgba(255, 250, 242, 0.88);
+    @apply flex items-center gap-1 rounded-xl border border-white bg-black px-1 py-1 shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm;
   }
 
   .canvas-status {
-    @apply flex items-center gap-2 rounded-2xl border px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.16em] text-aura-ink shadow-[0_14px_40px_rgba(71,59,44,0.14)] backdrop-blur-sm;
-    border-color: rgba(140, 133, 120, 0.35);
-    background: rgba(255, 250, 242, 0.9);
+    @apply flex items-center gap-2 rounded-xl border border-white bg-black px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.16em] text-white shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm;
   }
 
   .canvas-status-editing {
-    border-color: rgba(72, 105, 100, 0.55);
-    background: rgba(223, 231, 218, 0.9);
+    border-color: rgba(120, 255, 180, 0.78);
   }
 
   .canvas-status-dot {
@@ -243,41 +202,34 @@
   }
 
   .canvas-sep {
-    @apply mx-1 h-5 w-px;
-    background-color: rgba(140, 133, 120, 0.25);
+    @apply mx-1 h-5 w-px bg-white/15;
   }
 
   .canvas-icon-button {
-    @apply inline-flex h-7 w-7 items-center justify-center rounded-xl border text-aura-ink transition;
-    border-color: rgba(140, 133, 120, 0.28);
-    background: rgba(255, 255, 255, 0.48);
+    @apply inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/30 bg-white/5 text-white transition;
   }
 
   .canvas-text-button {
-    @apply inline-flex h-7 items-center justify-center rounded-xl border px-2 font-mono text-[8px] uppercase tracking-[0.16em] text-aura-ink transition;
-    border-color: rgba(140, 133, 120, 0.28);
-    background: rgba(255, 255, 255, 0.48);
+    @apply inline-flex h-7 items-center justify-center rounded-lg border border-white/30 bg-white/5 px-2 font-mono text-[8px] uppercase tracking-[0.16em] text-white transition;
   }
 
   .canvas-control-active {
     border-color: var(--aura-accent);
     background-color: var(--aura-accent);
-    color: #fffaf2;
+    color: #000000;
   }
 
   .canvas-slider {
-    accent-color: #24211d;
+    accent-color: #ffffff;
     width: 62px;
   }
 
   .studio-panel-toggle {
-    @apply inline-flex h-6 w-6 items-center justify-center rounded-md border text-aura-ink transition;
-    border-color: rgba(140, 133, 120, 0.28);
-    background: rgba(255, 255, 255, 0.5);
+    @apply inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/20 bg-black text-white transition hover:border-white;
   }
 
   .studio-panel-title {
-    @apply font-mono text-[11px] uppercase tracking-[0.14em] text-aura-ink;
+    @apply font-mono text-[11px] uppercase tracking-[0.14em] text-white;
   }
 
   .studio-muted-note {
@@ -285,18 +237,11 @@
   }
 
   .creator-stage {
-    @apply min-h-0 rounded-[24px] border p-3;
-    border-color: rgba(140, 133, 120, 0.4);
-    background:
-      linear-gradient(180deg, rgba(255, 250, 242, 0.96) 0%, rgba(245, 238, 228, 0.94) 100%);
-    box-shadow: var(--aura-shadow);
+    @apply min-h-0 rounded-[22px] border border-white bg-black p-3;
   }
 
   .creator-stage-panel {
-    @apply flex h-full min-h-0 flex-col rounded-[20px] border p-3;
-    border-color: rgba(140, 133, 120, 0.28);
-    background:
-      radial-gradient(circle at top, rgba(235, 226, 198, 0.55) 0%, rgba(255, 250, 242, 0.92) 30%, rgba(244, 238, 230, 0.98) 100%);
+    @apply flex h-full min-h-0 flex-col rounded-[18px] border border-white bg-[radial-gradient(circle_at_top,#181818_0%,#090909_72%)] p-3;
   }
 
   .creator-stage-head {
@@ -308,42 +253,35 @@
   }
 
   .creator-toolbar-group {
-    @apply inline-flex items-center gap-1 rounded-2xl border p-1;
-    border-color: rgba(140, 133, 120, 0.3);
-    background: rgba(255, 250, 242, 0.82);
+    @apply inline-flex items-center gap-1 rounded-xl border border-white bg-black p-1;
   }
 
   .creator-preset-chip {
-    @apply inline-flex min-w-[4.5rem] items-center justify-center rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-aura-ink;
-    border-color: rgba(140, 133, 120, 0.35);
-    background: rgba(255, 255, 255, 0.58);
+    @apply inline-flex min-w-[4.5rem] items-center justify-center rounded-full border border-white px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-white;
   }
 
   .creator-accent-visual {
-    background: rgba(234, 223, 213, 0.8);
+    background: rgba(255, 90, 90, 0.16);
   }
 
   .creator-accent-motion {
-    background: rgba(221, 231, 235, 0.8);
+    background: rgba(110, 190, 255, 0.16);
   }
 
   .creator-accent-input {
-    background: rgba(223, 231, 218, 0.82);
+    background: rgba(120, 255, 180, 0.14);
   }
 
   .creator-accent-snap {
-    background: rgba(235, 226, 198, 0.86);
+    background: rgba(255, 214, 90, 0.16);
   }
 
   .creator-preview-card {
-    @apply relative mt-3 min-h-0 flex-1 overflow-hidden rounded-[22px] border;
-    border-color: rgba(140, 133, 120, 0.28);
-    background:
-      linear-gradient(180deg, rgba(255, 252, 246, 0.98) 0%, rgba(244, 238, 230, 0.96) 100%);
+    @apply relative mt-3 min-h-0 flex-1 overflow-hidden rounded-[20px] border border-white bg-black;
   }
 
   .creator-preview-title {
-    fill: #191713;
+    fill: #ffffff;
     font-family: "IBM Plex Mono", monospace;
     font-size: 10px;
     letter-spacing: 0.18em;
@@ -351,7 +289,7 @@
   }
 
   .creator-preview-meta {
-    fill: rgba(38, 33, 27, 0.66);
+    fill: rgba(255, 255, 255, 0.72);
     font-family: "IBM Plex Mono", monospace;
     font-size: 9px;
     letter-spacing: 0.14em;
@@ -363,19 +301,15 @@
   }
 
   .creator-target-row {
-    @apply flex w-full items-start justify-between gap-3 rounded-2xl border px-2.5 py-2 text-left text-aura-ink transition disabled:cursor-not-allowed disabled:opacity-45;
-    border-color: rgba(140, 133, 120, 0.3);
-    background: rgba(255, 250, 242, 0.8);
+    @apply flex w-full items-start justify-between gap-3 rounded-xl border border-white bg-black px-2.5 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-45;
   }
 
   .creator-target-row-active {
-    @apply text-white;
-    background: var(--aura-accent);
-    border-color: var(--aura-accent);
+    @apply bg-white text-black;
   }
 
   .creator-target-row-active .text-aura-muted {
-    color: rgba(255, 250, 242, 0.72);
+    color: rgba(0, 0, 0, 0.72);
   }
 
   .creator-preset-grid {
@@ -391,21 +325,16 @@
   }
 
   .creator-choice-button {
-    @apply inline-flex min-h-[2.15rem] items-center justify-center rounded-2xl border px-2 py-1.5 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-aura-ink transition disabled:cursor-not-allowed disabled:opacity-45;
-    border-color: rgba(140, 133, 120, 0.3);
-    background: rgba(255, 250, 242, 0.82);
+    @apply inline-flex min-h-[2.15rem] items-center justify-center rounded-xl border border-white bg-black px-2 py-1.5 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-white transition disabled:cursor-not-allowed disabled:opacity-45;
   }
 
   .creator-list-row {
-    @apply flex items-center gap-2 rounded-2xl border px-2.5 py-2 text-left text-aura-ink transition;
-    border-color: rgba(140, 133, 120, 0.24);
-    background: rgba(255, 250, 242, 0.8);
+    @apply flex items-center gap-2 rounded-xl border bg-black px-2.5 py-2 text-left text-white transition;
+    border-color: rgba(255, 255, 255, 0.16);
   }
 
   .creator-list-row-active {
-    @apply text-white;
-    background: var(--aura-accent);
-    border-color: var(--aura-accent);
+    @apply border-white bg-white text-black;
   }
 
   .creator-stack-meta {
@@ -413,39 +342,31 @@
   }
 
   .creator-choice-button-active {
-    @apply text-white;
-    background: var(--aura-accent);
-    border-color: var(--aura-accent);
+    @apply bg-white text-black;
   }
 
   .creator-preset-card {
-    @apply rounded-2xl border px-2.5 py-2.5 text-left text-aura-ink transition;
-    border-color: rgba(140, 133, 120, 0.3);
-    background: rgba(255, 250, 242, 0.82);
+    @apply rounded-xl border border-white bg-black px-2.5 py-2.5 text-left transition;
   }
 
   .creator-preset-card-active {
-    @apply text-white;
-    background: var(--aura-accent);
-    border-color: var(--aura-accent);
+    @apply bg-white text-black;
   }
 
   .creator-preset-card-active .text-aura-muted,
   .creator-preset-card-active .text-white {
-    color: rgba(255, 250, 242, 0.84);
+    color: rgba(0, 0, 0, 0.84);
   }
 
   .creator-json-preview {
-    @apply overflow-x-auto rounded-2xl border p-3 font-mono text-[11px] leading-5 text-aura-ink;
-    border-color: rgba(140, 133, 120, 0.3);
-    background: rgba(255, 250, 242, 0.84);
+    @apply overflow-x-auto rounded-xl border border-white bg-black p-3 font-mono text-[11px] leading-5 text-white;
   }
 
   .canvas-icon-button:hover,
   .canvas-text-button:hover {
     border-color: var(--aura-accent);
-    background-color: #efe4d1;
-    color: #181512;
+    background-color: var(--aura-accent);
+    color: #000000;
   }
 
   @media (max-width: 1180px) {

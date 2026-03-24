@@ -67,11 +67,11 @@ export function PropertiesPanel() {
 
       return (
         <aside className="studio-rail studio-rail-inspector">
-          <div className="studio-rail-header border-b border-aura-border/35 px-3 py-3">
+          <div className="studio-rail-header border-b border-white px-3 py-3">
             <div className="studio-rail-head-inner flex items-start justify-between gap-3">
               <div>
                 <p className="editor-eyebrow">Inspector</p>
-                <h2 className="mt-1.5 font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-aura-ink">
+                <h2 className="mt-1.5 font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-white">
                   Net
                 </h2>
               </div>
@@ -88,7 +88,7 @@ export function PropertiesPanel() {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="rounded-xl border border-aura-border/25 bg-white/62 px-2.5 py-2">
+                  <div className="rounded-lg border border-white bg-black px-2.5 py-2">
                     <div className="editor-label !mb-1">From</div>
                     <div className="font-mono text-[12px] text-aura-ink">
                       {fromDetails.title}
@@ -98,7 +98,7 @@ export function PropertiesPanel() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-aura-border/25 bg-white/62 px-2.5 py-2">
+                  <div className="rounded-lg border border-white bg-black px-2.5 py-2">
                     <div className="editor-label !mb-1">To</div>
                     <div className="font-mono text-[12px] text-aura-ink">
                       {toDetails.title}
@@ -109,7 +109,7 @@ export function PropertiesPanel() {
                   </div>
                 </div>
 
-                <div className="mt-3 rounded-xl border border-dashed border-aura-border/35 bg-white/55 px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
+                <div className="mt-3 rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
                   {selectedConnection.routePointsUm?.length
                     ? `${selectedConnection.routePointsUm.length} custom route points stored. Manual bends move freely with nearby-geometry snap.`
                     : "Automatic route. Double-click the wire on canvas to insert aligned bends."}
@@ -148,11 +148,11 @@ export function PropertiesPanel() {
 
       return (
         <aside className="studio-rail studio-rail-inspector">
-          <div className="studio-rail-header border-b border-aura-border/35 px-3 py-3">
+          <div className="studio-rail-header border-b border-white px-3 py-3">
             <div className="studio-rail-head-inner flex items-start justify-between gap-3">
               <div>
                 <p className="editor-eyebrow">Inspector</p>
-                <h2 className="mt-1.5 font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-aura-ink">
+                <h2 className="mt-1.5 font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-white">
                   Junction
                 </h2>
               </div>
@@ -199,7 +199,7 @@ export function PropertiesPanel() {
                   </div>
                 </div>
 
-                <div className="mt-3 rounded-xl border border-dashed border-aura-border/35 bg-white/55 px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
+                <div className="mt-3 rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
                   {attachedConnections.length} attached connection
                   {attachedConnections.length === 1 ? "" : "s"}.
                 </div>
@@ -223,11 +223,11 @@ export function PropertiesPanel() {
 
     return (
       <aside className="studio-rail studio-rail-inspector">
-        <div className="studio-rail-header border-b border-aura-border/35 px-3 py-3">
+        <div className="studio-rail-header border-b border-white px-3 py-3">
             <div className="studio-rail-head-inner flex items-start justify-between gap-3">
             <div>
               <p className="editor-eyebrow">Inspector</p>
-              <h2 className="mt-1.5 font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-aura-ink">
+              <h2 className="mt-1.5 font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-white">
                 Workspace Summary
               </h2>
             </div>
@@ -263,7 +263,7 @@ export function PropertiesPanel() {
               <textarea
                 readOnly
                 value={JSON.stringify(manifest, null, 2)}
-                className="mt-3 h-[min(50vh,540px)] w-full resize-none rounded-xl border border-aura-border/25 bg-white/72 px-2.5 py-2.5 font-mono text-[10px] leading-4 text-aura-ink outline-none"
+                className="mt-3 h-[min(50vh,540px)] w-full resize-none rounded-lg border border-white bg-black px-2.5 py-2.5 font-mono text-[10px] leading-4 text-aura-ink outline-none"
               />
             </div>
           </div>
@@ -293,23 +293,23 @@ export function PropertiesPanel() {
 
   return (
     <aside className="studio-rail studio-rail-inspector">
-      <div className="studio-rail-header border-b border-aura-border/35 px-3 py-3">
+      <div className="studio-rail-header border-b border-white px-3 py-3">
         <div className="studio-rail-head-inner">
           <div className="flex items-start justify-between gap-3">
             <p className="editor-eyebrow">Inspector</p>
             <UnitToggle displayUnit={displayUnit} onChange={setDisplayUnit} />
           </div>
-          <div className="mt-1.5 rounded-2xl border border-aura-border/25 bg-white/68 p-2.5">
+          <div className="mt-1.5 rounded-xl border border-white bg-black p-2.5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="font-sans text-[0.95rem] font-black tracking-[0.12em] text-aura-ink">
+                <h2 className="font-sans text-[0.95rem] font-black tracking-[0.12em] text-white">
                   {selectedComponent.reference}
                 </h2>
-                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-aura-muted">
+                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white">
                   {resolvedPackage.packageKey}
                 </div>
               </div>
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-aura-border/28 bg-aura-blue/45 text-aura-ink">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white bg-black text-aura-ink">
                 <Package2 className="h-4 w-4" />
               </span>
             </div>
@@ -386,7 +386,7 @@ export function PropertiesPanel() {
               <button
                 type="button"
                 onClick={() => rotateComponent(selectedComponent.id, -90)}
-                className="inline-flex h-[34px] w-[34px] items-center justify-center self-end rounded-xl border border-aura-border/28 bg-white/70 text-aura-ink transition hover:border-aura-ink hover:bg-[#f0e7d7]"
+                className="inline-flex h-[34px] w-[34px] items-center justify-center self-end rounded-lg border border-white bg-black text-white transition hover:bg-white hover:text-black"
                 title="Rotate left 90 degrees"
               >
                 <RotateCcw className="h-4 w-4" />
@@ -394,7 +394,7 @@ export function PropertiesPanel() {
               <button
                 type="button"
                 onClick={() => rotateComponent(selectedComponent.id, 90)}
-                className="inline-flex h-[34px] w-[34px] items-center justify-center self-end rounded-xl border border-aura-border/28 bg-white/70 text-aura-ink transition hover:border-aura-ink hover:bg-[#f0e7d7]"
+                className="inline-flex h-[34px] w-[34px] items-center justify-center self-end rounded-lg border border-white bg-black text-white transition hover:bg-white hover:text-black"
                 title="Rotate right 90 degrees"
               >
                 <RotateCw className="h-4 w-4" />
@@ -485,11 +485,11 @@ export function PropertiesPanel() {
                   </div>
                 ) : resizeBehavior.mode === "linear-pin-step" ? (
                   resizeBehavior.fixedRowCount != null ? (
-                    <div className="rounded-xl border border-dashed border-aura-border/35 bg-white/55 px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
+                    <div className="rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
                       Single-row connector. Drag east or the corner to add positions.
                     </div>
                   ) : resizeBehavior.fixedColumnCount != null ? (
-                    <div className="rounded-xl border border-dashed border-aura-border/35 bg-white/55 px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
+                    <div className="rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
                       {resizeBehavior.fixedColumnCount} columns fixed. Drag south or the corner to add rows.
                     </div>
                   ) : (
@@ -518,17 +518,17 @@ export function PropertiesPanel() {
                     </div>
                   )
                 ) : resizeBehavior.mode === "mapped-pin-step" ? (
-                  <div className="rounded-xl border border-dashed border-aura-border/35 bg-white/55 px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
+                  <div className="rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
                     Drag the corner to step through package sizes.
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-dashed border-aura-border/35 bg-white/55 px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
+                  <div className="rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
                     Drag south edge to extend strip.
                   </div>
                 )}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-aura-border/35 bg-white/55 px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
+              <div className="rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
                 Fixed-size package.
               </div>
             )}
@@ -562,7 +562,7 @@ export function PropertiesPanel() {
               {resolvedPackage.pins.map((pin) => (
                 <div
                   key={pin.id}
-                  className="flex items-center justify-between rounded-xl border border-aura-border/25 bg-white/65 px-2.5 py-2 font-mono text-[11px] text-aura-ink"
+                  className="flex items-center justify-between rounded-lg border border-white bg-black px-2.5 py-2 font-mono text-[11px] text-aura-ink"
                 >
                   <span>{pin.id}</span>
                   <span className="text-aura-muted">{pin.label}</span>

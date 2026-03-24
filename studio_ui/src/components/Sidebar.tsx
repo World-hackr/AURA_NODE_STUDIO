@@ -147,11 +147,11 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
   );
   return (
     <aside ref={asideRef} className="studio-rail studio-rail-left studio-rail-library">
-      <div className="studio-rail-header border-b border-aura-border/35 px-3 py-3">
+      <div className="studio-rail-header border-b border-white px-3 py-3">
         <div className="studio-rail-head-inner">
           <div className="min-w-0">
             <p className="editor-eyebrow">Circuit Studio</p>
-            <h1 className="mt-1.5 font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] leading-none text-aura-ink">
+            <h1 className="mt-1.5 font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] leading-none text-white">
               Circuit Library
             </h1>
           </div>
@@ -159,16 +159,16 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
         </div>
       </div>
 
-      <div className="border-b border-aura-border/28 px-3 py-2">
+      <div className="border-b border-white px-3 py-2">
         <div className="studio-rail-body-inner">
           <div className="grid grid-cols-2 gap-1.5">
-            <div className="rounded-xl border border-aura-border/25 bg-white/60 px-2.5 py-2">
+            <div className="rounded-lg border border-white bg-black px-2 py-1.5">
               <div className="editor-eyebrow">Placed</div>
               <div className="mt-1 font-mono text-[15px] leading-none text-aura-ink">
                 {components.length}
               </div>
             </div>
-            <div className="rounded-xl border border-aura-border/25 bg-white/60 px-2.5 py-2">
+            <div className="rounded-lg border border-white bg-black px-2 py-1.5">
               <div className="editor-eyebrow">Nets</div>
               <div className="mt-1 font-mono text-[15px] leading-none text-aura-ink">
                 {connections.length}
@@ -194,7 +194,7 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
         </div>
       </div>
 
-      <div className="border-b border-aura-border/28 px-3 py-2">
+      <div className="border-b border-white px-3 py-2">
         <div className="studio-rail-body-inner space-y-1.5">
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-aura-muted" />
@@ -209,7 +209,7 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setSearchValue("")}
-                className="absolute right-2 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md border border-aura-border/20 bg-white/70 text-aura-muted transition hover:border-aura-ink hover:text-aura-ink"
+                className="absolute right-2 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md border border-white/15 bg-black text-aura-muted transition hover:border-white hover:text-white"
                 title="Clear search"
               >
                 <X className="h-3 w-3" />
@@ -223,8 +223,8 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
               onClick={() => setExpandableOnly((value) => !value)}
               className={`inline-flex h-6 items-center justify-center rounded-full border px-2.5 font-mono text-[9px] uppercase tracking-[0.14em] transition ${
                 expandableOnly
-                  ? "border-aura-ink bg-aura-ink text-white"
-                  : "border-aura-border/35 bg-white/60 text-aura-muted hover:border-aura-ink hover:text-aura-ink"
+                  ? "border-white bg-white text-black"
+                  : "border-white/35 bg-black text-aura-muted hover:border-white hover:text-white"
               }`}
             >
               Expandable
@@ -242,8 +242,8 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
       >
         <div className="studio-rail-body-inner space-y-2.5">
           {familyEntries.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-aura-border/35 bg-white/55 px-3 py-4 text-center">
-              <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-aura-ink">
+            <div className="rounded-xl border border-dashed border-white/25 bg-black/60 px-3 py-4 text-center">
+              <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-white">
                 No matches
               </div>
               <div className="mt-1 text-[11px] leading-4 text-aura-muted">
@@ -255,9 +255,9 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
           {familyEntries.map(({ family, seriesList }) => (
             <section
               key={family.id}
-              className="overflow-hidden rounded-2xl border border-aura-border/35 bg-white/62 shadow-[inset_0_1px_0_rgba(255,255,255,0.58)]"
+              className="overflow-hidden rounded-xl border border-white/40 bg-[#0a0a0a] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
             >
-              <div className="flex items-start justify-between gap-3 border-b border-aura-border/18 bg-aura-sage/55 px-3 py-2">
+              <div className="flex items-start justify-between gap-3 border-b border-white/15 bg-white/[0.04] px-3 py-2">
                 <p className="editor-eyebrow">{family.label}</p>
                 <span className="studio-pill">{seriesList.length}</span>
               </div>
@@ -277,14 +277,14 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
                         onClick={() => armLibraryItem(leadItem.id)}
                         onMouseEnter={(event) => showDescription(event, leadItem.description)}
                         onMouseLeave={hideDescription}
-                        className="group w-full rounded-xl border border-aura-border/22 bg-white/78 px-2.5 py-2 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] transition hover:border-aura-ink hover:bg-[#f0e7d7] hover:text-aura-ink"
+                        className="group w-full rounded-lg border border-white/25 bg-[#121212] px-2.5 py-2 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition hover:border-white hover:bg-white hover:text-black"
                       >
                         <div className="flex items-start justify-between gap-2.5">
                           <div className="min-w-0">
                             <div className="truncate font-mono text-[11px] leading-4 text-aura-ink group-hover:text-black">
                               {leadItem.seriesLabel}
                             </div>
-                            <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-aura-muted">
+                            <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white group-hover:text-black/70">
                               {leadItem.variantLabel}
                             </div>
                           </div>
@@ -294,7 +294,7 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
                                 Expand
                               </span>
                             ) : null}
-                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-aura-ink bg-aura-ink text-aura-surface transition">
+                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white bg-black text-aura-ink transition group-hover:border-black group-hover:bg-black group-hover:text-white">
                               <Plus className="h-3 w-3" />
                             </span>
                           </div>
@@ -310,20 +310,20 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
                   return (
                     <div
                       key={series.id}
-                      className="rounded-xl border border-aura-border/22 bg-white/76 shadow-[inset_0_1px_0_rgba(255,255,255,0.58)]"
+                      className="rounded-lg border border-white/25 bg-[#121212] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                       onMouseLeave={hideDescription}
                     >
                       <button
                         type="button"
                         onClick={() => toggleSeries(series.id)}
                         onMouseEnter={(event) => showDescription(event, series.description)}
-                        className="group flex w-full items-start justify-between gap-2.5 bg-transparent px-2.5 py-2 text-left transition hover:bg-[#f0e7d7] hover:text-aura-ink"
+                        className="group flex w-full items-start justify-between gap-2.5 bg-white/[0.03] px-2.5 py-2 text-left transition hover:bg-white hover:text-black"
                       >
                         <div className="min-w-0">
                           <div className="truncate font-mono text-[11px] leading-4 text-aura-ink group-hover:text-black">
                             {series.label}
                           </div>
-                          <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-aura-muted">
+                          <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white group-hover:text-black/70">
                             {series.visibleItems.length === series.items.length
                               ? `${series.items.length} variants`
                               : `${series.visibleItems.length} matches`}
@@ -338,7 +338,7 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
                           <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-aura-muted group-hover:text-black/70">
                             {series.referencePrefix}
                           </span>
-                          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-aura-ink bg-aura-ink text-aura-surface transition">
+                          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-white bg-black text-aura-ink transition group-hover:border-black group-hover:bg-black group-hover:text-white">
                             {isExpanded ? (
                               <ChevronDown className="h-3 w-3" />
                             ) : (
@@ -349,7 +349,7 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
                       </button>
 
                       {isExpanded ? (
-                        <div className="border-t border-aura-border/18 bg-aura-blue/30 px-2 py-1.5">
+                        <div className="border-t border-white/15 bg-black/45 px-2 py-1.5">
                           <div className="space-y-1.5">
                             {series.visibleItems.map((item) => (
                               <button
@@ -357,7 +357,7 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
                                 type="button"
                                 onClick={() => armLibraryItem(item.id)}
                                 onMouseEnter={(event) => showDescription(event, item.description)}
-                                className="group flex w-full items-center justify-between rounded-lg border border-aura-border/18 bg-white/76 px-2.5 py-2 text-left transition hover:border-aura-ink hover:bg-[#f0e7d7] hover:text-aura-ink"
+                                className="group flex w-full items-center justify-between rounded-md border border-white/20 bg-[#080808] px-2.5 py-2 text-left transition hover:border-white hover:bg-white hover:text-black"
                               >
                                 <div className="min-w-0">
                                   <div className="font-mono text-[10px] leading-4 text-aura-ink group-hover:text-black">
@@ -392,7 +392,7 @@ export function Sidebar({ modeSwitch }: { modeSwitch?: ReactNode }) {
 
       {hoveredDescription ? (
         <div
-          className="pointer-events-none absolute z-[80] w-[260px] rounded-xl border border-aura-border/40 bg-aura-surface/95 px-3 py-2 text-[10px] leading-[1.35] text-aura-ink shadow-[0_16px_32px_rgba(71,59,44,0.18)] backdrop-blur-sm"
+          className="pointer-events-none absolute z-[80] w-[260px] rounded-md border border-white/70 bg-black/78 px-3 py-1 text-[10px] leading-[1.25] text-white shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-sm"
           style={{
             top: hoveredDescription.top,
             left: hoveredDescription.left,

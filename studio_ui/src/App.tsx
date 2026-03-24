@@ -31,7 +31,7 @@ function App() {
   );
 
   return (
-    <div className="box-border h-screen w-screen overflow-hidden bg-aura-bg p-3 font-sans text-aura-ink md:p-4">
+    <div className="box-border h-screen w-screen overflow-hidden bg-aura-bg p-2 font-sans text-aura-ink md:p-2.5">
       <div className="studio-app-frame">
         <div className="h-full min-h-0">
           {workspaceMode === "creator" ? (

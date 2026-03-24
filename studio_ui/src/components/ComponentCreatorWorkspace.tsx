@@ -3312,11 +3312,11 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   return (
     <div className="creator-shell h-full min-h-0">
       <aside className="studio-rail studio-rail-authoring">
-        <div className="studio-rail-header border-b border-aura-border/35 px-3 py-3">
+        <div className="studio-rail-header border-b border-white px-3 py-3">
           <div className="studio-rail-head-inner flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="editor-eyebrow">Component Lab</p>
-              <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-aura-ink">Reusable Part Authoring</h2>
+              <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-white">Reusable Part Authoring</h2>
             </div>
             {modeSwitch ? <div className="shrink-0">{modeSwitch}</div> : null}
           </div>
@@ -3407,7 +3407,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
           <div className="creator-stage-head">
             <div className="min-w-0">
               <p className="editor-eyebrow">Deterministic Package Authoring</p>
-              <h2 className="mt-1.5 truncate font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-aura-ink">{componentName}</h2>
+              <h2 className="mt-1.5 truncate font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-white">{componentName}</h2>
               <p className="mt-1.5 text-[10px] leading-4 text-aura-muted">Middle mouse pans. Wheel zooms. Start from a known package, then convert only the layers you need to edit.</p>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
@@ -3764,11 +3764,11 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
       </main>
 
       <aside className="studio-rail studio-rail-detail">
-        <div className="studio-rail-header border-b border-aura-border/35 px-3 py-3">
+        <div className="studio-rail-header border-b border-white px-3 py-3">
           <div className="studio-rail-head-inner flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="editor-eyebrow">Inspector</p>
-              <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-aura-ink">{selectionLabel}</h2>
+              <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-white">{selectionLabel}</h2>
             </div>
             <span className="studio-pill">{selectedLayer?.kind ?? "none"}</span>
           </div>
@@ -3782,11 +3782,11 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
               onToggle={() => setRightSections((current) => ({ ...current, selection: !current.selection }))}
             >
               {childEditSession ? (
-                <div className="rounded-2xl border border-aura-border/25 bg-white/68 px-3 py-3">
+                <div className="rounded-xl border border-white bg-black px-3 py-3">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <div className="editor-label !mb-1">Child Edit Session</div>
-                      <div className="font-mono text-[12px] uppercase tracking-[0.14em] text-aura-ink">{activeChildEditLabel}</div>
+                      <div className="font-mono text-[12px] uppercase tracking-[0.14em] text-white">{activeChildEditLabel}</div>
                     </div>
                     <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-400">{activeChildEditLayers.length} layers</div>
                   </div>
@@ -3804,8 +3804,8 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
               {selectedLayer?.kind === "base" && selectedLayer.id === "body_primary" ? (
                 <>
                   <div className="studio-stat-grid">
-                    <div className="studio-stat-card"><div className="editor-label !mb-1">Width</div><div className="font-mono text-[12px] text-aura-ink">{formatMm(baseLayout.bodyWidthUm)}</div></div>
-                    <div className="studio-stat-card"><div className="editor-label !mb-1">Height</div><div className="font-mono text-[12px] text-aura-ink">{formatMm(baseLayout.bodyHeightUm)}</div></div>
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">Width</div><div className="font-mono text-[12px] text-white">{formatMm(baseLayout.bodyWidthUm)}</div></div>
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">Height</div><div className="font-mono text-[12px] text-white">{formatMm(baseLayout.bodyHeightUm)}</div></div>
                   </div>
                   <div className="studio-stat-grid">
                     <div>
@@ -3937,10 +3937,10 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
               {selectedLayer?.kind === "base" && selectedLayer.id === "pins_primary" ? (
                 <>
                   <div className="studio-stat-grid">
-                    <div className="studio-stat-card"><div className="editor-label !mb-1">Pins</div><div className="font-mono text-[12px] text-aura-ink">{baseLayout.previewPins.length}</div></div>
-                    <div className="studio-stat-card"><div className="editor-label !mb-1">Selected</div><div className="font-mono text-[12px] text-aura-ink">{selectedPin?.label ?? "None"}</div></div>
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">Pins</div><div className="font-mono text-[12px] text-white">{baseLayout.previewPins.length}</div></div>
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">Selected</div><div className="font-mono text-[12px] text-white">{selectedPin?.label ?? "None"}</div></div>
                   </div>
-                  <div className="rounded-2xl border border-aura-border/22 bg-white/55 px-3 py-3 text-[11px] leading-5 text-aura-muted">
+                  <div className="rounded-xl border border-white/12 px-3 py-3 text-[11px] leading-5 text-aura-muted">
                     Drag pin handles on the stage to reposition them, or edit labels and offsets here for exact package cleanup.
                   </div>
                   <div className="space-y-2">
@@ -3950,7 +3950,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                       return (
                         <div
                           key={pin.id}
-                          className={`rounded-2xl border px-3 py-3 ${selected ? "border-aura-ink bg-aura-ink text-white" : "border-aura-border/22 bg-white/74 text-aura-ink"}`}
+                          className={`rounded-xl border px-3 py-3 ${selected ? "border-white bg-white text-black" : "border-white/16 bg-black text-white"}`}
                         >
                           <button
                             type="button"
@@ -4062,8 +4062,8 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
               {selectedLayer?.kind === "child" && selectedChild ? (
                 <>
                   <div className="studio-stat-grid">
-                    <div className="studio-stat-card"><div className="editor-label !mb-1">X</div><div className="font-mono text-[12px] text-aura-ink">{selectedChild.anchor.x.toFixed(1)}</div></div>
-                    <div className="studio-stat-card"><div className="editor-label !mb-1">Y</div><div className="font-mono text-[12px] text-aura-ink">{selectedChild.anchor.y.toFixed(1)}</div></div>
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">X</div><div className="font-mono text-[12px] text-white">{selectedChild.anchor.x.toFixed(1)}</div></div>
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">Y</div><div className="font-mono text-[12px] text-white">{selectedChild.anchor.y.toFixed(1)}</div></div>
                   </div>
                   <div className="studio-stat-grid">
                     <div>
@@ -4165,8 +4165,8 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   {selectedChildPins.length > 0 ? (
                     <>
                       <div className="studio-stat-grid">
-                        <div className="studio-stat-card"><div className="editor-label !mb-1">Pins</div><div className="font-mono text-[12px] text-aura-ink">{selectedChildPins.length}</div></div>
-                        <div className="studio-stat-card"><div className="editor-label !mb-1">Selected</div><div className="font-mono text-[12px] text-aura-ink">{selectedChildPin?.label ?? "None"}</div></div>
+                        <div className="studio-stat-card"><div className="editor-label !mb-1">Pins</div><div className="font-mono text-[12px] text-white">{selectedChildPins.length}</div></div>
+                        <div className="studio-stat-card"><div className="editor-label !mb-1">Selected</div><div className="font-mono text-[12px] text-white">{selectedChildPin?.label ?? "None"}</div></div>
                       </div>
                       <div className="max-h-[12rem] space-y-2 overflow-y-auto pr-1">
                         {selectedChildPins.map((pin) => {
@@ -4181,7 +4181,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                                 setSelectedPinId(null);
                                 setSelectedChildPinId(pin.id);
                               }}
-                              className={`w-full rounded-2xl border px-3 py-2 text-left transition ${selected ? "border-aura-ink bg-aura-ink text-white" : "border-aura-border/24 bg-white/76 text-aura-ink"}`}
+                              className={`w-full rounded-xl border px-3 py-2 text-left transition ${selected ? "border-white bg-white text-black" : "border-white bg-black text-white"}`}
                             >
                               <div className="flex items-center justify-between gap-3">
                                 <span className="font-mono text-[11px] uppercase tracking-[0.12em]">{pin.label}</span>
@@ -4373,7 +4373,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   {selectedShapeDimensionSummary ? (
                     <div className="studio-stat-card space-y-3">
                       <div className="editor-label !mb-1">Dimensions</div>
-                      <div className="font-mono text-[12px] text-aura-ink">{selectedShapeDimensionSummary.primary}</div>
+                      <div className="font-mono text-[12px] text-white">{selectedShapeDimensionSummary.primary}</div>
                       <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-aura-muted">{selectedShapeDimensionSummary.secondary}</div>
                       <div className="flex flex-wrap gap-2">
                         {(selectedShape.kind === "line" ? (["length", "dx", "dy"] as const) : (["width", "height"] as const)).map((kind) => {
@@ -4862,7 +4862,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   </button>
                 </>
               ) : null}
-              {selectedLayer == null ? <div className="rounded-2xl border border-dashed border-aura-border/28 bg-white/52 px-3 py-3 text-[10px] leading-4 text-aura-muted">Select the body, pins, a marking, child part, or a custom drawn shape to edit it.</div> : null}
+              {selectedLayer == null ? <div className="rounded-xl border border-dashed border-white/20 px-3 py-3 text-[10px] leading-4 text-aura-muted">Select the body, pins, a marking, child part, or a custom drawn shape to edit it.</div> : null}
             </CreatorSection>
 
             <CreatorSection
@@ -4871,8 +4871,8 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
               open={rightSections.definition}
               onToggle={() => setRightSections((current) => ({ ...current, definition: !current.definition }))}
             >
-              <div className="rounded-2xl border border-aura-border/22 bg-white/55 px-3 py-3 text-[11px] leading-5 text-aura-muted">
-                Use this as the deterministic round-trip format for library growth. Build visually, export JSON, refine it, then re-apply it without hidden creator-only state. Export reviewed parts as <span className="font-mono text-aura-ink">.component.json</span> files so they can live in the shared repo library.
+              <div className="rounded-xl border border-white/12 px-3 py-3 text-[11px] leading-5 text-aura-muted">
+                Use this as the deterministic round-trip format for library growth. Build visually, export JSON, refine it, then re-apply it without hidden creator-only state. Export reviewed parts as <span className="font-mono text-white">.component.json</span> files so they can live in the shared repo library.
               </div>
               <input
                 ref={definitionFileInputRef}
@@ -4940,18 +4940,18 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                     </button>
                   ))}
                 </div>
-                <div className="rounded-2xl border border-dashed border-aura-border/24 bg-white/52 px-3 py-2 text-[10px] leading-4 text-aura-muted">
-                  Built-in examples mirror the repo-backed starter files under <span className="font-mono text-aura-ink">shared/component_definitions_v1/examples</span>.
+                <div className="rounded-xl border border-dashed border-white/12 px-3 py-2 text-[10px] leading-4 text-aura-muted">
+                  Built-in examples mirror the repo-backed starter files under <span className="font-mono text-white">shared/component_definitions_v1/examples</span>.
                 </div>
               </div>
               <textarea
                 value={definitionText}
                 onChange={(event) => setDefinitionText(event.target.value)}
                 spellCheck={false}
-                className="creator-json-preview h-[22rem] w-full resize-y bg-transparent outline-none"
+                className="creator-json-preview h-[22rem] w-full resize-y bg-black outline-none"
               />
               {definitionNotice ? (
-                <div className="rounded-2xl border border-aura-border/22 bg-white/55 px-3 py-2 text-[11px] leading-5 text-aura-muted">
+                <div className="rounded-xl border border-white/12 px-3 py-2 text-[11px] leading-5 text-aura-muted">
                   {definitionNotice}
                 </div>
               ) : null}
@@ -4970,7 +4970,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
               </div>
               <div className="studio-stat-card">
                 <div className="editor-label !mb-1">Target Layer</div>
-                <div className="font-mono text-[12px] text-aura-ink">{selectionLabel}</div>
+                <div className="font-mono text-[12px] text-white">{selectionLabel}</div>
                 <p className="mt-2 text-[11px] leading-5 text-aura-muted">Use this only after the component geometry is right. The selected visible layer becomes the behavior target.</p>
               </div>
               <div><label className="editor-label">Signal Name</label><input value={draft.property} onChange={(event) => setDraft((current) => ({ ...current, property: event.target.value }))} className="editor-input" /></div>
