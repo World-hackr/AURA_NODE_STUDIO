@@ -1,0 +1,28 @@
+{
+  "schema": "aura.component_definition_index.v1",
+  "generatedFor": "Component Lab",
+  "template": {
+    "path": "shared/component_definitions_v1/component_definition.template.json",
+    "label": "Starter Template"
+  },
+  "examples": [
+    {
+      "id": "led_indicator",
+      "label": "LED Indicator",
+      "path": "shared/component_definitions_v1/examples/led_indicator.component.json",
+      "description": "Package-backed indicator with readable lighting behavior."
+    },
+    {
+      "id": "dev_board",
+      "label": "Dev Board",
+      "path": "shared/component_definitions_v1/examples/dev_board.component.json",
+      "description": "Blank-board aggregate with child parts and 2D board detail."
+    },
+    {
+      "id": "nano_controller_board",
+      "label": "Nano Controller Board",
+      "path": "shared/component_definitions_v1/examples/nano_controller_board.component.json",
+      "description": "More detailed black-and-white board example with onboard parts and readable labels."
+    }
+  ]
+}

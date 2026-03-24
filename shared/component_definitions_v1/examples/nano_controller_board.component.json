@@ -1,0 +1,301 @@
+{
+  "schema": "aura.component_definition.v1",
+  "metadata": {
+    "name": "Nano Controller Board",
+    "description": "Detailed board-style example that stays flat, readable, and deterministic while showing onboard component density.",
+    "tags": [
+      "example",
+      "board",
+      "controller",
+      "nano_style"
+    ]
+  },
+  "base": {
+    "kind": "blank_board",
+    "blankBoard": {
+      "widthUm": 18500,
+      "heightUm": 45500,
+      "cornerUm": 1200
+    },
+    "override": {
+      "form": "rect",
+      "fill": "#ededed",
+      "stroke": "#111111"
+    }
+  },
+  "children": [
+    {
+      "id": "child_left_header",
+      "itemId": "header_strip",
+      "title": "Male Header",
+      "anchor": {
+        "x": 208,
+        "y": 106
+      },
+      "packageState": {
+        "pinCount": 15
+      }
+    },
+    {
+      "id": "child_right_header",
+      "itemId": "header_strip",
+      "title": "Male Header",
+      "anchor": {
+        "x": 490,
+        "y": 106
+      },
+      "packageState": {
+        "pinCount": 15
+      }
+    },
+    {
+      "id": "child_mcu",
+      "itemId": "qfp_ic",
+      "title": "QFP MCU",
+      "anchor": {
+        "x": 350,
+        "y": 232
+      },
+      "packageState": {
+        "pinCount": 32
+      },
+      "override": {
+        "fill": "#d7d7d7",
+        "stroke": "#111111"
+      }
+    },
+    {
+      "id": "child_usb",
+      "itemId": "jst_ph",
+      "title": "Power Header",
+      "anchor": {
+        "x": 350,
+        "y": 58
+      },
+      "packageState": {
+        "pinCount": 4,
+        "columnCount": 4
+      }
+    },
+    {
+      "id": "child_reset",
+      "itemId": "button_tact_smd",
+      "title": "Reset Switch",
+      "anchor": {
+        "x": 454,
+        "y": 148
+      },
+      "packageState": {}
+    },
+    {
+      "id": "child_status_led",
+      "itemId": "led_0603",
+      "title": "Status LED",
+      "anchor": {
+        "x": 437,
+        "y": 92
+      },
+      "packageState": {}
+    },
+    {
+      "id": "child_regulator",
+      "itemId": "sot23_pkg",
+      "title": "Regulator",
+      "anchor": {
+        "x": 260,
+        "y": 148
+      },
+      "packageState": {
+        "pinCount": 5
+      }
+    },
+    {
+      "id": "child_decoupler_a",
+      "itemId": "capacitor_0603",
+      "title": "Decoupler",
+      "anchor": {
+        "x": 292,
+        "y": 180
+      },
+      "packageState": {}
+    },
+    {
+      "id": "child_decoupler_b",
+      "itemId": "capacitor_0603",
+      "title": "Decoupler",
+      "anchor": {
+        "x": 408,
+        "y": 180
+      },
+      "packageState": {}
+    },
+    {
+      "id": "child_boot_resistor",
+      "itemId": "resistor_0603",
+      "title": "Pull-Up",
+      "anchor": {
+        "x": 437,
+        "y": 126
+      },
+      "packageState": {}
+    }
+  ],
+  "shapeLayers": [
+    {
+      "id": "usb_shell",
+      "name": "Port Shell",
+      "kind": "rect",
+      "x": 298,
+      "y": 30,
+      "width": 104,
+      "height": 48,
+      "radius": 7,
+      "fill": "#ffffff",
+      "stroke": "#111111",
+      "strokeWidth": 2
+    },
+    {
+      "id": "top_label",
+      "name": "Top Label",
+      "kind": "text",
+      "x": 258,
+      "y": 84,
+      "width": 188,
+      "height": 24,
+      "text": "NANO CTRL",
+      "fill": "#111111",
+      "fontSize": 16
+    },
+    {
+      "id": "mcu_box",
+      "name": "MCU Outline",
+      "kind": "rect",
+      "x": 283,
+      "y": 189,
+      "width": 134,
+      "height": 134,
+      "radius": 14,
+      "fill": "#f8f8f8",
+      "stroke": "#111111",
+      "strokeWidth": 2
+    },
+    {
+      "id": "pin_bank_left",
+      "name": "Left Pin Label",
+      "kind": "text",
+      "x": 152,
+      "y": 346,
+      "width": 78,
+      "height": 20,
+      "text": "DIGITAL",
+      "fill": "#111111",
+      "fontSize": 12
+    },
+    {
+      "id": "pin_bank_right",
+      "name": "Right Pin Label",
+      "kind": "text",
+      "x": 473,
+      "y": 346,
+      "width": 74,
+      "height": 20,
+      "text": "POWER",
+      "fill": "#111111",
+      "fontSize": 12
+    },
+    {
+      "id": "status_mark",
+      "name": "Status Mark",
+      "kind": "ellipse",
+      "x": 420,
+      "y": 80,
+      "width": 32,
+      "height": 32,
+      "fill": "#ffffff",
+      "stroke": "#111111",
+      "strokeWidth": 2
+    },
+    {
+      "id": "section_line",
+      "name": "Section Line",
+      "kind": "line",
+      "x1": 242,
+      "y1": 165,
+      "x2": 458,
+      "y2": 165,
+      "stroke": "#111111",
+      "strokeWidth": 2,
+      "construction": true
+    }
+  ],
+  "persistentDimensions": [],
+  "behaviorDraft": {
+    "presetId": "light_emitter",
+    "targetId": "indicator_primary",
+    "property": "status",
+    "valueMin": 0,
+    "valueMax": 100,
+    "angleMin": -135,
+    "angleMax": 135,
+    "axis": "x",
+    "distanceMin": -12,
+    "distanceMax": 12,
+    "originX": 0,
+    "originY": 0,
+    "glowX": 0,
+    "glowY": 0,
+    "glowRadius": 24,
+    "glowBlur": 14,
+    "glowColor": "#ff5a5a",
+    "baseColor": "#ffffff",
+    "opacityMin": 0.12,
+    "opacityMax": 0.88,
+    "blinkPeriodMs": 420,
+    "blinkDutyCycle": 50,
+    "pressDepth": 2.4,
+    "detentCount": 12,
+    "autoReset": true,
+    "lightTargetSourceMode": "existingTarget",
+    "helperShapeKind": "circle",
+    "helperX": 0,
+    "helperY": 0,
+    "helperWidth": 56,
+    "helperHeight": 56,
+    "helperRadius": 14,
+    "glowEnabled": true
+  },
+  "compiledBehavior": {
+    "kind": "behaviorHelper",
+    "entry": {
+      "id": "indicator_primary_light",
+      "type": "light_emitter",
+      "property": "status",
+      "source": {
+        "type": "target_slot",
+        "target": "indicator_primary"
+      },
+      "range": [
+        0,
+        100
+      ],
+      "baseColor": "#ffffff",
+      "opacityRange": [
+        0.12,
+        0.88
+      ],
+      "glow": {
+        "enabled": true,
+        "color": "#ffffff",
+        "reachRange": [
+          10.8,
+          32.4
+        ],
+        "blur": 14,
+        "opacityRange": [
+          0.04,
+          0.63
+        ]
+      }
+    }
+  }
+}

@@ -18,7 +18,7 @@ That is professional if the boundaries are clear:
 - `host_remote/` - ESP32 host remote firmware, host-specific tests, and host-specific helper scripts
 - `studio_ui/` - browser-side deterministic circuit and component authoring tool for advanced/internal workflows
 - `phone_ui/` - future phone UI workspace, plus phone-side placeholder organization for tests and tools
-- `shared/` - shared models and contracts
+- `shared/` - shared models, contracts, and reusable component-definition artifacts
 - `docs/` - system planning docs for this restart
 - `local_tools/` - reusable machine-side utilities and hardware bring-up helpers that can be reused across projects
 - `AURA _report/` - archive/reference material for academic reports, presentations, and earlier formal writeups

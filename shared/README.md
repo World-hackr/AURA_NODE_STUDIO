@@ -9,6 +9,7 @@ The current source-of-truth planning doc for those contracts is:
 The current machine-readable contract artifacts live in:
 
 - `shared/contracts_v1/`
+- `shared/component_definitions_v1/`
 
 Examples:
 - inventory item schema
@@ -26,3 +27,5 @@ The first frozen V1 contract set is:
 - `PartLookupResult`
 
 The first machine-readable schemas now exist under `shared/contracts_v1/`. Add stricter validation or code generation only after host and phone begin consuming these exact shapes directly.
+
+Repo-backed deterministic component-definition examples and starter artifacts now live under `shared/component_definitions_v1/`. Treat that folder as the seed of the reusable part-definition library for `Component Lab`.

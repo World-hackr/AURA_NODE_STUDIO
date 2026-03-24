@@ -1,0 +1,182 @@
+{
+  "schema": "aura.component_definition.v1",
+  "metadata": {
+    "name": "Example Dev Board",
+    "description": "Board-style aggregate example with headers, MCU package, LED, button, and printed 2D detail.",
+    "tags": [
+      "example",
+      "board",
+      "module"
+    ]
+  },
+  "base": {
+    "kind": "blank_board",
+    "blankBoard": {
+      "widthUm": 18000,
+      "heightUm": 44000,
+      "cornerUm": 1400
+    },
+    "override": {
+      "form": "rect",
+      "fill": "#ececec",
+      "stroke": "#111111"
+    }
+  },
+  "children": [
+    {
+      "id": "child_left_header",
+      "itemId": "header_strip",
+      "title": "Male Header",
+      "anchor": {
+        "x": 206,
+        "y": 108
+      },
+      "packageState": {
+        "pinCount": 15
+      }
+    },
+    {
+      "id": "child_right_header",
+      "itemId": "header_strip",
+      "title": "Male Header",
+      "anchor": {
+        "x": 482,
+        "y": 108
+      },
+      "packageState": {
+        "pinCount": 15
+      }
+    },
+    {
+      "id": "child_mcu",
+      "itemId": "soic_ic",
+      "title": "SOIC IC",
+      "anchor": {
+        "x": 350,
+        "y": 202
+      },
+      "packageState": {
+        "pinCount": 16
+      },
+      "override": {
+        "fill": "#d8d8d8",
+        "stroke": "#111111"
+      }
+    },
+    {
+      "id": "child_button",
+      "itemId": "button_tact_smd",
+      "title": "Tact Switch SMD",
+      "anchor": {
+        "x": 350,
+        "y": 118
+      },
+      "packageState": {}
+    },
+    {
+      "id": "child_led",
+      "itemId": "led_0603",
+      "title": "LED 0603",
+      "anchor": {
+        "x": 438,
+        "y": 104
+      },
+      "packageState": {}
+    }
+  ],
+  "shapeLayers": [
+    {
+      "id": "usb_outline",
+      "name": "USB Outline",
+      "kind": "rect",
+      "x": 304,
+      "y": 36,
+      "width": 92,
+      "height": 42,
+      "radius": 6,
+      "fill": "#ffffff",
+      "stroke": "#111111",
+      "strokeWidth": 2
+    },
+    {
+      "id": "label_top",
+      "name": "Board Label",
+      "kind": "text",
+      "x": 266,
+      "y": 86,
+      "width": 168,
+      "height": 24,
+      "text": "DEV CTRL",
+      "fill": "#111111",
+      "fontSize": 15
+    },
+    {
+      "id": "silk_split",
+      "name": "Section Line",
+      "kind": "line",
+      "x1": 246,
+      "y1": 154,
+      "x2": 454,
+      "y2": 154,
+      "stroke": "#111111",
+      "strokeWidth": 2,
+      "construction": true
+    }
+  ],
+  "persistentDimensions": [],
+  "behaviorDraft": {
+    "presetId": "blink_output",
+    "targetId": "indicator_primary",
+    "property": "status",
+    "valueMin": 0,
+    "valueMax": 100,
+    "angleMin": -135,
+    "angleMax": 135,
+    "axis": "x",
+    "distanceMin": -12,
+    "distanceMax": 12,
+    "originX": 0,
+    "originY": 0,
+    "glowX": 0,
+    "glowY": 0,
+    "glowRadius": 18,
+    "glowBlur": 12,
+    "glowColor": "#ffffff",
+    "baseColor": "#ff5a5a",
+    "opacityMin": 0.1,
+    "opacityMax": 0.85,
+    "blinkPeriodMs": 900,
+    "blinkDutyCycle": 42,
+    "pressDepth": 2.4,
+    "detentCount": 12,
+    "autoReset": true,
+    "lightTargetSourceMode": "existingTarget",
+    "helperShapeKind": "circle",
+    "helperX": 0,
+    "helperY": 0,
+    "helperWidth": 56,
+    "helperHeight": 56,
+    "helperRadius": 14,
+    "glowEnabled": true
+  },
+  "compiledBehavior": {
+    "kind": "behaviorHelper",
+    "entry": {
+      "id": "indicator_primary_blink",
+      "type": "blink_overlay",
+      "property": "status",
+      "target": "indicator_primary",
+      "range": [
+        0,
+        100
+      ],
+      "periodMs": 900,
+      "dutyCycle": 42,
+      "color": "#ffffff",
+      "opacityRange": [
+        0.1,
+        0.85
+      ]
+    }
+  }
+}

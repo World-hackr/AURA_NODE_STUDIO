@@ -1,0 +1,86 @@
+{
+  "schema": "aura.component_definition.v1",
+  "metadata": {
+    "name": "Starter Component",
+    "description": "Minimal valid starter definition for Component Lab.",
+    "tags": [
+      "template",
+      "starter"
+    ]
+  },
+  "base": {
+    "kind": "none"
+  },
+  "children": [],
+  "shapeLayers": [],
+  "persistentDimensions": [],
+  "behaviorDraft": {
+    "presetId": "light_emitter",
+    "targetId": "indicator_primary",
+    "property": "brightness",
+    "valueMin": 0,
+    "valueMax": 100,
+    "angleMin": -135,
+    "angleMax": 135,
+    "axis": "x",
+    "distanceMin": -12,
+    "distanceMax": 12,
+    "originX": 0,
+    "originY": 0,
+    "glowX": 0,
+    "glowY": 0,
+    "glowRadius": 18,
+    "glowBlur": 12,
+    "glowColor": "#ff5a5a",
+    "baseColor": "#ff5a5a",
+    "opacityMin": 0.08,
+    "opacityMax": 0.94,
+    "blinkPeriodMs": 420,
+    "blinkDutyCycle": 50,
+    "pressDepth": 2.4,
+    "detentCount": 12,
+    "autoReset": true,
+    "lightTargetSourceMode": "existingTarget",
+    "helperShapeKind": "circle",
+    "helperX": 0,
+    "helperY": 0,
+    "helperWidth": 56,
+    "helperHeight": 56,
+    "helperRadius": 14,
+    "glowEnabled": true
+  },
+  "compiledBehavior": {
+    "kind": "behaviorHelper",
+    "entry": {
+      "id": "indicator_primary_light",
+      "type": "light_emitter",
+      "property": "brightness",
+      "source": {
+        "type": "target_slot",
+        "target": "indicator_primary"
+      },
+      "range": [
+        0,
+        100
+      ],
+      "baseColor": "#ff5a5a",
+      "opacityRange": [
+        0.08,
+        0.94
+      ],
+      "glow": {
+        "enabled": true,
+        "color": "#ff5a5a",
+        "reachRange": [
+          8.1,
+          25.2
+        ],
+        "blur": 12,
+        "opacityRange": [
+          0.02,
+          0.68
+        ]
+      }
+    }
+  }
+}

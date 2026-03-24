@@ -1,4 +1,5 @@
 import {
+  type ChangeEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -2455,6 +2456,7 @@ function renderBasePackage(
 export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNode }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const stagePanelRef = useRef<HTMLDivElement | null>(null);
+  const definitionFileInputRef = useRef<HTMLInputElement | null>(null);
   const [componentName, setComponentName] = useState("Custom Component");
   const [childQuery, setChildQuery] = useState("");
   const [selectedBaseId, setSelectedBaseId] = useState(NO_BASE_ID);
@@ -2657,6 +2659,38 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     } catch {
       setDefinitionText(text);
       setDefinitionNotice("Clipboard unavailable. Use the JSON editor below.");
+    }
+  };
+
+  const exportDefinitionFile = () => {
+    const fileName = `${(componentName.trim() || "custom_component").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "custom_component"}.component.json`;
+    const blob = new Blob([JSON.stringify(exportedDefinition, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setDefinitionNotice(`Exported ${fileName}.`);
+  };
+
+  const handleDefinitionFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const parsed = parseComponentDefinition(text);
+      applyDefinition(parsed);
+      setDefinitionText(JSON.stringify(parsed, null, 2));
+      setDefinitionNotice(`Imported ${file.name}.`);
+    } catch (error) {
+      setDefinitionNotice(error instanceof Error ? error.message : "Definition file import failed.");
     }
   };
 
@@ -4838,8 +4872,15 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
               onToggle={() => setRightSections((current) => ({ ...current, definition: !current.definition }))}
             >
               <div className="rounded-xl border border-white/12 px-3 py-3 text-[11px] leading-5 text-aura-muted">
-                Use this as the deterministic round-trip format for library growth. Build visually, export JSON, refine it, then re-apply it without hidden creator-only state.
+                Use this as the deterministic round-trip format for library growth. Build visually, export JSON, refine it, then re-apply it without hidden creator-only state. Export reviewed parts as <span className="font-mono text-white">.component.json</span> files so they can live in the shared repo library.
               </div>
+              <input
+                ref={definitionFileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleDefinitionFileSelected}
+                className="hidden"
+              />
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -4854,6 +4895,20 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   className="editor-action-button"
                 >
                   Copy JSON
+                </button>
+                <button
+                  type="button"
+                  onClick={exportDefinitionFile}
+                  className="editor-action-button"
+                >
+                  Export File
+                </button>
+                <button
+                  type="button"
+                  onClick={() => definitionFileInputRef.current?.click()}
+                  className="editor-action-button"
+                >
+                  Import File
                 </button>
                 <button
                   type="button"
@@ -4884,6 +4939,9 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                       {example.label}
                     </button>
                   ))}
+                </div>
+                <div className="rounded-xl border border-dashed border-white/12 px-3 py-2 text-[10px] leading-4 text-aura-muted">
+                  Built-in examples mirror the repo-backed starter files under <span className="font-mono text-white">shared/component_definitions_v1/examples</span>.
                 </div>
               </div>
               <textarea

@@ -125,8 +125,15 @@ That is the path toward AI-generated circuits that are still inspectable and con
 - loading the current component definition into a JSON editor
 - applying edited JSON back into the authoring workspace
 - copying exported JSON
+- exporting the definition as a `.component.json` file
+- importing a saved definition file back into the workspace
 - loading built-in example definitions
 - previewing the compiled behavior entry beside the raw behavior draft
+
+Repo-backed starter artifacts now also exist under:
+
+- `shared/component_definitions_v1/`
+- `shared/component_definitions_v1/examples/`
 
 ## Current Limit
 
@@ -136,8 +143,8 @@ That is acceptable for now because the main product need is a stable determinist
 
 ## Next Step
 
-After this format settles, the next useful step is:
+Now that file import/export and repo-backed examples exist, the next useful step is:
 
-1. add file-based import/export for component definitions
-2. add a repo folder of real example definitions
+1. validate definition files automatically during CI or local checks
+2. add reviewed contributor submissions under `shared/component_definitions_v1/`
 3. connect this format to a future shared library ingestion path
