@@ -53,6 +53,12 @@ void deselectTft() {
   }
 }
 
+void deselectTouch() {
+  if (kPinTouchCs >= 0) {
+    digitalWrite(kPinTouchCs, HIGH);
+  }
+}
+
 void csnHigh() {
   digitalWrite(kPinRadioCsn, HIGH);
 }
@@ -75,6 +81,7 @@ uint8_t transferByte(uint8_t value) {
 
 uint8_t executeSingleByteCommand(uint8_t command) {
   deselectTft();
+  deselectTouch();
   SPI.beginTransaction(kRadioSpiSettings);
   csnLow();
   const uint8_t status = transferByte(command);
@@ -85,6 +92,7 @@ uint8_t executeSingleByteCommand(uint8_t command) {
 
 uint8_t readRegister(uint8_t reg) {
   deselectTft();
+  deselectTouch();
   SPI.beginTransaction(kRadioSpiSettings);
   csnLow();
   transferByte(kCmdReadRegister | (reg & 0x1F));
@@ -96,6 +104,7 @@ uint8_t readRegister(uint8_t reg) {
 
 uint8_t writeRegister(uint8_t reg, uint8_t value) {
   deselectTft();
+  deselectTouch();
   SPI.beginTransaction(kRadioSpiSettings);
   csnLow();
   const uint8_t status = transferByte(kCmdWriteRegister | (reg & 0x1F));
@@ -107,6 +116,7 @@ uint8_t writeRegister(uint8_t reg, uint8_t value) {
 
 void writeRegisterBuffer(uint8_t reg, const uint8_t* data, size_t length) {
   deselectTft();
+  deselectTouch();
   SPI.beginTransaction(kRadioSpiSettings);
   csnLow();
   transferByte(kCmdWriteRegister | (reg & 0x1F));
@@ -119,6 +129,7 @@ void writeRegisterBuffer(uint8_t reg, const uint8_t* data, size_t length) {
 
 void writePayload(const uint8_t* data, size_t length) {
   deselectTft();
+  deselectTouch();
   SPI.beginTransaction(kRadioSpiSettings);
   csnLow();
   transferByte(kCmdWriteTxPayload);
@@ -180,9 +191,13 @@ void configureForTransmitAttempt() {
 void initializeRadioSelfTest() {
   pinMode(kPinRadioCe, OUTPUT);
   pinMode(kPinRadioCsn, OUTPUT);
+  if (kPinTouchCs >= 0) {
+    pinMode(kPinTouchCs, OUTPUT);
+  }
   ceLow();
   csnHigh();
   deselectTft();
+  deselectTouch();
   SPI.begin(
       aura_host::remote_config::kSpiSck,
       aura_host::remote_config::kSpiMiso,

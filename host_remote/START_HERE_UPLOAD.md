@@ -72,7 +72,18 @@ Also make sure:
 - `VCC -> 3V3`
 - `GND -> GND`
 - `SCL / CLK -> GPIO18`
-- `SDA / MOSI -> GPIO23`
+- `SDI / MOSI -> GPIO23`
 - `CS -> GPIO5`
-- `DC / A0 -> GPIO27`
+- `DC -> GPIO27`
 - `RST / RES -> GPIO26`
+- `LED / BLK -> AO3407 drain`
+
+If you wired the new `2.8 inch TFT + touch` module, also connect:
+
+- `T_CLK -> GPIO18`
+- `T_DIN -> GPIO23`
+- `T_DO -> GPIO19`
+- `T_CS -> GPIO22`
+- `T_IRQ -> GPIO17`
+
+Current firmware still uses the joystick for navigation. Touch is only parked on the SPI bus for now so it does not interfere with the display or radio.

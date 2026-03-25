@@ -30,6 +30,7 @@ import {
   type RoutingPoint,
   type RoutingRect,
 } from "../utils/routing";
+import { computeLayoutHealth } from "../utils/layoutHealth";
 import { formatUmPair } from "../utils/units";
 
 interface CanvasPointer {
@@ -112,12 +113,17 @@ const STAGE_AXIS_COLOR = "#ffffff";
 const STAGE_SELECTION_COLOR = "#ffffff";
 const STAGE_SELECTION_SOFT = "#ffffff";
 const STAGE_LABEL_COLOR = "#f1f4f8";
-const STAGE_WIRE_COLOR = "#d7d7d7";
+const STAGE_WIRE_COLOR = "#9098a1";
+const STAGE_WIRE_RELATED = "#dfe8f5";
 const STAGE_WIRE_SELECTED = "#ffffff";
-const STAGE_WIRE_GLOW = "#ffffff";
+const STAGE_WIRE_GLOW = "#9fd3ff";
 const STAGE_HANDLE_FILL = "#ffffff";
 const STAGE_HANDLE_STROKE = "#111111";
-const STAGE_GUIDE_COLOR = "#ffffff";
+const STAGE_GUIDE_COLOR = "#9fd3ff";
+const STAGE_PIN_RING = "#cde8ff";
+const STAGE_SELECTION_FILL = "#8fcfff";
+const STAGE_WARNING_OVERLAP = "#ffd5cc";
+const STAGE_WARNING_CROWDED = "#ffe5a8";
 
 function snapToGrid(valueUm: number) {
   return Math.round(valueUm / GRID_UM) * GRID_UM;
@@ -281,6 +287,32 @@ function getResizeZone(
   }
 
   return null;
+}
+
+function isConnectionAttachedToComponent(connection: { from: WireEndpoint; to: WireEndpoint }, componentId: string) {
+  return (
+    (connection.from.kind === "pin" && connection.from.componentId === componentId) ||
+    (connection.to.kind === "pin" && connection.to.componentId === componentId)
+  );
+}
+
+function isConnectionAttachedToJunction(connection: { from: WireEndpoint; to: WireEndpoint }, junctionId: string) {
+  return (
+    (connection.from.kind === "junction" && connection.from.junctionId === junctionId) ||
+    (connection.to.kind === "junction" && connection.to.junctionId === junctionId)
+  );
+}
+
+function estimateStageLabelWidth(label: string) {
+  return Math.max(44, label.length * 6.6 + 18);
+}
+
+function getRouteMidpoint(routePoints: RoutingPoint[]) {
+  if (routePoints.length === 0) {
+    return { x: 0, y: 0 };
+  }
+
+  return routePoints[Math.floor(routePoints.length / 2)];
 }
 
 function getBasePinPoint(
@@ -936,6 +968,7 @@ function renderPinHotspot(
   componentId: string,
   pinId: string,
   point: PinPoint,
+  emphasized: boolean,
   onPinMouseDown: (
     event: React.MouseEvent<SVGCircleElement>,
     componentId: string,
@@ -962,6 +995,18 @@ function renderPinHotspot(
 
   return (
     <g key={`${componentId}_${pinId}`}>
+      {emphasized ? (
+        <circle
+          cx={point.xPx}
+          cy={point.yPx}
+          r={hitRadius - 1}
+          fill="none"
+          stroke={STAGE_PIN_RING}
+          strokeWidth={0.9}
+          opacity={0.46}
+          pointerEvents="none"
+        />
+      ) : null}
       <circle
         cx={point.xPx}
         cy={point.yPx}
@@ -1511,11 +1556,15 @@ function renderResizeAffordance(
 function RenderComponent({
   component,
   selected,
+  emphasizedPins,
+  readabilityIssue,
   onComponentMouseDown,
   onPinMouseDown,
 }: {
   component: CircuitComponent;
   selected: boolean;
+  emphasizedPins: boolean;
+  readabilityIssue: "overlap" | "crowded" | null;
   onComponentMouseDown: (event: React.MouseEvent<SVGGElement>, componentId: string) => void;
   onPinMouseDown: (
     event: React.MouseEvent<SVGCircleElement>,
@@ -1526,22 +1575,58 @@ function RenderComponent({
   const packageDef = resolvePackageByItemId(component.libraryItemId, component.packageState);
   const bounds = getComponentBoundsPx(component, packageDef);
   const pinPoints = packageDef.pins.map((pin) => getPinPoint(component, packageDef, pin.id));
+  const labelWidth = estimateStageLabelWidth(component.reference);
 
   return (
     <g onMouseDown={(event) => onComponentMouseDown(event, component.id)}>
-      {selected ? (
+      {!selected && readabilityIssue === "overlap" ? (
+        <rect
+          x={bounds.left - 12}
+          y={bounds.top - 12}
+          width={bounds.width + 24}
+          height={bounds.height + 24}
+          rx={12}
+          fill={STAGE_WARNING_OVERLAP}
+          opacity={0.06}
+          pointerEvents="none"
+        />
+      ) : null}
+      {!selected && readabilityIssue === "crowded" ? (
         <rect
           x={bounds.left - 10}
           y={bounds.top - 10}
           width={bounds.width + 20}
           height={bounds.height + 20}
           rx={10}
-          fill="none"
-          stroke={STAGE_SELECTION_COLOR}
-          strokeWidth={1.1}
-          strokeDasharray="5 4"
-          opacity={0.85}
+          fill={STAGE_WARNING_CROWDED}
+          opacity={0.04}
+          pointerEvents="none"
         />
+      ) : null}
+      {selected ? (
+        <>
+          <rect
+            x={bounds.left - 14}
+            y={bounds.top - 14}
+            width={bounds.width + 28}
+            height={bounds.height + 28}
+            rx={14}
+            fill={STAGE_SELECTION_FILL}
+            opacity={0.06}
+            pointerEvents="none"
+          />
+          <rect
+            x={bounds.left - 10}
+            y={bounds.top - 10}
+            width={bounds.width + 20}
+            height={bounds.height + 20}
+            rx={10}
+            fill="none"
+            stroke={STAGE_SELECTION_COLOR}
+            strokeWidth={1.1}
+            opacity={0.9}
+          />
+        </>
       ) : null}
 
       {renderComponentShape(component, packageDef, selected)}
@@ -1553,19 +1638,33 @@ function RenderComponent({
           component.id,
           packageDef.pins[index].id,
           point,
+          emphasizedPins,
           onPinMouseDown,
         ),
       )}
 
-      <text
-        x={bounds.centerX}
-        y={bounds.top - 14}
-        textAnchor="middle"
-        className="pointer-events-none font-mono text-[11px]"
-        fill={STAGE_LABEL_COLOR}
-      >
-        {component.reference}
-      </text>
+      <g pointerEvents="none">
+        <rect
+          x={bounds.centerX - labelWidth / 2}
+          y={bounds.top - 27}
+          width={labelWidth}
+          height={16}
+          rx={8}
+          fill={selected ? "#ffffff" : "#000000"}
+          opacity={selected ? 1 : 0.88}
+          stroke={selected ? "#ffffff" : "#ffffff"}
+          strokeWidth={selected ? 0 : 0.6}
+        />
+        <text
+          x={bounds.centerX}
+          y={bounds.top - 15}
+          textAnchor="middle"
+          className="font-mono text-[11px]"
+          fill={selected ? "#000000" : STAGE_LABEL_COLOR}
+        >
+          {component.reference}
+        </text>
+      </g>
     </g>
   );
 }
@@ -1637,6 +1736,7 @@ export function Canvas() {
   });
   const [gridVisible, setGridVisible] = useState(true);
   const [gridOpacity, setGridOpacity] = useState(0.4);
+  const [clarityMode, setClarityMode] = useState(true);
   const [textureVisible, setTextureVisible] = useState(true);
   const [textureKey, setTextureKey] = useState<'texture1' | 'texture2' | 'texture3' | 'texture4'>('texture2');
   const [textureEditMode, setTextureEditMode] = useState(false);
@@ -2465,12 +2565,33 @@ export function Canvas() {
         };
       })()
     : { x: null, y: null };
+  const selectedComponent = selectedComponentId
+    ? components.find((component) => component.id === selectedComponentId) ?? null
+    : null;
   const selectedConnection = selectedConnectionId
     ? connections.find((connection) => connection.id === selectedConnectionId) ?? null
     : null;
   const selectedJunction = selectedJunctionId
     ? junctions.find((junction) => junction.id === selectedJunctionId) ?? null
     : null;
+  const hasFocusedSelection =
+    Boolean(selectedComponentId) ||
+    Boolean(selectedConnectionId) ||
+    Boolean(selectedJunctionId) ||
+    Boolean(activeWire);
+  const relatedConnectionIds = new Set(
+    connections
+      .filter((connection) =>
+        selectedComponentId
+          ? isConnectionAttachedToComponent(connection, selectedComponentId)
+          : selectedJunctionId
+            ? isConnectionAttachedToJunction(connection, selectedJunctionId)
+            : false,
+      )
+      .map((connection) => connection.id),
+  );
+  const { issues: readabilityIssues, issueLevelByComponent: readabilityIssueLevelByComponent } =
+    computeLayoutHealth(components);
   const junctionPoints = (() => {
     const endpointCounts = new Map<string, number>();
 
@@ -2561,21 +2682,6 @@ export function Canvas() {
         }
       : { x: null, y: null };
 
-  const statusLabel = activeWire
-    ? "WIRE"
-    : selectedConnection
-      ? selectedConnection.id.toUpperCase()
-    : selectedJunction
-      ? selectedJunction.id.toUpperCase()
-    : pendingDraftId
-      ? "DRAFT"
-    : pendingLibraryItemId
-      ? "PLACE"
-    : junctionEditMode
-      ? "JUNCTION"
-      : textureEditMode
-        ? "ALIGN"
-        : "GRID";
   const resetFrame = () => {
     if (!containerRef.current) {
       setViewport({ x: 0, y: 0, zoom: 1 });
@@ -2587,6 +2693,81 @@ export function Canvas() {
   const screenGridStep = GRID_PX * viewport.zoom;
   const showFineGrid = screenGridStep > 5;
   const pointerLabel = formatUmPair(hoverPointer.xUm, hoverPointer.yUm, displayUnit);
+  const liveMode = pendingDraft
+    ? {
+        label: "Place Draft",
+        detail: pendingDraft.title,
+        toneClass: "canvas-mode-banner-active",
+      }
+    : pendingLibraryItemId
+      ? {
+          label: "Place Part",
+          detail: getLibraryItem(pendingLibraryItemId).title,
+          toneClass: "canvas-mode-banner-active",
+        }
+        : activeWire
+        ? {
+            label: "Wire",
+            detail: "Choose destination endpoint",
+            toneClass: "canvas-mode-banner-active",
+          }
+        : junctionEditMode
+          ? {
+              label: "Junction Mode",
+              detail: "Click stage to add a junction",
+              toneClass: "canvas-mode-banner-active",
+            }
+          : textureEditMode
+            ? {
+                label: "Align Texture",
+                detail: "Drag and zoom background",
+                toneClass: "canvas-mode-banner-neutral",
+              }
+            : selectedConnection
+                ? {
+                    label: "Edit Wire",
+                    detail: selectedConnection.id.toUpperCase(),
+                    toneClass: "canvas-mode-banner-neutral",
+                  }
+              : selectedJunction
+                ? {
+                    label: "Edit Junction",
+                    detail: selectedJunction.id,
+                    toneClass: "canvas-mode-banner-neutral",
+                  }
+                : selectedComponent
+                  ? {
+                      label: "Edit Part",
+                      detail: selectedComponent.reference,
+                      toneClass: "canvas-mode-banner-neutral",
+                    }
+                  : components.length === 0
+                    ? {
+                        label: "Start Layout",
+                        detail: "Pick the first part",
+                        toneClass: "canvas-mode-banner-neutral",
+                      }
+                    : {
+                        label: "Stage Ready",
+                        detail: "Select, place, or wire",
+                        toneClass: "canvas-mode-banner-neutral",
+                      };
+  const stageHintText = pendingDraftId
+    ? "Click to place the draft on the stage."
+    : pendingLibraryItemId
+      ? "Click to place the selected part."
+      : activeWire
+        ? "Finish the wire on a pin or junction."
+        : junctionEditMode
+          ? "Click empty stage to place a junction."
+          : textureEditMode
+            ? "Drag and zoom to align the texture."
+            : null;
+  const firstPlacementTitle = pendingDraft
+    ? pendingDraft.title
+    : pendingLibraryItemId
+      ? getLibraryItem(pendingLibraryItemId).title
+      : "Selected part";
 
   return (
     <main
@@ -2596,13 +2777,14 @@ export function Canvas() {
       onContextMenu={(event) => event.preventDefault()}
     >
       <div
-        className="absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-3"
+        className="absolute inset-x-3 top-3 z-20 flex flex-wrap items-start justify-between gap-2"
         onMouseDown={stopCanvasGesturePropagation}
         onPointerDown={stopCanvasGesturePropagation}
         onWheel={stopCanvasGesturePropagation}
       >
-        <div className="flex min-w-0 items-start gap-2">
-          <div className="canvas-hud-group">
+        <div className="flex min-w-0 max-w-full flex-wrap items-start gap-2">
+          <div className="canvas-toolgroup">
+            <span className="canvas-toolgroup-label">View</span>
             <div className="px-2.5 flex items-center">
               <input
                 type="range"
@@ -2631,6 +2813,10 @@ export function Canvas() {
             >
               <LocateFixed className="h-4 w-4" />
             </button>
+          </div>
+
+          <div className="canvas-toolgroup">
+            <span className="canvas-toolgroup-label">Edit</span>
             <button
               type="button"
               onClick={() => {
@@ -2648,11 +2834,22 @@ export function Canvas() {
               type="button"
               onClick={() => setJunctionEditMode((value) => !value)}
               className={`canvas-text-button ${junctionEditMode ? "canvas-control-active" : ""}`}
-              title="Place and move explicit junctions"
+              title="Place and move junctions"
             >
               Junction
             </button>
-            <div className="canvas-sep" />
+            <button
+              type="button"
+              onClick={() => setClarityMode((value) => !value)}
+              className={`canvas-text-button ${clarityMode ? "canvas-control-active" : ""}`}
+              title="Show readability warnings for dense layouts"
+            >
+              Clarity
+            </button>
+          </div>
+
+          <div className="canvas-toolgroup">
+            <span className="canvas-toolgroup-label">Background</span>
             <button
               type="button"
               onClick={() => setTextureEditMode((value) => !value)}
@@ -2672,7 +2869,8 @@ export function Canvas() {
           </div>
 
           {textureVisible || textureEditMode ? (
-            <div className="canvas-hud-group">
+            <div className="canvas-toolgroup">
+              <span className="canvas-toolgroup-label">Texture</span>
               {TEXTURE_KEYS.map((key, index) => (
                 <button
                   key={key}
@@ -2691,44 +2889,98 @@ export function Canvas() {
           ) : null}
         </div>
 
-        <div className={`canvas-status ${textureEditMode ? "canvas-status-editing" : ""}`}>
-          <span className="canvas-status-dot" />
-          <span>{statusLabel}</span>
-          <span>{pointerLabel}</span>
+        <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
+          <div className={`canvas-mode-banner ${liveMode.toneClass}`}>
+            <span className="canvas-mode-banner-label">{liveMode.label}</span>
+            <span className="canvas-mode-banner-detail">{liveMode.detail}</span>
+          </div>
+
+          <div className="canvas-toolgroup">
+            <span className="canvas-toolgroup-label">Stage</span>
+            <div className="canvas-text-chip">
+              <span className="text-aura-muted">Parts</span>
+              <span>{components.length}</span>
+            </div>
+            <div className="canvas-text-chip">
+              <span className="text-aura-muted">Wires</span>
+              <span>{connections.length}</span>
+            </div>
+            <div className="canvas-text-chip">
+              <span className="text-aura-muted">Pointer</span>
+              <span>{pointerLabel}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="pointer-events-none absolute bottom-4 left-4 z-20 max-w-xl">
-        <div className="canvas-chip text-aura-muted">
-          {pendingDraftId
-            ? "Move over the stage, then click and drag to place the pending draft. Drafts reuse the same real package geometry as built-in components."
-            : pendingLibraryItemId
-            ? "Move over the stage, then click and drag to place the pending part. Dashed guides and light snap appear near aligned pins, edges, and centers."
-            : activeWire
-            ? "Click a pin or junction to finish the net. Click empty canvas to add free-angle route points. Locked endpoints glow, and nearby pins or edges get light snap."
-            : junctionEditMode
-              ? "Click empty canvas to place a junction. Drag a junction to move it."
-            : selectedConnection
-              ? "Selected net. Drag white bend handles freely to shape it. Nearby package pins and edges get stronger snap and dashed guides. Double-click the wire to add an aligned bend, double-click a bend to remove it."
-            : selectedJunction
-              ? "Selected junction. Use Delete to remove it, or enable Junction mode to move it."
-            : textureEditMode
-              ? "Drag and zoom to align the background texture."
-              : "Drag empty space to pan. Drag bodies to move with alignment guides. Click pins or junctions to wire. Click a net to inspect it. Press R to rotate selected parts."}
+      {stageHintText ? (
+        <div className="pointer-events-none absolute bottom-4 left-4 z-20 max-w-md">
+          <div className="canvas-chip text-aura-muted">{stageHintText}</div>
         </div>
-      </div>
+      ) : null}
 
       {components.length === 0 && !pendingLibraryItemId && !pendingDraftId ? (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-          <div className="max-w-md rounded-2xl border border-white bg-black px-8 py-8 text-center shadow-[0_24px_90px_rgba(0,0,0,0.55)] backdrop-blur-sm">
+          <div className="max-w-[30rem] rounded-2xl border border-white bg-black px-8 py-8 text-center shadow-[0_24px_90px_rgba(0,0,0,0.55)] backdrop-blur-sm">
             <p className="editor-eyebrow">Empty Stage</p>
             <h3 className="mt-2 font-mono text-xl text-white">
-              Start with a real package
+              Start with one part
             </h3>
             <p className="mt-3 text-sm leading-6 text-aura-muted">
-              Add a DIP body, SMD IC, connector, or support part from the left rail.
-              {" "}Resize packages directly on the canvas, then wire pin to pin.
+              Choose one part from the left library, place it on the stage, then connect from its pins.
             </p>
+            <div className="mt-5 grid grid-cols-3 gap-2 text-left">
+              <div className="canvas-empty-step">
+                <div className="canvas-empty-step-label">1. Choose</div>
+                <div className="canvas-empty-step-detail">
+                  Use Quick Access for a fast start, or open a family and choose one part.
+                </div>
+              </div>
+              <div className="canvas-empty-step">
+                <div className="canvas-empty-step-label">2. Place</div>
+                <div className="canvas-empty-step-detail">
+                  That click readies placement. Then click the stage to drop the first part with guides.
+                </div>
+              </div>
+              <div className="canvas-empty-step">
+                <div className="canvas-empty-step-label">3. Connect</div>
+                <div className="canvas-empty-step-detail">
+                  After the part is down, start the first wire by clicking one pin and then another.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {components.length === 0 && (pendingLibraryItemId || pendingDraftId) ? (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+          <div className="max-w-[28rem] rounded-2xl border border-white bg-black px-7 py-7 text-center shadow-[0_24px_90px_rgba(0,0,0,0.55)] backdrop-blur-sm">
+            <p className="editor-eyebrow">Placement Ready</p>
+            <h3 className="mt-2 font-mono text-xl text-white">{firstPlacementTitle}</h3>
+            <p className="mt-3 text-sm leading-6 text-aura-muted">
+              The part is ready. The next click on the stage places it, then you can adjust it or start the first wire.
+            </p>
+            <div className="mt-5 grid gap-3 text-left">
+              <div className="canvas-empty-step">
+                <div className="canvas-empty-step-label">1. Move onto the stage</div>
+                <div className="canvas-empty-step-detail">
+                  The preview follows the pointer so you can judge the first position before drop.
+                </div>
+              </div>
+              <div className="canvas-empty-step">
+                <div className="canvas-empty-step-label">2. Click to place</div>
+                <div className="canvas-empty-step-detail">
+                  Alignment guides appear near edges, centers, and pins to help the first drop land cleanly.
+                </div>
+              </div>
+              <div className="canvas-empty-step">
+                <div className="canvas-empty-step-label">3. Continue with wiring</div>
+                <div className="canvas-empty-step-detail">
+                  After placement, inspect the part or start the first wire directly from its pins.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
@@ -2840,6 +3092,24 @@ export function Canvas() {
               getConnectionExcludedComponentIds(connection),
             );
             const selected = connection.id === selectedConnectionId;
+            const related = relatedConnectionIds.has(connection.id);
+            const routeState = selected ? "selected" : related ? "related" : "idle";
+            const routeStroke =
+              routeState === "selected"
+                ? STAGE_WIRE_SELECTED
+                : routeState === "related"
+                  ? STAGE_WIRE_RELATED
+                  : STAGE_WIRE_COLOR;
+            const routeStrokeWidth =
+              routeState === "selected" ? 3.1 : routeState === "related" ? 2.55 : 1.7;
+            const routeOpacity =
+              routeState === "selected"
+                ? 1
+                : routeState === "related"
+                  ? 0.95
+                  : hasFocusedSelection
+                    ? 0.34
+                    : 0.78;
             const routePoints = getOrthogonalRoutePoints(
               start.xPx,
               start.yPx,
@@ -2851,6 +3121,9 @@ export function Canvas() {
               routePointsUmToPx(connection.routePointsUm),
             );
             const bendPoints = selected ? getEditableBendPoints(routePoints) : [];
+            const routeMidpoint = getRouteMidpoint(routePoints);
+            const routeLabel = connection.id.toUpperCase();
+            const routeLabelWidth = estimateStageLabelWidth(routeLabel);
 
             return (
               <g key={connection.id}>
@@ -2866,17 +3139,18 @@ export function Canvas() {
                     routePointsUmToPx(connection.routePointsUm),
                   )}
                   fill="none"
-                  stroke={selected ? STAGE_WIRE_SELECTED : STAGE_WIRE_COLOR}
-                  strokeWidth={selected ? 3.1 : 2.1}
+                  stroke={routeStroke}
+                  strokeWidth={routeStrokeWidth}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className={`cursor-pointer transition ${selected ? "opacity-100" : "opacity-85 hover:opacity-100"}`}
+                  opacity={routeOpacity}
+                  className={`cursor-pointer transition ${selected ? "opacity-100" : "hover:opacity-100"}`}
                   onMouseDown={(event) => handleConnectionMouseDown(event, connection.id)}
                   onDoubleClick={(event) =>
                     handleConnectionPathDoubleClick(event, connection.id, routePoints)
                   }
                 />
-                {selected ? (
+                {selected || related ? (
                   <path
                     d={getOrthogonalPath(
                       start.xPx,
@@ -2889,13 +3163,34 @@ export function Canvas() {
                       routePointsUmToPx(connection.routePointsUm),
                     )}
                     fill="none"
-                    stroke={STAGE_WIRE_GLOW}
-                    strokeWidth={8}
+                    stroke={selected ? STAGE_WIRE_GLOW : STAGE_WIRE_RELATED}
+                    strokeWidth={selected ? 9 : 6}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    opacity={0.14}
+                    opacity={selected ? 0.18 : 0.08}
                     pointerEvents="none"
                   />
+                ) : null}
+                {selected ? (
+                  <g pointerEvents="none">
+                    <rect
+                      x={routeMidpoint.x - routeLabelWidth / 2}
+                      y={routeMidpoint.y - 18}
+                      width={routeLabelWidth}
+                      height={14}
+                      rx={7}
+                      fill="#ffffff"
+                    />
+                    <text
+                      x={routeMidpoint.x}
+                      y={routeMidpoint.y - 8}
+                      textAnchor="middle"
+                      className="font-mono text-[10px]"
+                      fill="#000000"
+                    >
+                      {routeLabel}
+                    </text>
+                  </g>
                 ) : null}
                 {bendPoints.map((bendPoint) => (
                   <circle
@@ -2947,17 +3242,28 @@ export function Canvas() {
             const selected = junction.id === selectedJunctionId;
 
             return (
-              <circle
-                key={junction.id}
-                cx={point.xPx}
-                cy={point.yPx}
-                r={selected ? 5.8 : 4.8}
-                fill={selected ? STAGE_SELECTION_COLOR : STAGE_HANDLE_FILL}
-                stroke={selected ? STAGE_SELECTION_SOFT : STAGE_HANDLE_STROKE}
-                strokeWidth={selected ? 1.6 : 1.1}
-                className={junctionEditMode || activeWire ? "cursor-crosshair" : "cursor-pointer"}
-                onMouseDown={(event) => handleJunctionMouseDown(event, junction.id)}
-              />
+              <g key={junction.id}>
+                {selected ? (
+                  <circle
+                    cx={point.xPx}
+                    cy={point.yPx}
+                    r={10}
+                    fill={STAGE_SELECTION_FILL}
+                    opacity={0.12}
+                    pointerEvents="none"
+                  />
+                ) : null}
+                <circle
+                  cx={point.xPx}
+                  cy={point.yPx}
+                  r={selected ? 5.8 : 4.8}
+                  fill={selected ? STAGE_SELECTION_COLOR : STAGE_HANDLE_FILL}
+                  stroke={selected ? STAGE_SELECTION_SOFT : STAGE_HANDLE_STROKE}
+                  strokeWidth={selected ? 1.6 : 1.1}
+                  className={junctionEditMode || activeWire ? "cursor-crosshair" : "cursor-pointer"}
+                  onMouseDown={(event) => handleJunctionMouseDown(event, junction.id)}
+                />
+              </g>
             );
           })}
 
@@ -3139,6 +3445,51 @@ export function Canvas() {
             </>
           ) : null}
 
+          {clarityMode ? (
+            <g pointerEvents="none">
+              {readabilityIssues.map((issue, index) => {
+                const stroke = issue.kind === "overlap" ? STAGE_WARNING_OVERLAP : STAGE_WARNING_CROWDED;
+                const label = issue.kind === "overlap" ? "Overlap" : "Crowded";
+                const labelWidth = estimateStageLabelWidth(label);
+
+                return (
+                  <g key={`${issue.kind}_${issue.componentIds.join("_")}_${index}`}>
+                    <rect
+                      x={issue.box.left - 6}
+                      y={issue.box.top - 6}
+                      width={Math.max(12, issue.box.width + 12)}
+                      height={Math.max(12, issue.box.height + 12)}
+                      rx={10}
+                      fill={stroke}
+                      opacity={issue.kind === "overlap" ? 0.08 : 0.04}
+                      stroke={stroke}
+                      strokeWidth={1}
+                      strokeDasharray={issue.kind === "overlap" ? "none" : "8 6"}
+                    />
+                    <rect
+                      x={issue.box.centerX - labelWidth / 2}
+                      y={issue.box.top - 18}
+                      width={labelWidth}
+                      height={14}
+                      rx={7}
+                      fill={stroke}
+                      opacity={0.92}
+                    />
+                    <text
+                      x={issue.box.centerX}
+                      y={issue.box.top - 8}
+                      textAnchor="middle"
+                      className="font-mono text-[10px]"
+                      fill="#000000"
+                    >
+                      {label}
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
+          ) : null}
+
           {pendingPlacementComponent && pendingPlacementPackage && pendingPlacementBounds ? (
             <g opacity={0.62}>
               {renderComponentShape(
@@ -3162,6 +3513,8 @@ export function Canvas() {
               key={component.id}
               component={component}
               selected={component.id === selectedComponentId}
+              emphasizedPins={component.id === selectedComponentId || activeWire != null}
+              readabilityIssue={clarityMode ? readabilityIssueLevelByComponent.get(component.id) ?? null : null}
               onComponentMouseDown={handleComponentMouseDown}
               onPinMouseDown={handlePinMouseDown}
             />

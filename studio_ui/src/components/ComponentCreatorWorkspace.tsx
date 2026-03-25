@@ -2489,11 +2489,13 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     library: true,
     stack: true,
   });
+  const [leftTab, setLeftTab] = useState<"setup" | "library" | "stack">("setup");
   const [rightSections, setRightSections] = useState({
     selection: true,
     definition: true,
     behaviors: false,
   });
+  const [rightTab, setRightTab] = useState<"edit" | "json" | "behavior">("edit");
   const [definitionText, setDefinitionText] = useState("");
   const [definitionNotice, setDefinitionNotice] = useState<string | null>(null);
 
@@ -3311,18 +3313,49 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
 
   return (
     <div className="creator-shell h-full min-h-0">
-      <aside className="studio-rail studio-rail-authoring">
+      <aside className="studio-rail studio-rail-authoring creator-rail">
         <div className="studio-rail-header border-b border-white px-3 py-3">
-          <div className="studio-rail-head-inner flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="editor-eyebrow">Component Lab</p>
-              <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-white">Reusable Part Authoring</h2>
+          <div className="studio-rail-head-inner">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="editor-eyebrow">Component Lab</p>
+                <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-white">Build Reusable Parts</h2>
+              </div>
+              {modeSwitch ? <div className="shrink-0">{modeSwitch}</div> : null}
             </div>
-            {modeSwitch ? <div className="shrink-0">{modeSwitch}</div> : null}
+            <div className="studio-compact-status mt-3">
+              <span className="studio-compact-status-chip">{shapeLayers.length} layers</span>
+              <span className="studio-compact-status-chip">{children.length} child parts</span>
+              <span className="studio-compact-status-chip">{persistentDimensions.length} dims</span>
+            </div>
           </div>
+        </div>
+        <div className="studio-rail-tabbar">
+          <button
+            type="button"
+            onClick={() => setLeftTab("setup")}
+            className={`studio-rail-tab ${leftTab === "setup" ? "studio-rail-tab-active" : ""}`}
+          >
+            Setup
+          </button>
+          <button
+            type="button"
+            onClick={() => setLeftTab("library")}
+            className={`studio-rail-tab ${leftTab === "library" ? "studio-rail-tab-active" : ""}`}
+          >
+            Library
+          </button>
+          <button
+            type="button"
+            onClick={() => setLeftTab("stack")}
+            className={`studio-rail-tab ${leftTab === "stack" ? "studio-rail-tab-active" : ""}`}
+          >
+            Stack
+          </button>
         </div>
         <div className="studio-rail-scroll px-3 py-3">
           <div className="studio-rail-body-inner space-y-3">
+            {leftTab === "setup" ? (
             <CreatorSection
               title="Component"
               count={selectedBaseId === NO_BASE_ID ? "none" : 1}
@@ -3343,9 +3376,10 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   </button>
                 ))}
               </div>
-              <div className="studio-muted-note">Start empty, place real parts, then edit geometry directly.</div>
             </CreatorSection>
+            ) : null}
 
+            {leftTab === "library" ? (
             <CreatorSection
               title="Library"
               count={pendingChildItemId ? "armed" : childOptions.length}
@@ -3374,9 +3408,10 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   </button>
                 ))}
               </div>
-              <div className="studio-muted-note">Choose a part here, then click on the stage to place it.</div>
             </CreatorSection>
+            ) : null}
 
+            {leftTab === "stack" ? (
             <CreatorSection
               title="Stack"
               count={stackItems.length}
@@ -3396,8 +3431,9 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   ) : null}
                 </div>
               ))}
-              {stackItems.length === 0 ? <div className="studio-muted-note">Draw directly or place a real part to start building the stack.</div> : null}
+              {stackItems.length === 0 ? <div className="studio-muted-note">Place a base part or draw a shape to start building the stack.</div> : null}
             </CreatorSection>
+            ) : null}
           </div>
         </div>
       </aside>
@@ -3405,12 +3441,11 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
       <main className="creator-stage">
         <div className="creator-stage-panel">
           <div className="creator-stage-head">
-            <div className="min-w-0">
-              <p className="editor-eyebrow">Deterministic Package Authoring</p>
+            <div className="min-w-0 overflow-hidden">
+              <p className="editor-eyebrow truncate">Component Stage</p>
               <h2 className="mt-1.5 truncate font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-white">{componentName}</h2>
-              <p className="mt-1.5 text-[10px] leading-4 text-aura-muted">Middle mouse pans. Wheel zooms. Start from a known package, then convert only the layers you need to edit.</p>
             </div>
-            <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
               <span className="creator-preset-chip">{selectedBaseId === NO_BASE_ID ? "EMPTY" : selectedPackage?.packageKey ?? "BLANK-BOARD"}</span>
               {hasBase ? <span className="creator-preset-chip">{formatMm(baseLayout.bodyWidthUm)} x {formatMm(baseLayout.bodyHeightUm)}</span> : null}
             </div>
@@ -3419,6 +3454,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
           <div className="creator-stage-toolbar">
             {TOOL_GROUPS.map((group) => (
               <div key={group.title} className="creator-toolbar-group">
+                <span className="canvas-toolgroup-label">{group.title}</span>
                 {group.tools.map((toolId) => {
                   const tool = TOOL_OPTIONS.find((entry) => entry.id === toolId);
                   if (!tool) {
@@ -3433,6 +3469,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
               </div>
             ))}
             <div className="creator-toolbar-group">
+              <span className="canvas-toolgroup-label">View</span>
               <button type="button" onClick={resetViewport} className="creator-choice-button">Reset View</button>
             </div>
           </div>
@@ -3765,16 +3802,42 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
 
       <aside className="studio-rail studio-rail-detail">
         <div className="studio-rail-header border-b border-white px-3 py-3">
-          <div className="studio-rail-head-inner flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="editor-eyebrow">Inspector</p>
-              <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-white">{selectionLabel}</h2>
+          <div className="studio-rail-head-inner">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="editor-eyebrow">Inspector</p>
+                <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-white">{selectionLabel}</h2>
+              </div>
+              <span className="studio-pill">{selectedLayer?.kind ?? "none"}</span>
             </div>
-            <span className="studio-pill">{selectedLayer?.kind ?? "none"}</span>
+            <div className="studio-rail-tabbar mt-3 !border-b-0 !px-0 !py-0">
+              <button
+                type="button"
+                onClick={() => setRightTab("edit")}
+                className={`studio-rail-tab ${rightTab === "edit" ? "studio-rail-tab-active" : ""}`}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => setRightTab("json")}
+                className={`studio-rail-tab ${rightTab === "json" ? "studio-rail-tab-active" : ""}`}
+              >
+                JSON
+              </button>
+              <button
+                type="button"
+                onClick={() => setRightTab("behavior")}
+                className={`studio-rail-tab ${rightTab === "behavior" ? "studio-rail-tab-active" : ""}`}
+              >
+                Behavior
+              </button>
+            </div>
           </div>
         </div>
         <div className="studio-rail-scroll px-3 py-3">
           <div className="studio-rail-body-inner space-y-3">
+            {rightTab === "edit" ? (
             <CreatorSection
               title="Selection"
               count={selectedLayer?.kind ?? "none"}
@@ -3792,7 +3855,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   </div>
                   <p className="mt-2 text-[11px] leading-5 text-neutral-400">Editing this child as real sketch layers. Apply to save it back into the grouped child, or cancel to restore the original instance.</p>
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    <button type="button" onClick={applyChildEditSession} className="editor-action-button">
+                    <button type="button" onClick={applyChildEditSession} className="editor-action-button editor-action-button-success">
                       Apply Child Edit
                     </button>
                     <button type="button" onClick={cancelChildEditSession} className="editor-action-button">
@@ -4361,7 +4424,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                       setSelectedLayer(hasBase ? { kind: "base", id: "body_primary" } : null);
                       setSelectedChildPinId(null);
                     }}
-                    className="editor-action-button"
+                    className="editor-action-button editor-action-button-danger"
                   >
                     Delete Child
                   </button>
@@ -4856,7 +4919,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                       );
                       setSelectedLayer({ kind: "base", id: "body_primary" });
                     }}
-                    className="editor-action-button"
+                    className="editor-action-button editor-action-button-danger"
                   >
                     Delete Layer
                   </button>
@@ -4864,16 +4927,15 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
               ) : null}
               {selectedLayer == null ? <div className="rounded-xl border border-dashed border-white/20 px-3 py-3 text-[10px] leading-4 text-aura-muted">Select the body, pins, a marking, child part, or a custom drawn shape to edit it.</div> : null}
             </CreatorSection>
+            ) : null}
 
+            {rightTab === "json" ? (
             <CreatorSection
               title="Definition JSON"
               count="v1"
               open={rightSections.definition}
               onToggle={() => setRightSections((current) => ({ ...current, definition: !current.definition }))}
             >
-              <div className="rounded-xl border border-white/12 px-3 py-3 text-[11px] leading-5 text-aura-muted">
-                Use this as the deterministic round-trip format for library growth. Build visually, export JSON, refine it, then re-apply it without hidden creator-only state. Export reviewed parts as <span className="font-mono text-white">.component.json</span> files so they can live in the shared repo library.
-              </div>
               <input
                 ref={definitionFileInputRef}
                 type="file"
@@ -4899,7 +4961,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                 <button
                   type="button"
                   onClick={exportDefinitionFile}
-                  className="editor-action-button"
+                  className="editor-action-button editor-action-button-success"
                 >
                   Export File
                 </button>
@@ -4913,14 +4975,14 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                 <button
                   type="button"
                   onClick={applyDefinitionText}
-                  className="editor-action-button"
+                  className="editor-action-button editor-action-button-success"
                 >
                   Apply JSON
                 </button>
                 <button
                   type="button"
                   onClick={() => setDefinitionText("")}
-                  className="editor-action-button"
+                  className="editor-action-button editor-action-button-danger"
                 >
                   Clear Editor
                 </button>
@@ -4956,9 +5018,11 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                 </div>
               ) : null}
             </CreatorSection>
+            ) : null}
 
+            {rightTab === "behavior" ? (
             <CreatorSection
-              title="Advanced Behavior"
+              title="Behavior"
               count={selectedPreset.short}
               open={rightSections.behaviors}
               onToggle={() => setRightSections((current) => ({ ...current, behaviors: !current.behaviors }))}
@@ -4971,7 +5035,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
               <div className="studio-stat-card">
                 <div className="editor-label !mb-1">Target Layer</div>
                 <div className="font-mono text-[12px] text-white">{selectionLabel}</div>
-                <p className="mt-2 text-[11px] leading-5 text-aura-muted">Use this only after the component geometry is right. The selected visible layer becomes the behavior target.</p>
+                <p className="mt-2 text-[11px] leading-5 text-aura-muted">Apply behavior after the geometry is correct. The selected visible layer becomes the target.</p>
               </div>
               <div><label className="editor-label">Signal Name</label><input value={draft.property} onChange={(event) => setDraft((current) => ({ ...current, property: event.target.value }))} className="editor-input" /></div>
               {selectedPreset.id === "light_emitter" ? (
@@ -4989,6 +5053,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                 <pre className="creator-json-preview whitespace-pre-wrap break-all">{JSON.stringify(compiledBehaviorEntry, null, 2)}</pre>
               </div>
             </CreatorSection>
+            ) : null}
           </div>
         </div>
       </aside>

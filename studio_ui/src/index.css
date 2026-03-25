@@ -42,7 +42,68 @@
   .studio-shell {
     @apply grid h-full min-h-0;
     gap: clamp(8px, 0.8vw, 12px);
-    grid-template-columns: clamp(212px, 17vw, 274px) minmax(0, 1fr) clamp(228px, 18vw, 304px);
+    grid-template-columns: clamp(272px, 23vw, 338px) minmax(0, 1fr) clamp(252px, 21vw, 324px);
+  }
+
+  .editor-workspace {
+    @apply grid h-full min-h-0;
+    gap: clamp(8px, 0.8vw, 12px);
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .workspace-banner {
+    @apply flex items-start justify-between gap-4 rounded-[18px] border border-white bg-black px-4 py-3;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  }
+
+  .workspace-banner-main {
+    @apply flex min-w-0 flex-1 flex-col gap-2;
+  }
+
+  .workspace-banner-side {
+    @apply flex shrink-0 flex-col items-end gap-2;
+  }
+
+  .workspace-banner-switch {
+    @apply flex justify-end;
+  }
+
+  .workspace-title {
+    @apply mt-1.5 font-sans text-[1.05rem] font-black uppercase tracking-[0.16em] text-white;
+  }
+
+  .workspace-subtitle {
+    @apply mt-2 max-w-[42rem] text-[11px] leading-5 text-aura-muted;
+  }
+
+  .workspace-meta-strip {
+    @apply flex flex-wrap items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-aura-muted;
+  }
+
+  .workspace-meta-strip > span {
+    @apply rounded-full border border-white/20 px-2 py-1;
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+
+  .workspace-meta-pill-clean {
+    border-color: rgba(120, 255, 180, 0.3);
+    color: rgba(220, 255, 232, 0.9);
+  }
+
+  .workspace-meta-pill-warn {
+    border-color: rgba(255, 229, 168, 0.34);
+    color: rgba(255, 239, 205, 0.92);
+  }
+
+  .workspace-meta-pill-alert {
+    border-color: rgba(255, 213, 204, 0.34);
+    color: rgba(255, 226, 220, 0.92);
+  }
+
+  .workspace-title-row {
+    @apply mt-1.5 flex items-center gap-2;
   }
 
   .creator-shell {
@@ -51,13 +112,21 @@
     grid-template-columns: clamp(220px, 18vw, 290px) minmax(0, 1fr) clamp(236px, 19vw, 316px);
   }
 
+  .creator-rail {
+    position: relative;
+    z-index: 20;
+    overflow: hidden;
+  }
+
   .studio-rail {
     @apply flex min-h-0 flex-col overflow-hidden rounded-[18px] border border-white bg-black;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   .studio-rail-left {
-    overflow: visible;
+    min-height: 0;
+    overflow-x: visible;
+    overflow-y: hidden;
     position: relative;
     z-index: 30;
   }
@@ -92,11 +161,11 @@
   }
 
   .studio-rail-head-inner {
-    @apply mx-auto w-full max-w-[16.75rem];
+    @apply mx-auto w-full max-w-[20rem];
   }
 
   .studio-rail-body-inner {
-    @apply mx-auto w-full max-w-[16.75rem];
+    @apply mx-auto w-full max-w-[20rem];
   }
 
   .studio-rail-scroll {
@@ -117,12 +186,36 @@
     @apply rounded-xl border border-white bg-black p-2;
   }
 
+  .studio-inline-note {
+    @apply rounded-xl border border-white/15 bg-white/[0.03] px-2.5 py-2.5;
+  }
+
+  .studio-callout {
+    @apply rounded-2xl border border-white px-3 py-3;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+      #000000;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .studio-callout-inspector {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 48px 78px rgba(120, 190, 255, 0.045);
+  }
+
   .studio-stat-grid {
     @apply grid grid-cols-2 gap-2;
   }
 
   .studio-stat-card {
     @apply rounded-lg border border-white bg-black px-2 py-1.5;
+  }
+
+  .studio-stat-card-library {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
+      #000000;
   }
 
   .studio-pill {
@@ -135,6 +228,17 @@
 
   .editor-label {
     @apply mb-1 block text-[9px] font-bold uppercase tracking-[0.16em] text-white;
+  }
+
+  .hover-hint {
+    @apply inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/[0.03] text-aura-muted transition;
+  }
+
+  .hover-hint:hover,
+  .hover-hint:focus-visible {
+    border-color: rgba(255, 255, 255, 0.9);
+    color: #ffffff;
+    outline: none;
   }
 
   .editor-input {
@@ -172,8 +276,276 @@
     color: #000000;
   }
 
+  .editor-action-button-success {
+    border-color: rgba(150, 255, 196, 0.42);
+    color: rgba(220, 255, 232, 0.95);
+    background-color: rgba(150, 255, 196, 0.06);
+  }
+
+  .editor-action-button-success:hover {
+    border-color: rgba(150, 255, 196, 0.95);
+    background-color: rgba(150, 255, 196, 0.95);
+    color: #000000;
+  }
+
+  .editor-action-button-accent {
+    border-color: rgba(167, 212, 255, 0.42);
+    color: rgba(224, 240, 255, 0.95);
+    background-color: rgba(167, 212, 255, 0.06);
+  }
+
+  .editor-action-button-accent:hover {
+    border-color: rgba(167, 212, 255, 0.95);
+    background-color: rgba(167, 212, 255, 0.95);
+    color: #000000;
+  }
+
+  .editor-action-button-danger {
+    border-color: rgba(255, 132, 132, 0.48);
+    color: rgba(255, 218, 218, 0.95);
+    background-color: rgba(255, 132, 132, 0.06);
+  }
+
+  .editor-action-button-danger:hover {
+    border-color: rgba(255, 132, 132, 0.95);
+    background-color: rgba(255, 132, 132, 0.95);
+    color: #000000;
+  }
+
+  .studio-flow-grid {
+    @apply grid gap-1.5;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .studio-flow-step {
+    @apply rounded-xl border px-2 py-2;
+    border-color: rgba(255, 255, 255, 0.18);
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+
+  .studio-flow-step-active {
+    border-color: rgba(255, 255, 255, 0.92);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .studio-flow-step-complete {
+    border-color: rgba(255, 255, 255, 0.34);
+    box-shadow: inset 0 24px 54px rgba(120, 255, 180, 0.04);
+  }
+
+  .studio-list-note {
+    @apply rounded-lg border border-white/15 bg-white/[0.03] px-2.5 py-2 text-[11px] leading-5 text-aura-ink;
+  }
+
+  .studio-choice-grid {
+    @apply grid grid-cols-2 gap-2;
+  }
+
+  .studio-choice-card {
+    @apply rounded-xl border border-white/15 bg-white/[0.03] px-2.5 py-2.5;
+  }
+
+  .studio-quick-row {
+    @apply flex w-full items-center justify-between rounded-xl border border-white/20 bg-white/[0.03] px-2.5 py-2 text-left transition;
+  }
+
+  .studio-rail-tabbar {
+    @apply flex items-center gap-1 border-b border-white px-3 py-2;
+  }
+
+  .studio-rail-tab {
+    @apply inline-flex h-7 min-w-[5.5rem] items-center justify-center rounded-full border border-white/20 bg-white/[0.03] px-3 font-mono text-[9px] uppercase tracking-[0.14em] text-aura-muted transition;
+  }
+
+  .studio-rail-tab-active {
+    @apply border-white bg-white text-black;
+  }
+
+  .studio-compact-action-grid {
+    @apply grid grid-cols-2 gap-1.5;
+  }
+
+  .studio-compact-status {
+    @apply flex flex-wrap items-center gap-1.5;
+  }
+
+  .studio-compact-status-chip {
+    @apply inline-flex h-5 items-center justify-center rounded-full border border-white/20 px-2 font-mono text-[8px] uppercase tracking-[0.14em] text-aura-muted;
+  }
+
+  .studio-quick-row:hover {
+    border-color: rgba(255, 255, 255, 0.92);
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  .studio-quick-row:hover .text-aura-muted,
+  .studio-quick-row:hover .text-aura-ink {
+    color: rgba(0, 0, 0, 0.78);
+  }
+
+  .studio-item-card {
+    @apply w-full rounded-lg border border-white/25 bg-[#121212] px-2.5 py-2 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition;
+  }
+
+  .studio-item-card:hover {
+    border-color: rgba(255, 255, 255, 0.92);
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  .studio-item-badges {
+    @apply mt-1.5 flex flex-wrap gap-1;
+  }
+
+  .studio-item-badge {
+    @apply inline-flex h-5 items-center justify-center rounded-full border border-white/20 px-2 font-mono text-[8px] uppercase tracking-[0.14em] text-aura-muted transition;
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+
+  .studio-item-cue {
+    @apply mt-1.5 flex items-center justify-between gap-3 font-mono text-[8px] uppercase tracking-[0.12em] text-aura-muted transition;
+  }
+
+  .studio-item-card:hover .studio-item-badge {
+    border-color: rgba(0, 0, 0, 0.16);
+    background-color: rgba(0, 0, 0, 0.05);
+    color: rgba(0, 0, 0, 0.72);
+  }
+
+  .studio-item-card:hover .studio-item-cue,
+  .studio-item-card:hover .text-aura-muted,
+  .studio-item-card:hover .text-aura-ink {
+    color: rgba(0, 0, 0, 0.76);
+  }
+
+  .studio-family-card {
+    @apply overflow-hidden rounded-xl border bg-[#0a0a0a];
+    border-color: rgba(255, 255, 255, 0.32);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .studio-family-card-head {
+    @apply flex items-start justify-between gap-3 border-b px-3 py-2.5;
+    border-color: rgba(255, 255, 255, 0.14);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015)),
+      #0a0a0a;
+  }
+
+  .studio-family-card-head-button {
+    @apply w-full text-left transition;
+  }
+
+  .studio-family-card-head-button:hover .text-aura-muted {
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .studio-family-icon {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-white/[0.04] text-white;
+  }
+
+  .studio-family-badge {
+    @apply inline-flex h-5 items-center justify-center rounded-full border border-white/20 px-2 font-mono text-[8px] uppercase tracking-[0.14em] text-aura-muted;
+  }
+
+  .studio-family-chevron {
+    @apply inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/20 bg-white/[0.03] text-white;
+  }
+
+  .studio-family-card-integrated {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 44px 84px rgba(110, 190, 255, 0.055);
+  }
+
+  .studio-family-card-connectors {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 44px 84px rgba(120, 255, 180, 0.05);
+  }
+
+  .studio-family-card-power {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 44px 84px rgba(255, 214, 90, 0.055);
+  }
+
+  .studio-family-card-discretes {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 44px 84px rgba(255, 255, 255, 0.03);
+  }
+
+  .studio-family-card-controls {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 44px 84px rgba(255, 160, 160, 0.05);
+  }
+
+  .studio-disclosure {
+    @apply rounded-xl border border-white bg-black p-2.5;
+  }
+
+  .studio-utility-disclosure {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+      #000000;
+  }
+
+  .studio-disclosure-summary {
+    @apply flex cursor-pointer list-none items-center justify-between gap-3;
+  }
+
+  .studio-disclosure-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .studio-subdisclosure {
+    @apply rounded-lg border border-white/15 bg-white/[0.02] p-2.5;
+  }
+
+  .studio-subdisclosure-summary {
+    @apply flex cursor-pointer list-none items-center justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.14em] text-white;
+  }
+
+  .studio-subdisclosure-summary::-webkit-details-marker {
+    display: none;
+  }
+
   .canvas-chip {
     @apply rounded-full border border-white bg-black px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-white shadow-[0_14px_40px_rgba(0,0,0,0.4)] backdrop-blur-sm;
+  }
+
+  .canvas-handoff-card {
+    @apply max-w-[30rem] rounded-2xl border border-white bg-black px-3 py-3;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 16px 40px rgba(0, 0, 0, 0.42);
+  }
+
+  .canvas-handoff-head {
+    @apply flex items-center justify-between gap-3;
+  }
+
+  .canvas-handoff-label {
+    @apply inline-flex rounded-full border border-white/20 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.16em] text-aura-muted;
+  }
+
+  .canvas-handoff-grid {
+    @apply mt-3 grid grid-cols-2 gap-2;
+  }
+
+  .canvas-handoff-step {
+    @apply rounded-xl border border-white/15 bg-white/[0.03] px-2.5 py-2;
+  }
+
+  .canvas-handoff-title {
+    @apply font-mono text-[10px] uppercase tracking-[0.16em] text-white;
+  }
+
+  .canvas-handoff-detail {
+    @apply mt-1 text-[10px] leading-4 text-aura-muted;
   }
 
   .canvas-button {
@@ -188,12 +560,101 @@
     @apply flex items-center gap-1 rounded-xl border border-white bg-black px-1 py-1 shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm;
   }
 
+  .canvas-toolgroup {
+    @apply flex items-center gap-2 rounded-xl border border-white bg-black px-2 py-1 shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm;
+  }
+
+  .canvas-toolgroup-label {
+    @apply pl-1 font-mono text-[8px] uppercase tracking-[0.18em] text-aura-muted;
+  }
+
+  .canvas-text-chip {
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/[0.04] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-white;
+  }
+
+  .canvas-mode-banner {
+    @apply inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 shadow-[0_14px_40px_rgba(0,0,0,0.4)] backdrop-blur-sm;
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+
+  .canvas-mode-banner-neutral {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .canvas-mode-banner-active {
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 14px 40px rgba(0, 0, 0, 0.4),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .canvas-mode-banner-label {
+    @apply font-mono text-[9px] uppercase tracking-[0.16em] text-white;
+  }
+
+  .canvas-mode-banner-detail {
+    @apply font-mono text-[9px] uppercase tracking-[0.12em] text-aura-muted;
+  }
+
   .canvas-status {
     @apply flex items-center gap-2 rounded-xl border border-white bg-black px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.16em] text-white shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm;
   }
 
   .canvas-status-editing {
     border-color: rgba(120, 255, 180, 0.78);
+  }
+
+  .canvas-sidecard {
+    @apply rounded-2xl border border-white bg-black px-3 py-3;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 16px 40px rgba(0, 0, 0, 0.42);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015)),
+      #000000;
+  }
+
+  .canvas-sidecard-mode {
+    @apply font-mono text-[8px] uppercase tracking-[0.18em] text-aura-muted;
+  }
+
+  .canvas-sidecard-title {
+    @apply mt-1 font-sans text-[0.9rem] font-black uppercase tracking-[0.14em] text-white;
+  }
+
+  .canvas-sidecard-meta {
+    @apply rounded-full border border-white/20 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-aura-muted;
+  }
+
+  .canvas-sidecard-detail {
+    @apply mt-2 text-[10px] leading-4 text-aura-muted;
+  }
+
+  .canvas-sidecard-metas {
+    @apply mt-2 flex flex-wrap gap-1.5;
+  }
+
+  .canvas-sidecard-meta-alert {
+    border-color: rgba(255, 213, 204, 0.42);
+    color: rgba(255, 226, 220, 0.92);
+  }
+
+  .canvas-sidecard-meta-warn {
+    border-color: rgba(255, 229, 168, 0.42);
+    color: rgba(255, 239, 205, 0.92);
+  }
+
+  .canvas-cursor-tag {
+    @apply inline-flex items-center gap-2 rounded-full border px-2.5 py-1.5 shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm;
+    background-color: rgba(0, 0, 0, 0.92);
+  }
+
+  .canvas-cursor-tag-label {
+    @apply font-mono text-[8px] uppercase tracking-[0.18em] text-white;
+  }
+
+  .canvas-cursor-tag-detail {
+    @apply font-mono text-[8px] uppercase tracking-[0.12em] text-aura-muted;
   }
 
   .canvas-status-dot {
@@ -237,23 +698,25 @@
   }
 
   .creator-stage {
-    @apply min-h-0 rounded-[22px] border border-white bg-black p-3;
+    @apply relative min-h-0 min-w-0 overflow-hidden rounded-[22px] border border-white bg-black p-3;
+    isolation: isolate;
+    z-index: 0;
   }
 
   .creator-stage-panel {
-    @apply flex h-full min-h-0 flex-col rounded-[18px] border border-white bg-[radial-gradient(circle_at_top,#181818_0%,#090909_72%)] p-3;
+    @apply relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-white bg-[radial-gradient(circle_at_top,#181818_0%,#090909_72%)] p-3;
   }
 
   .creator-stage-head {
-    @apply flex shrink-0 items-start justify-between gap-3;
+    @apply flex min-w-0 shrink-0 items-start justify-between gap-3 overflow-hidden;
   }
 
   .creator-stage-toolbar {
-    @apply mt-3 flex shrink-0 flex-wrap items-center gap-1.5;
+    @apply mt-3 flex min-w-0 shrink-0 flex-wrap items-center gap-1.5 overflow-hidden;
   }
 
   .creator-toolbar-group {
-    @apply inline-flex items-center gap-1 rounded-xl border border-white bg-black p-1;
+    @apply inline-flex max-w-full flex-wrap items-center gap-1 rounded-xl border border-white bg-black p-1;
   }
 
   .creator-preset-chip {
@@ -278,6 +741,14 @@
 
   .creator-preview-card {
     @apply relative mt-3 min-h-0 flex-1 overflow-hidden rounded-[20px] border border-white bg-black;
+    isolation: isolate;
+    clip-path: inset(0 round 20px);
+  }
+
+  .creator-preview-card > svg {
+    display: block;
+    overflow: hidden;
+    background-color: #000000;
   }
 
   .creator-preview-title {
@@ -362,6 +833,18 @@
     @apply overflow-x-auto rounded-xl border border-white bg-black p-3 font-mono text-[11px] leading-5 text-white;
   }
 
+  .canvas-empty-step {
+    @apply rounded-xl border border-white/20 bg-white/[0.03] px-3 py-2.5;
+  }
+
+  .canvas-empty-step-label {
+    @apply font-mono text-[10px] uppercase tracking-[0.16em] text-white;
+  }
+
+  .canvas-empty-step-detail {
+    @apply mt-1 text-[10px] leading-4 text-aura-muted;
+  }
+
   .canvas-icon-button:hover,
   .canvas-text-button:hover {
     border-color: var(--aura-accent);
@@ -372,7 +855,7 @@
   @media (max-width: 1180px) {
     .studio-shell {
       gap: 10px;
-      grid-template-columns: 204px minmax(0, 1fr) 232px;
+      grid-template-columns: 244px minmax(0, 1fr) 252px;
     }
 
     .creator-shell {
@@ -384,6 +867,22 @@
   @media (max-width: 960px) {
     .studio-shell {
       @apply flex flex-col;
+    }
+
+    .workspace-banner {
+      @apply flex-col items-start;
+    }
+
+    .workspace-banner-side {
+      @apply w-full items-start;
+    }
+
+    .workspace-meta-strip {
+      @apply justify-start;
+    }
+
+    .studio-flow-grid {
+      @apply grid-cols-1;
     }
 
     .creator-shell {

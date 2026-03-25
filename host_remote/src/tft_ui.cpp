@@ -6,6 +6,7 @@
 #include <cstring>
 #include <stdio.h>
 
+#include "remote_peripheral_config.h"
 #include "tft_display_config.h"
 
 namespace {
@@ -14,8 +15,10 @@ using namespace aura_host::display_config;
 
 constexpr uint8_t kCmdSwReset = 0x01;
 constexpr uint8_t kCmdSleepOut = 0x11;
+constexpr uint8_t kCmdDisplayOff = 0x28;
 constexpr uint8_t kCmdDisplayOn = 0x29;
 constexpr uint8_t kCmdNormalDisplayOn = 0x13;
+constexpr uint8_t kCmdGammaSet = 0x26;
 constexpr uint8_t kCmdInversionOff = 0x20;
 constexpr uint8_t kCmdInversionOn = 0x21;
 constexpr uint8_t kCmdColumnAddressSet = 0x2A;
@@ -29,7 +32,9 @@ constexpr uint8_t kMadCtlMx = 0x40;
 constexpr uint8_t kMadCtlMv = 0x20;
 constexpr uint8_t kMadCtlBgr = 0x08;
 
-const SPISettings kSpiSettings(16000000, MSBFIRST, SPI_MODE0);
+// Keep the panel bus conservative during bring-up. The new larger TFT and
+// longer wiring are more sensitive than the earlier smoke-test display.
+const SPISettings kSpiSettings(8000000, MSBFIRST, SPI_MODE0);
 
 constexpr uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
   return static_cast<uint16_t>(((red & 0xF8) << 8) | ((green & 0xFC) << 3) | (blue >> 3));
@@ -52,8 +57,8 @@ constexpr uint16_t kColorSettings = color565(180, 190, 205);
 constexpr uint16_t kColorHighlightFill = color565(244, 247, 252);
 constexpr uint16_t kColorHighlightText = color565(12, 14, 18);
 
-constexpr int16_t kScreenWidth = 160;
-constexpr int16_t kScreenHeight = 128;
+constexpr int16_t kScreenWidth = static_cast<int16_t>(kUiWidth);
+constexpr int16_t kScreenHeight = static_cast<int16_t>(kUiHeight);
 constexpr int16_t kHeaderLineY = 18;
 constexpr int16_t kBodyTopY = 19;
 constexpr int16_t kBodyHeight = 97;
@@ -141,7 +146,7 @@ const Glyph5x7* findGlyph(char value) {
   return nullptr;
 }
 
-class St7735Panel {
+class SpiTftPanel {
  public:
   void begin() {
     pinMode(kPinTftCs, OUTPUT);
@@ -159,11 +164,13 @@ class St7735Panel {
       setBacklightEnabled(false);
     }
 
+    parkSharedSpiDevices();
     SPI.begin(kSpiSck, kSpiMiso, kSpiMosi, kPinTftCs);
 
     hardReset();
     initializeRegisters();
     setRotation(kRotation);
+    clearPhysicalPanel(kColorBackground);
     clearBuffer(kColorBackground);
     present();
 
@@ -173,19 +180,19 @@ class St7735Panel {
   }
 
   uint16_t width() const {
-    return width_;
+    return logicalWidth_;
   }
 
   uint16_t height() const {
-    return height_;
+    return logicalHeight_;
   }
 
   void fillScreen(uint16_t color) {
-    fillRect(0, 0, width_, height_, color);
+    fillRect(0, 0, static_cast<int16_t>(logicalWidth_), static_cast<int16_t>(logicalHeight_), color);
   }
 
   void drawPixel(int16_t x, int16_t y, uint16_t color) {
-    if ((x < 0) || (y < 0) || (x >= static_cast<int16_t>(width_)) || (y >= static_cast<int16_t>(height_))) {
+    if ((x < 0) || (y < 0) || (x >= static_cast<int16_t>(logicalWidth_)) || (y >= static_cast<int16_t>(logicalHeight_))) {
       return;
     }
 
@@ -194,8 +201,8 @@ class St7735Panel {
   }
 
   void fillRect(int16_t x, int16_t y, int16_t width, int16_t height, uint16_t color) {
-    if ((width <= 0) || (height <= 0) || (x >= static_cast<int16_t>(width_)) ||
-        (y >= static_cast<int16_t>(height_))) {
+    if ((width <= 0) || (height <= 0) || (x >= static_cast<int16_t>(logicalWidth_)) ||
+        (y >= static_cast<int16_t>(logicalHeight_))) {
       return;
     }
 
@@ -209,12 +216,12 @@ class St7735Panel {
       y = 0;
     }
 
-    if ((x + width) > static_cast<int16_t>(width_)) {
-      width = static_cast<int16_t>(width_) - x;
+    if ((x + width) > static_cast<int16_t>(logicalWidth_)) {
+      width = static_cast<int16_t>(logicalWidth_) - x;
     }
 
-    if ((y + height) > static_cast<int16_t>(height_)) {
-      height = static_cast<int16_t>(height_) - y;
+    if ((y + height) > static_cast<int16_t>(logicalHeight_)) {
+      height = static_cast<int16_t>(logicalHeight_) - y;
     }
 
     if ((width <= 0) || (height <= 0)) {
@@ -275,31 +282,68 @@ class St7735Panel {
     rotation_ = rotation & 0x03;
 
     uint8_t madctl = 0;
-    switch (rotation_) {
-      case 0:
-        madctl = kMadCtlMx | kMadCtlMy;
-        width_ = kPanelWidth;
-        height_ = kPanelHeight;
-        break;
-      case 1:
-        madctl = kMadCtlMy | kMadCtlMv;
-        width_ = kPanelHeight;
-        height_ = kPanelWidth;
-        break;
-      case 2:
-        madctl = 0x00;
-        width_ = kPanelWidth;
-        height_ = kPanelHeight;
-        break;
-      default:
-        madctl = kMadCtlMx | kMadCtlMv;
-        width_ = kPanelHeight;
-        height_ = kPanelWidth;
-        break;
+    if (kPanelController == PanelController::Ili9341) {
+      switch (rotation_) {
+        case 0:
+          madctl = kMadCtlMx;
+          physicalWidth_ = kPanelWidth;
+          physicalHeight_ = kPanelHeight;
+          break;
+        case 1:
+          madctl = kMadCtlMv;
+          physicalWidth_ = kPanelHeight;
+          physicalHeight_ = kPanelWidth;
+          break;
+        case 2:
+          madctl = kMadCtlMy;
+          physicalWidth_ = kPanelWidth;
+          physicalHeight_ = kPanelHeight;
+          break;
+        default:
+          madctl = kMadCtlMx | kMadCtlMy | kMadCtlMv;
+          physicalWidth_ = kPanelHeight;
+          physicalHeight_ = kPanelWidth;
+          break;
+      }
+    } else {
+      switch (rotation_) {
+        case 0:
+          madctl = kMadCtlMx | kMadCtlMy;
+          physicalWidth_ = kPanelWidth;
+          physicalHeight_ = kPanelHeight;
+          break;
+        case 1:
+          madctl = kMadCtlMy | kMadCtlMv;
+          physicalWidth_ = kPanelHeight;
+          physicalHeight_ = kPanelWidth;
+          break;
+        case 2:
+          madctl = 0x00;
+          physicalWidth_ = kPanelWidth;
+          physicalHeight_ = kPanelHeight;
+          break;
+        default:
+          madctl = kMadCtlMx | kMadCtlMv;
+          physicalWidth_ = kPanelHeight;
+          physicalHeight_ = kPanelWidth;
+          break;
+      }
     }
 
     if (kUseBgrColorOrder) {
       madctl |= kMadCtlBgr;
+    }
+
+    logicalWidth_ = kUiWidth;
+    logicalHeight_ = kUiHeight;
+    viewportX_ = static_cast<int16_t>(kUiOriginX);
+    viewportY_ = static_cast<int16_t>(kUiOriginY);
+
+    if ((viewportX_ + static_cast<int16_t>(logicalWidth_)) > static_cast<int16_t>(physicalWidth_)) {
+      viewportX_ = 0;
+    }
+    if ((viewportY_ + static_cast<int16_t>(logicalHeight_)) > static_cast<int16_t>(physicalHeight_)) {
+      viewportY_ = 0;
     }
 
     beginWrite();
@@ -309,7 +353,7 @@ class St7735Panel {
   }
 
   void present() {
-    presentRect(0, 0, static_cast<int16_t>(width_), static_cast<int16_t>(height_));
+    presentRect(0, 0, static_cast<int16_t>(logicalWidth_), static_cast<int16_t>(logicalHeight_));
   }
 
   void presentDirty() {
@@ -331,13 +375,13 @@ class St7735Panel {
   }
 
   size_t bufferIndex(int16_t x, int16_t y) const {
-    return static_cast<size_t>(y) * static_cast<size_t>(width_) + static_cast<size_t>(x);
+    return static_cast<size_t>(y) * static_cast<size_t>(logicalWidth_) + static_cast<size_t>(x);
   }
 
   void clearBuffer(uint16_t color) {
-    for (uint16_t y = 0; y < height_; ++y) {
-      uint16_t* row = &frameBuffer_[static_cast<size_t>(y) * static_cast<size_t>(width_)];
-      for (uint16_t x = 0; x < width_; ++x) {
+    for (uint16_t y = 0; y < logicalHeight_; ++y) {
+      uint16_t* row = &frameBuffer_[static_cast<size_t>(y) * static_cast<size_t>(logicalWidth_)];
+      for (uint16_t x = 0; x < logicalWidth_; ++x) {
         row[x] = color;
       }
     }
@@ -345,8 +389,8 @@ class St7735Panel {
     dirty_ = true;
     dirtyX0_ = 0;
     dirtyY0_ = 0;
-    dirtyX1_ = static_cast<int16_t>(width_ - 1);
-    dirtyY1_ = static_cast<int16_t>(height_ - 1);
+    dirtyX1_ = static_cast<int16_t>(logicalWidth_ - 1);
+    dirtyY1_ = static_cast<int16_t>(logicalHeight_ - 1);
   }
 
   void markDirty(int16_t x, int16_t y, int16_t width, int16_t height) {
@@ -406,12 +450,12 @@ class St7735Panel {
       y = 0;
     }
 
-    if ((x + width) > static_cast<int16_t>(width_)) {
-      width = static_cast<int16_t>(width_) - x;
+    if ((x + width) > static_cast<int16_t>(logicalWidth_)) {
+      width = static_cast<int16_t>(logicalWidth_) - x;
     }
 
-    if ((y + height) > static_cast<int16_t>(height_)) {
-      height = static_cast<int16_t>(height_) - y;
+    if ((y + height) > static_cast<int16_t>(logicalHeight_)) {
+      height = static_cast<int16_t>(logicalHeight_) - y;
     }
 
     if ((width <= 0) || (height <= 0)) {
@@ -421,10 +465,10 @@ class St7735Panel {
 
     beginWrite();
     setAddressWindowRaw(
-        static_cast<uint16_t>(x),
-        static_cast<uint16_t>(y),
-        static_cast<uint16_t>(x + width - 1),
-        static_cast<uint16_t>(y + height - 1));
+        static_cast<uint16_t>(x + viewportX_),
+        static_cast<uint16_t>(y + viewportY_),
+        static_cast<uint16_t>(x + viewportX_ + width - 1),
+        static_cast<uint16_t>(y + viewportY_ + height - 1));
 
     for (int16_t row = 0; row < height; ++row) {
       const uint16_t* source = &frameBuffer_[bufferIndex(x, static_cast<int16_t>(y + row))];
@@ -452,6 +496,15 @@ class St7735Panel {
   }
 
   void initializeRegisters() {
+    if (kPanelController == PanelController::Ili9341) {
+      initializeIli9341Registers();
+      return;
+    }
+
+    initializeSt7735Registers();
+  }
+
+  void initializeSt7735Registers() {
     static const uint8_t kFrameRateNormal[] = {0x01, 0x2C, 0x2D};
     static const uint8_t kFrameRateIdle[] = {0x01, 0x2C, 0x2D};
     static const uint8_t kFrameRatePartial[] = {0x01, 0x2C, 0x2D, 0x01, 0x2C, 0x2D};
@@ -496,6 +549,58 @@ class St7735Panel {
     delay(100);
   }
 
+  void initializeIli9341Registers() {
+    static const uint8_t kPowerControlB[] = {0x00, 0xC1, 0x30};
+    static const uint8_t kPowerOnSequenceControl[] = {0x64, 0x03, 0x12, 0x81};
+    static const uint8_t kDriverTimingControlA[] = {0x85, 0x00, 0x78};
+    static const uint8_t kPowerControlA[] = {0x39, 0x2C, 0x00, 0x34, 0x02};
+    static const uint8_t kPumpRatioControl[] = {0x20};
+    static const uint8_t kDriverTimingControlB[] = {0x00, 0x00};
+    static const uint8_t kPowerControl1[] = {0x23};
+    static const uint8_t kPowerControl2[] = {0x10};
+    static const uint8_t kVcomControl1[] = {0x3E, 0x28};
+    static const uint8_t kVcomControl2[] = {0x86};
+    static const uint8_t kPixelFormat16Bit[] = {0x55};
+    static const uint8_t kFrameRateControl[] = {0x00, 0x18};
+    static const uint8_t kDisplayFunctionControl[] = {0x08, 0x82, 0x27};
+    static const uint8_t kEnable3Gamma[] = {0x00};
+    static const uint8_t kGammaCurveSelected[] = {0x01};
+    static const uint8_t kPositiveGamma[] = {
+        0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1,
+        0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00};
+    static const uint8_t kNegativeGamma[] = {
+        0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1,
+        0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F};
+
+    writeCommand(kCmdSwReset);
+    delay(150);
+    writeCommand(kCmdDisplayOff);
+    writeCommandWithData(0xCF, kPowerControlB, sizeof(kPowerControlB));
+    writeCommandWithData(0xED, kPowerOnSequenceControl, sizeof(kPowerOnSequenceControl));
+    writeCommandWithData(0xE8, kDriverTimingControlA, sizeof(kDriverTimingControlA));
+    writeCommandWithData(0xCB, kPowerControlA, sizeof(kPowerControlA));
+    writeCommandWithData(0xF7, kPumpRatioControl, sizeof(kPumpRatioControl));
+    writeCommandWithData(0xEA, kDriverTimingControlB, sizeof(kDriverTimingControlB));
+    writeCommandWithData(0xC0, kPowerControl1, sizeof(kPowerControl1));
+    writeCommandWithData(0xC1, kPowerControl2, sizeof(kPowerControl2));
+    writeCommandWithData(0xC5, kVcomControl1, sizeof(kVcomControl1));
+    writeCommandWithData(0xC7, kVcomControl2, sizeof(kVcomControl2));
+    writeCommandWithData(kCmdColorMode, kPixelFormat16Bit, sizeof(kPixelFormat16Bit));
+    writeCommandWithData(0xB1, kFrameRateControl, sizeof(kFrameRateControl));
+    writeCommandWithData(0xB6, kDisplayFunctionControl, sizeof(kDisplayFunctionControl));
+    writeCommandWithData(0xF2, kEnable3Gamma, sizeof(kEnable3Gamma));
+    writeCommandWithData(kCmdGammaSet, kGammaCurveSelected, sizeof(kGammaCurveSelected));
+    writeCommandWithData(0xE0, kPositiveGamma, sizeof(kPositiveGamma));
+    writeCommandWithData(0xE1, kNegativeGamma, sizeof(kNegativeGamma));
+    writeCommand(kInvertColors ? kCmdInversionOn : kCmdInversionOff);
+    writeCommand(kCmdSleepOut);
+    delay(120);
+    writeCommand(kCmdNormalDisplayOn);
+    delay(10);
+    writeCommand(kCmdDisplayOn);
+    delay(120);
+  }
+
   void writeCommand(uint8_t command) {
     beginWrite();
     writeCommandRaw(command);
@@ -536,6 +641,40 @@ class St7735Panel {
     SPI.transfer(static_cast<uint8_t>(value & 0xFF));
   }
 
+  void clearPhysicalPanel(uint16_t color) {
+    beginWrite();
+    setAddressWindowRaw(
+        0,
+        0,
+        static_cast<uint16_t>(physicalWidth_ - 1),
+        static_cast<uint16_t>(physicalHeight_ - 1));
+    streamColorRaw(color, static_cast<uint32_t>(physicalWidth_) * static_cast<uint32_t>(physicalHeight_));
+    endWrite();
+  }
+
+  void parkSharedSpiDevices() {
+    using namespace aura_host::remote_config;
+
+    if (kPinRadioCe >= 0) {
+      pinMode(kPinRadioCe, OUTPUT);
+      digitalWrite(kPinRadioCe, LOW);
+    }
+
+    if (kPinRadioCsn >= 0) {
+      pinMode(kPinRadioCsn, OUTPUT);
+      digitalWrite(kPinRadioCsn, HIGH);
+    }
+
+    if (kPinTouchCs >= 0) {
+      pinMode(kPinTouchCs, OUTPUT);
+      digitalWrite(kPinTouchCs, HIGH);
+    }
+
+    if (kPinTouchIrq >= 0) {
+      pinMode(kPinTouchIrq, INPUT_PULLUP);
+    }
+  }
+
   void setAddressWindowRaw(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
     x0 = static_cast<uint16_t>(x0 + kColumnOffset);
     x1 = static_cast<uint16_t>(x1 + kColumnOffset);
@@ -553,18 +692,32 @@ class St7735Panel {
     writeCommandRaw(kCmdMemoryWrite);
   }
 
-  uint16_t width_ = kPanelWidth;
-  uint16_t height_ = kPanelHeight;
+  void streamColorRaw(uint16_t color, uint32_t pixelCount) {
+    const uint8_t highByte = static_cast<uint8_t>(color >> 8);
+    const uint8_t lowByte = static_cast<uint8_t>(color & 0xFF);
+
+    while (pixelCount-- > 0) {
+      SPI.transfer(highByte);
+      SPI.transfer(lowByte);
+    }
+  }
+
+  uint16_t physicalWidth_ = kPanelWidth;
+  uint16_t physicalHeight_ = kPanelHeight;
+  uint16_t logicalWidth_ = kUiWidth;
+  uint16_t logicalHeight_ = kUiHeight;
+  int16_t viewportX_ = 0;
+  int16_t viewportY_ = 0;
   uint8_t rotation_ = 0;
   bool dirty_ = false;
   int16_t dirtyX0_ = 0;
   int16_t dirtyY0_ = 0;
   int16_t dirtyX1_ = 0;
   int16_t dirtyY1_ = 0;
-  uint16_t frameBuffer_[static_cast<size_t>(kPanelWidth) * static_cast<size_t>(kPanelHeight)] = {};
+  uint16_t frameBuffer_[static_cast<size_t>(kUiWidth) * static_cast<size_t>(kUiHeight)] = {};
 };
 
-St7735Panel panel;
+SpiTftPanel panel;
 bool displayReady = false;
 AppState lastRenderedState{};
 bool hasLastRenderedState = false;

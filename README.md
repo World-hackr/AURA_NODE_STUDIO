@@ -23,6 +23,11 @@ That is professional if the boundaries are clear:
 - `local_tools/` - reusable machine-side utilities and hardware bring-up helpers that can be reused across projects
 - `AURA _report/` - archive/reference material for academic reports, presentations, and earlier formal writeups
 
+For a direct file/folder map of the repo, use:
+
+- `WORKSPACE_GUIDE.md`
+- `workspace_index/README.md`
+
 ## What Is Active Right Now
 
 The active implementation center is:

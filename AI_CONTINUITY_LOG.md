@@ -3703,3 +3703,1290 @@ Use this structure for each new entry:
 - Decisions: Black remains the product base. White remains the core drafting/component/detail language. Color is allowed only as restrained sectional differentiation, not as a replacement substrate. Visual corrections must be validated through build/test before being treated as real.
 - Open Questions: Whether the next pass should make the rail tinting even subtler, and whether a few isolated accent markers or section tabs would be a cleaner separation mechanism than the current faint rail glow.
 - Next Step: Commit and push this correction, then continue visual work more slowly by refining only small hierarchy cues inside the black system instead of changing the whole substrate again.
+
+### Entry
+- Timestamp: 2026-03-24 18:53:50 +05:30
+- User Intent: Stop pushing to GitHub on every pass and acknowledge that visual/design work should stay local until the result is actually judged correct.
+- Discussion Summary: The user interrupted the push intentionally and clarified the process expectation: local correction and review first, remote preservation later only when the result is actually right. This is now the active workflow constraint for future UI/product iterations.
+- Actions Taken: No code changes in this reply yet. Begin by verifying whether the interrupted git push changed the remote or not.
+- Files Touched: AI_CONTINUITY_LOG.md
+- Reference Points: Verification should check local HEAD, working tree cleanliness, and remote origin/main before any future push decisions.
+- Decisions: Do not auto-push after every design pass. Keep iterative visual work local until the user is satisfied or the change is explicitly approved for push.
+- Open Questions: Whether the interrupted push partially succeeded; verify instead of assuming.
+- Next Step: Check local and remote git state, report clearly, and continue using local verification-only workflow unless the user later asks to push.
+
+### Entry
+- Timestamp: 2026-03-24 19:00:04 +05:30
+- User Intent: Before continuing broader UI work, ask how to wire a newly purchased 2.8 inch TFT touch display for the host hardware, noting that its pinout looks similar to the previous display with touch added.
+- Discussion Summary: The repo already documents the existing host SPI display and radio wiring, so the right response is to map the likely common SPI touch-display pinout onto the current ESP32 host bus instead of guessing a whole new architecture. The answer should explicitly reuse the host SPI lines and preserve the current nRF24 and joystick assignments. Because the exact panel variant is still not identified, the wiring advice is framed as the correct mapping for the common SPI TFT + SPI touch-controller module whose pin row adds T_CLK/T_CS/T_DIN/T_DO/T_IRQ beside the earlier TFT pins.
+- Actions Taken: Inspected host_remote/README.md, host_remote/include/remote_peripheral_config.h, and host_remote/include/tft_display_config.h to recover the current host wiring budget. Confirmed existing assignments: shared SPI bus SCK=18, MISO=19, MOSI=23; TFT CS=5, DC=27, RST=26, BL=21; radio CE=4, CSN=16; joystick X=33, Y=32, SW=25. Prepared a likely touch wiring recommendation using the same shared SPI bus with new dedicated touch control pins that do not collide with current peripherals.
+- Files Touched: AI_CONTINUITY_LOG.md
+- Reference Points: Existing host display wiring is documented in host_remote/README.md:65-98. Shared SPI and peripheral pins are frozen in host_remote/include/remote_peripheral_config.h:6-21. Current TFT control pins are frozen in host_remote/include/tft_display_config.h:8-11.
+- Decisions: Reuse the shared SPI bus for the new touch display module. Keep the existing TFT, radio, and joystick assignments intact. Recommend new dedicated touch-control pins rather than moving the existing display wiring.
+- Open Questions: The exact display/touch controller labels are still unknown; if the module is not the common SPI TFT + SPI touch type, the final wiring may differ and should be confirmed from the silkscreen labels or a photo.
+- Next Step: Tell the user the likely wiring map now, with an explicit note that if the module labels differ, they should send the exact pin row or a photo before power-up.
+
+### Entry
+- Timestamp: 2026-03-24 19:05:42 +05:30
+- User Intent: Clarify whether the new 2.8 inch TFT touch display uses the same display-control pins as the previous display, specifically asking about the old A0 pin.
+- Discussion Summary: The user is checking continuity with the old display wiring rather than asking for a new architecture. The key clarification is that A0 on many TFT modules is the same signal as DC or RS, so that control pin should remain mapped exactly like before. The shared SPI lines and the main TFT control pins stay the same; only the added touch-controller pins need extra assignments.
+- Actions Taken: No code changes. Provided clarification anchored to the existing host display wiring already frozen in the repo.
+- Files Touched: AI_CONTINUITY_LOG.md
+- Reference Points: Existing display wiring remains documented in host_remote/README.md:65-78 and host_remote/START_HERE_UPLOAD.md:70-78, with TFT control pins frozen in host_remote/include/tft_display_config.h:8-11.
+- Decisions: Treat A0, DC, and RS as the same display-control concept for this wiring discussion unless the module documentation explicitly says otherwise.
+- Open Questions: The exact module silkscreen is still not confirmed; if the panel labels differ from the common SPI touch module pattern, the final touch-pin mapping should be rechecked before power-up.
+- Next Step: Tell the user exactly which old pins stay identical and which added pins belong only to touch.
+
+### Entry
+- Timestamp: 2026-03-24 19:48:21 +05:30
+- User Intent: Provide the exact pin rows for the new 2.8 inch TFT touch module and the old 1.8 inch TFT, then ask for a concrete comparison so the wiring differences are fully understood before hardware hookup.
+- Discussion Summary: The user supplied the exact silkscreen labels. That confirms the new module follows the common SPI TFT + SPI touch-controller pattern. The old 1.8 inch display only exposed the TFT write-side SPI pins (CS, RESET, A0/DC, SDA/MOSI, SCK, LED). The new 2.8 inch module keeps those same TFT functions, adds SDO(MISO) for TFT readback, and then adds a second SPI device for touch via T_CLK, T_CS, T_DIN, T_DO, and T_IRQ. The right answer is therefore to keep the old TFT wiring exactly as-is, map A0 to DC, map SDA to SDI(MOSI), and only assign new ESP32 pins for the touch controller chip-select and interrupt while sharing the SPI bus lines.
+- Actions Taken: No code changes. Prepared the exact comparison and final wiring guidance from the user-provided pin rows and the existing host wiring frozen in the repo.
+- Files Touched: AI_CONTINUITY_LOG.md
+- Reference Points: Existing TFT host wiring remains in host_remote/README.md:65-78 and host_remote/include/tft_display_config.h:8-11. Existing shared SPI bus pins remain in host_remote/include/remote_peripheral_config.h:6-8.
+- Decisions: Preserve the old TFT wiring unchanged. Treat A0 on the old module as the same signal as DC on the new module. Use GPIO19 for the new display/touch MISO line and dedicate new control pins only for touch (T_CS, optionally T_IRQ).
+- Open Questions: None blocking the wiring explanation. The only remaining note is that the silkscreen label T_D0 is almost certainly T_DO (touch data out / MISO).
+- Next Step: Give the user a direct side-by-side mapping and a final recommended ESP32 wiring table for the 2.8 inch module.
+
+### Entry
+- Timestamp: 2026-03-24 19:51:13 +05:30
+- User Intent: Ask whether the new touch-display wiring recommendation was made with the rest of the host hardware wiring in mind, not just the screen alone.
+- Discussion Summary: The user is validating system-level pin planning before starting physical wiring. The correct response is to confirm which current host peripherals were accounted for and which future peripherals are still outside the frozen wiring budget. The touch mapping was chosen specifically to avoid collisions with the existing SPI TFT, nRF24 radio, joystick, and backlight-control plan already documented in the repo.
+- Actions Taken: No code changes. Responded based on the current host pin budget already frozen in the repo.
+- Files Touched: AI_CONTINUITY_LOG.md
+- Reference Points: Current host wiring remains documented in host_remote/README.md:65-125, shared SPI and current peripheral pins in host_remote/include/remote_peripheral_config.h:6-21, and TFT control pins in host_remote/include/tft_display_config.h:8-11.
+- Decisions: Treat the touch-screen wiring as part of the current host hardware plan, not as an isolated display-only suggestion.
+- Open Questions: Whether the user plans to add more hardware soon such as SD card, buzzer, battery monitor, encoder, or extra buttons, since those would need a new pin-budget pass.
+- Next Step: Explain clearly what has already been accounted for in the host wiring and what has not yet been budgeted.
+
+### Entry
+- Timestamp: 2026-03-24 19:58:18 +05:30
+- User Intent: Ask whether the new 2.8 inch touch display can be wired on top of the old display setup.
+- Discussion Summary: The ambiguous phrase "on top of old one" can mean either reusing the same wiring points as a replacement or physically/electrically keeping both displays connected at once. The correct guidance is different for those two cases. Reusing the old display connections for the new display is acceptable. Keeping both TFT displays connected live on the same TFT control pins is not recommended because they would share CS/DC/RST behavior and the old/new display modules are not being treated as independently selected SPI devices in the current plan.
+- Actions Taken: No code changes. Prepared a direct hardware-safety clarification before the user starts wiring.
+- Files Touched: AI_CONTINUITY_LOG.md
+- Reference Points: Existing host TFT pin plan remains in host_remote/README.md:65-98 and host_remote/include/tft_display_config.h:8-11, with shared SPI bus pins in host_remote/include/remote_peripheral_config.h:6-8.
+- Decisions: Advise reuse of the old display wiring points only as a replacement path, not as a dual-display parallel hookup.
+- Open Questions: Whether the user intends a full replacement or a temporary side-by-side test harness; if side-by-side, a separate dedicated chip-select strategy would be needed.
+- Next Step: Tell the user clearly: replacing is fine, running both live on the same TFT control lines is not.
+
+## 2026-03-24 23:05 IST - Codex
+- User intent: Update host firmware after wiring the new 2.8 inch SPI TFT touch display.
+- Discussed: Proceeding with the required repo read order first, then inspecting host firmware and display config before making code changes.
+- Changed or created: No code changes in this reply.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: host_remote/include/tft_display_config.h; host_remote/include/remote_peripheral_config.h; host_remote/src/tft_ui.cpp
+- Decisions made: Start with required repo context and then continue the local firmware migration for the new display.
+- User corrections: None in this reply.
+- Next recommended step: Read README.md and AI_CONTINUITY_LOG.md, then verify the partial display-driver patch before building.
+
+## 2026-03-24 23:24 IST - Codex
+- User intent: Update the host firmware after the new 2.8 inch SPI TFT + touch module was physically wired.
+- Discussed: Treated this as a real hardware migration instead of a UI/design pass. The critical firmware risks were (1) the partially migrated TFT driver still had stale `width_` / `height_` references that would not compile, and (2) the newly wired touch controller now sits on the shared SPI bus and needed to be electrically parked until touch support exists. The repo docs also still described the old 1.8 inch ST7735 setup as the active host display, which would now be misleading during bring-up.
+- Changed or created: Finished the host display migration to the larger ILI9341-class panel while keeping the existing host UI at a centered 160x128 logical canvas. Updated the TFT driver in `host_remote/src/tft_ui.cpp` to use the new logical/physical panel split consistently, fixed stale `width_` / `height_` references, preserved the larger panel by centering the logical UI with viewport offsets, and changed `clearPhysicalPanel()` to clear the full rotated physical panel instead of only the logical viewport. Added shared-SPI parking in `SpiTftPanel::parkSharedSpiDevices()` so the radio is held inactive and the new touch controller `T_CS` is driven high before TFT initialization; `T_IRQ` is also configured as an input. Kept the touch controller reserved only at the pin-definition layer for now and did not implement touch input yet. Updated `host_remote/README.md` and `host_remote/START_HERE_UPLOAD.md` so the active host wiring now matches the real 2.8 inch TFT + touch setup, explicitly notes that TFT `SDO/MISO` should remain disconnected for now, and states that touch is wired but not yet used for navigation. Removed the accidental stray root file `AI_CONTITY_LOG.md` that had been created earlier due to a typo, keeping `AI_CONTINUITY_LOG.md` as the single continuity ledger.
+- Files touched: `AI_CONTINUITY_LOG.md`, `host_remote/include/tft_display_config.h`, `host_remote/include/remote_peripheral_config.h`, `host_remote/src/tft_ui.cpp`, `host_remote/README.md`, `host_remote/START_HERE_UPLOAD.md`; deleted accidental `AI_CONTITY_LOG.md`
+- Reference points: The active panel/controller selection is now frozen at `host_remote/include/tft_display_config.h:8-31` via `PanelController`, `kPanelController`, `kPanelWidth`, `kPanelHeight`, `kUiWidth`, and `kUiHeight`. The reserved touch pins remain at `host_remote/include/remote_peripheral_config.h:18-20` via `kPinTouchCs` and `kPinTouchIrq`. Shared-SPI parking and the corrected panel bring-up now live in `host_remote/src/tft_ui.cpp:147-176` via `SpiTftPanel::begin()`, with ILI9341/ST7735 init dispatch in `host_remote/src/tft_ui.cpp:490-550`, full physical clear in `host_remote/src/tft_ui.cpp:633-641`, idle-device parking in `host_remote/src/tft_ui.cpp:644-666`, and the centered logical viewport behavior in `host_remote/src/tft_ui.cpp:283-343` plus `host_remote/src/tft_ui.cpp:424-470`. The updated active host wiring doc begins at `host_remote/README.md:65`, and the condensed upload-facing wiring summary begins at `host_remote/START_HERE_UPLOAD.md:70`.
+- Decisions made: Keep the host UI layout unchanged for now instead of rushing a full 320x240 redesign; bring up the bigger display safely first by centering the proven UI. Treat touch as electrically present but functionally deferred. Do not connect/use TFT `SDO/MISO` in the active wiring path until TFT readback is actually needed. Keep this work local; no git push was performed.
+- User corrections: The user had already corrected the earlier workflow and explicitly asked not to push every design/code pass automatically; this turn followed that rule. The user had also already approved taking decisions without repeated permission.
+- Next recommended step: Flash this build to the ESP32 and verify the actual panel orientation and centering on hardware. If the image is rotated or mirrored, only `setRotation()` / `kRotation` need adjustment next. After that, the next real firmware step is optional touch bring-up and calibration, not more display refactoring.
+
+## 2026-03-24 23:31 IST - Codex
+- User intent: Report that the newly flashed host UI looks wrong on the real display and that one screen corner shows noise, implying the display migration is not yet correct on hardware.
+- Discussed: The issue is now real hardware behavior, not build correctness. The next step is to audit panel orientation/addressing assumptions and tighten the bring-up path instead of assuming the current ILI9341 rotation/viewport mapping is correct.
+- Changed or created: No code changes in this reply.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: host_remote/src/tft_ui.cpp; host_remote/include/tft_display_config.h
+- Decisions made: Treat the hardware report as authoritative and continue with a careful display bring-up correction.
+- User corrections: The user reported that the current firmware result is visually wrong and one corner contains noise.
+- Next recommended step: Inspect the panel address/rotation logic, then simplify the initial bring-up path to a full-panel mapping before reintroducing any centered logical viewport behavior.
+
+## 2026-03-24 23:38 IST - Codex
+- User intent: Fix the host display bring-up after reporting that the flashed result looked wrong and one screen corner showed noise.
+- Discussed: The most likely bring-up risks were the aggressive centered-viewport assumption and a TFT bus rate that was still tuned more like the small earlier display than a newly wired larger module. The shared SPI bus also needed stricter deselection in the radio path so the newly added touch controller could never stay active during radio transfers.
+- Changed or created: Updated `host_remote/include/tft_display_config.h` so the logical UI canvas now has explicit `kUiOriginX` and `kUiOriginY` bring-up anchors, currently set to top-left instead of auto-centered. Updated `host_remote/src/tft_ui.cpp` to lower TFT SPI speed from 16 MHz to 8 MHz for cleaner physical bring-up, replace the auto-centering viewport calculation with explicit anchored origin bounds checks, and send `Normal Display On` in the ILI9341 init path before `Display On`. Updated `host_remote/src/radio_self_test.cpp` to add `deselectTouch()` and assert `T_CS` high in all radio SPI transactions and initialization, so the touch controller is explicitly excluded from the bus during radio activity as well as TFT bring-up. Rebuilt the host firmware with PlatformIO after the changes, and the build passed successfully.
+- Files touched: `AI_CONTINUITY_LOG.md`, `host_remote/include/tft_display_config.h`, `host_remote/src/tft_ui.cpp`, `host_remote/src/radio_self_test.cpp`
+- Reference points: The new top-left logical anchor constants now live at `host_remote/include/tft_display_config.h:29-32`. The reduced TFT SPI speed and anchored viewport logic now live at `host_remote/src/tft_ui.cpp:32` and `host_remote/src/tft_ui.cpp:319-327`, with the extra ILI9341 `Normal Display On` step at `host_remote/src/tft_ui.cpp:590-593`. The explicit touch deselection during radio SPI access now lives in `host_remote/src/radio_self_test.cpp:47-51`, and that deselection is enforced through all radio SPI helpers beginning at `host_remote/src/radio_self_test.cpp:69` onward.
+- Decisions made: Prefer conservative, easy-to-debug bring-up over clever display positioning. Keep the UI anchored at the top-left until the panel is visually stable on real hardware. Reduce bus speed during first hardware bring-up rather than chasing signal-integrity failures indirectly.
+- User corrections: The user reported that the previous firmware result was wrong on the real panel and included visible corner noise, which overrode the earlier assumption that the first ILI9341 pass was good enough.
+- Next recommended step: Reflash this new build and inspect whether the panel now renders cleanly. If orientation is still wrong but the noise is gone, the next correction should be isolated to the ILI9341 rotation mapping only.
+
+## 2026-03-24 23:43 IST - Codex
+- User intent: Pause coding and discuss why the new 2.8 inch display is still showing noise after the second bring-up pass.
+- Discussed: Clarified that the difficulty is not the raw size of a 2.8 inch TFT itself; the real issue is that the exact module/controller behavior on hardware still does not match the current assumptions about controller family, rotation mapping, address window behavior, or bus interaction. No further code changes should be rushed until the failure mode is framed more clearly.
+- Changed or created: No code changes in this reply.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: host_remote/src/tft_ui.cpp; host_remote/include/tft_display_config.h; host_remote/src/radio_self_test.cpp
+- Decisions made: Stop treating this as a simple one-step firmware swap and explain the actual hardware bring-up problem space before making the next change.
+- User corrections: The user reported that after the latest firmware pass a different region of the screen now shows noise, indicating the panel is still not correctly initialized or mapped.
+- Next recommended step: Explain the likely root causes and then choose a disciplined bring-up strategy, ideally a tiny panel-identification/smoke program before returning to the full host UI.
+
+## 2026-03-24 23:49 IST - Codex
+- User intent: Stop guessing on the full host UI and test the screen first, with the user now clarifying that the display driver/controller is `ST7789`.
+- Discussed: This changes the display bring-up direction materially because the current main host firmware was being adapted toward an ILI9341-class panel. The right next step is a dedicated screen-only bring-up path for ST7789 rather than more host-level iteration.
+- Changed or created: No code changes in this reply.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: host_remote/tests/display_st7735_smoke; host_remote/src/tft_ui.cpp; host_remote/include/tft_display_config.h
+- Decisions made: Build a dedicated ST7789 display smoke test first and use that to lock controller behavior before touching the main host UI again.
+- User corrections: The user identified the actual display driver/controller as ST7789.
+- Next recommended step: Create a focused ST7789 smoke test under `host_remote/tests/`, then iterate on that minimal test until the panel renders cleanly.
+
+## 2026-03-25 00:01 IST - Codex
+- User intent: Stop iterating on the full host UI and build a proper isolated screen test after identifying the actual controller as ST7789.
+- Discussed: The earlier display work had been steering toward an ILI9341-style path, but the user clarified the real controller is ST7789. That means the responsible next step is a dedicated ST7789 smoke project rather than more mutations of the main firmware.
+- Changed or created: Added a new isolated PlatformIO test project at `host_remote/tests/display_st7789_smoke/` with its own `platformio.ini`, `include/display_test_config.h`, `src/main.cpp`, and `README.md`. The new test drives a 240x320 ST7789 panel over SPI at a conservative 8 MHz, initializes the controller with a common ST7789 register set, cycles through solid full-screen fills plus color bars and an orientation screen, and keeps the test focused entirely on TFT bring-up. Updated `host_remote/tests/README.md` to list the new project. During verification, the first build exposed a compile issue because `SPISettings` in the new test had been declared `constexpr`; that was corrected to `const`, after which the isolated ST7789 smoke test built successfully.
+- Files touched: `AI_CONTINUITY_LOG.md`, `host_remote/tests/README.md`, `host_remote/tests/display_st7789_smoke/platformio.ini`, `host_remote/tests/display_st7789_smoke/include/display_test_config.h`, `host_remote/tests/display_st7789_smoke/README.md`, `host_remote/tests/display_st7789_smoke/src/main.cpp`
+- Reference points: The new test project root is `host_remote/tests/display_st7789_smoke/`. Wiring and adjustment guidance now lives in `host_remote/tests/display_st7789_smoke/README.md`. The panel size, rotation, offsets, and color-order toggles live in `host_remote/tests/display_st7789_smoke/include/display_test_config.h:5-22`. The ST7789 init sequence and test pattern rendering live in `host_remote/tests/display_st7789_smoke/src/main.cpp:9-281`, with the stage renderer starting at `host_remote/tests/display_st7789_smoke/src/main.cpp:339` and demo startup at `host_remote/tests/display_st7789_smoke/src/main.cpp:366`.
+- Decisions made: Separate panel identification from host UI logic. Use a standalone ST7789 smoke test as the new source of truth for display bring-up. Keep the test simple, deterministic, and hardware-focused, and recommend disconnecting the radio while proving the display alone.
+- User corrections: The user identified the actual TFT controller as ST7789, which invalidated the earlier ILI9341 assumption.
+- Next recommended step: Upload `host_remote/tests/display_st7789_smoke/` to the ESP32, test with the radio disconnected, and report the exact visual result of the color fills and orientation screen. Only after the panel is clean there should the main `host_remote` firmware be repointed to the same ST7789 behavior.
+
+## 2026-03-25 00:06 IST - Codex
+- User intent: Change direction again and build a diagnostics-style program under `local_tools/` that can run on the host hardware and show multiple live hardware states on the screen, including at least nRF and joystick position, instead of continuing the isolated TFT smoke-test route.
+- Discussed: Treat this as a request for a reusable hardware bring-up/diagnostics tool rather than a narrow display-only test. The next responsible step is to inspect the existing `local_tools/` structure and design a dedicated diagnostic firmware project that can render live hardware telemetry on the TFT.
+- Changed or created: No code changes in this reply.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: local_tools/; host_remote/include/remote_peripheral_config.h; host_remote/include/tft_display_config.h
+- Decisions made: Follow the new direction and build a reusable diagnostics program under `local_tools/` instead of continuing only with the ST7789 smoke project.
+- User corrections: The user rejected the prior narrow screen-test route and explicitly asked for a local-tools-based on-device diagnostics program that shows multiple hardware states on the screen.
+- Next recommended step: Inspect `local_tools/` and create a dedicated PlatformIO diagnostics app that visualizes display, joystick, and nRF status on the TFT.
+
+## 2026-03-25 00:15 IST - Codex
+- User intent: Abandon the narrow isolated TFT smoke-test route and instead create a reusable diagnostics program under `local_tools/` that runs on the host hardware and shows live on-screen hardware state such as nRF24 status and joystick position in a circle.
+- Discussed: The user wanted a broader bring-up utility rather than another display-only experiment. The correct response was to treat this as a standalone reusable diagnostics firmware project with its own PlatformIO root, wiring config, ST7789 bring-up path, live joystick visualization, switch state, touch IRQ state, and periodic nRF24 self-test panel.
+- Changed or created: Added a new standalone PlatformIO project at `local_tools/aura_host_diagnostics/` with `platformio.ini`, `include/diagnostics_config.h`, `src/main.cpp`, and `README.md`. The config file freezes the current host pin map, panel size, rotation, and rendering cadence. The new firmware includes an internal ST7789 display driver, simple pixel-font text rendering, drawing primitives, joystick sampling and normalization, a live joystick-circle display with a moving dot, joystick raw X/Y and switch state, touch IRQ state, and an embedded nRF24 self-test/status panel that periodically refreshes without requiring the serial console. Updated `local_tools/README.md` to list the new diagnostics tool. Built the new diagnostics firmware successfully with PlatformIO for environment `aura_host_diag_esp32dev`.
+- Files touched: `AI_CONTINUITY_LOG.md`, `local_tools/README.md`, `local_tools/aura_host_diagnostics/platformio.ini`, `local_tools/aura_host_diagnostics/include/diagnostics_config.h`, `local_tools/aura_host_diagnostics/README.md`, `local_tools/aura_host_diagnostics/src/main.cpp`
+- Reference points: The new diagnostics project root is `local_tools/aura_host_diagnostics/`. The frozen diagnostics pin map and panel tuning values live at `local_tools/aura_host_diagnostics/include/diagnostics_config.h:6-41`. The ST7789 panel implementation begins at `local_tools/aura_host_diagnostics/src/main.cpp:155`. Radio SPI helpers begin at `local_tools/aura_host_diagnostics/src/main.cpp:338`, joystick sampling at `local_tools/aura_host_diagnostics/src/main.cpp:507`, the main diagnostics renderer at `local_tools/aura_host_diagnostics/src/main.cpp:821`, hardware initialization at `local_tools/aura_host_diagnostics/src/main.cpp:892`, and the main live update loop at `local_tools/aura_host_diagnostics/src/main.cpp:916`. User-facing build/use notes begin at `local_tools/aura_host_diagnostics/README.md:1`, and the tool registry entry is now in `local_tools/README.md:23`.
+- Decisions made: Keep this utility under `local_tools/` because it is a reusable hardware-debug surface rather than the product UI. Use the TFT itself as the primary diagnostics surface instead of depending on serial output. Keep the radio test periodic and the joystick visualization continuous so one firmware image can validate multiple subsystems at once.
+- User corrections: The user explicitly rejected the previous display-smoke-only direction and requested a local-tools-based live diagnostics program with on-screen hardware feedback.
+- Next recommended step: Upload `local_tools/aura_host_diagnostics/` to the ESP32 and use that as the current hardware truth screen. After observing the real output, refine only the ST7789 rotation/offset parameters in `include/diagnostics_config.h` if the screen still needs tuning.
+
+## 2026-03-25 00:17 IST - Codex
+- User intent: Ask for the exact command to upload the new local-tools diagnostics firmware.
+- Discussed: Provide the direct PlatformIO upload command for the `local_tools/aura_host_diagnostics` project with no additional implementation work.
+- Changed or created: No code changes.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: local_tools/aura_host_diagnostics/platformio.ini
+- Decisions made: Answer with the single direct upload command the user can run immediately.
+- User corrections: None.
+- Next recommended step: Run the upload command, then report what the diagnostics screen shows on hardware.
+
+## 2026-03-25 00:18 IST - Codex
+- User intent: Continue after receiving the upload command for the diagnostics firmware.
+- Discussed: The natural continuation is to provide the matching serial monitor command and the immediate next observation checklist for the diagnostics screen.
+- Changed or created: No code changes.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: local_tools/aura_host_diagnostics/platformio.ini; local_tools/aura_host_diagnostics/README.md
+- Decisions made: Keep the reply operational and short: upload command, monitor command, and what to check on-screen.
+- User corrections: None.
+- Next recommended step: Upload the diagnostics firmware, open the serial monitor if needed, and report what the screen shows.
+
+## 2026-03-25 00:20 IST - Codex
+- User intent: Clarify whether they need to open a specific directory before running the upload command for the diagnostics firmware.
+- Discussed: The user needs simpler terminal instructions. The correct answer is that they can either run the full command from the repo root/current terminal as-is, or change into the diagnostics folder first and use the shorter `platformio.exe run -t upload` form.
+- Changed or created: No code changes.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: local_tools/aura_host_diagnostics/
+- Decisions made: Respond with both command forms and the simplest recommended one.
+- User corrections: None.
+- Next recommended step: Open a terminal in the repo root or diagnostics folder, run upload, then report the on-screen result.
+
+## 2026-03-25 00:28 IST - Codex
+- User intent: Optimize the new diagnostics firmware after successful first bring-up by making the screen feel static instead of visibly sweeping top-to-bottom, flipping the display because the module is mounted opposite, and improving joystick responsiveness because motion felt slow and stepped.
+- Discussed: The visible sweep came from full-screen repainting on every frame. The slow/stepped joystick feel came from the combination of that heavy redraw path, a low render cadence, and an overly conservative joystick span projection. The right correction was to keep the shell static, redraw only the changing regions, flip the landscape rotation, and tighten the joystick projection.
+- Changed or created: Updated `local_tools/aura_host_diagnostics/include/diagnostics_config.h` to switch diagnostics rotation from `1` to `3`, lower the render interval from `90 ms` to `20 ms`, and reduce `kJoystickSpan` from `1600` to `1100` so the joystick dot responds more directly. Updated `local_tools/aura_host_diagnostics/src/main.cpp` to replace the old full-screen `renderDiagnostics()` repaint with a static-shell plus partial-update model: added `renderStaticShell()`, `renderJoystickPanel()`, `renderRadioPanel()`, and `renderInputsPanel()`, plus `joystickOffsetFromRaw()` for a more direct raw-to-screen mapping. Initialization now draws the static shell once and then paints each dynamic section, while the live loop only repaints the joystick panel and inputs panel at the fast cadence and refreshes the radio panel only when the radio self-test reruns. Rebuilt the diagnostics firmware successfully with PlatformIO after the optimization pass.
+- Files touched: `AI_CONTINUITY_LOG.md`, `local_tools/aura_host_diagnostics/include/diagnostics_config.h`, `local_tools/aura_host_diagnostics/src/main.cpp`
+- Reference points: The new rotation/render/joystick tuning values now live in `local_tools/aura_host_diagnostics/include/diagnostics_config.h:25-41`. The new raw joystick projection helper now lives at `local_tools/aura_host_diagnostics/src/main.cpp:590`. The static-shell renderer begins at `local_tools/aura_host_diagnostics/src/main.cpp:833`, the partial joystick panel renderer at `local_tools/aura_host_diagnostics/src/main.cpp:854`, the radio panel renderer at `local_tools/aura_host_diagnostics/src/main.cpp:875`, the inputs panel renderer at `local_tools/aura_host_diagnostics/src/main.cpp:891`, initialization now draws the shell and first dynamic state at `local_tools/aura_host_diagnostics/src/main.cpp:922-935`, and the optimized live update loop now lives at `local_tools/aura_host_diagnostics/src/main.cpp:938-950`.
+- Decisions made: Prefer partial repainting over framebuffer complexity to remove the visible sweep while keeping the tool simple and deterministic. Match the userâ€™s physical install orientation directly in config by flipping to rotation `3`. Improve joystick feel by both increasing update frequency and using a stronger raw-to-screen projection.
+- User corrections: The user reported that the first diagnostics build refreshed visibly from top to bottom, the screen orientation was upside down relative to the physical install, and joystick motion felt slow and stepped.
+- Next recommended step: Upload the optimized diagnostics firmware and verify three things on hardware: whether the sweep is gone, whether rotation now matches the installed screen orientation, and whether joystick motion now feels continuous enough.
+
+## 2026-03-25 00:33 IST - Codex
+- User intent: Further optimize the diagnostics firmware so the joystick and radio panes stop visibly blinking, and do so using researched guidance instead of guessing.
+- Discussed: Treat the remaining flicker as a redraw-strategy and update-rate problem, then verify practical HMI/diagnostics refresh guidance before making the next tuning pass.
+- Changed or created: No code changes in this reply.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: local_tools/aura_host_diagnostics/include/diagnostics_config.h; local_tools/aura_host_diagnostics/src/main.cpp
+- Decisions made: Inspect current redraw logic and use online sources before changing timing behavior again.
+- User corrections: The user reported that the joystick and radio panes still visibly blink and explicitly asked for researched industrial-style update timing rather than more guessing.
+- Next recommended step: Review current diagnostics redraw logic, browse practical HMI refresh guidance, then switch from panel-clearing redraws to value-delta updates with calmer radio refresh cadence.
+
+## 2026-03-25 00:40 IST - Codex
+- User intent: Remove the remaining visible blinking in the joystick and radio panes, and base the timing choices on researched practical guidance instead of guessing.
+- Discussed: The remaining blink was traced to region-clearing redraws, not only the raw timer values. Practical official guidance found online pointed toward calmer static-data update rates and distinct treatment for moving versus slowly changing information. Rockwell Automation documents a default HMI screen update rate of 500 ms and offers 100/250/500 ms options, while FAA AC 23.1311-1B states that some map information may be adequate at at least 1 Hz, critical changing data should update at at least 15 Hz, and visible flicker is typically avoided with 50-60 Hz display refresh. Based on that, the diagnostics tool was shifted toward delta updates with a 60 ms joystick redraw cadence (~16.7 Hz) and a 500 ms radio retest cadence.
+- Changed or created: Updated `local_tools/aura_host_diagnostics/include/diagnostics_config.h` to set `kRenderIntervalMs = 60` and `kRadioRetestMs = 500` while keeping the flipped rotation and stronger joystick span. Updated `local_tools/aura_host_diagnostics/src/main.cpp` to stop clearing whole joystick/radio/input panes on every timer tick. Added cached previous joystick/touch state and a `drawValueField()` helper for fixed-width value overwrites. Reworked the renderer so the shell draws static labels once and the live loop now updates only changed values and the joystick dot. The joystick dot is now erased/redrawn locally while the ring/crosshair remain stable, and radio/input fields are updated in-place instead of panel-wide clears. Rebuilt the diagnostics firmware successfully with PlatformIO after the flicker-reduction pass.
+- Files touched: `AI_CONTINUITY_LOG.md`, `local_tools/aura_host_diagnostics/include/diagnostics_config.h`, `local_tools/aura_host_diagnostics/src/main.cpp`
+- Reference points: The tuned update cadences now live at `local_tools/aura_host_diagnostics/include/diagnostics_config.h:38-39`. The cached dynamic state fields begin at `local_tools/aura_host_diagnostics/src/main.cpp:274-279`. The fixed-width value overwrite helper now lives at `local_tools/aura_host_diagnostics/src/main.cpp:594`. The static shell with one-time labels is now defined at `local_tools/aura_host_diagnostics/src/main.cpp:838`, the joystick delta-update renderer at `local_tools/aura_host_diagnostics/src/main.cpp:879`, the radio in-place field updater at `local_tools/aura_host_diagnostics/src/main.cpp:924`, the input in-place field updater at `local_tools/aura_host_diagnostics/src/main.cpp:939`, and the main loop using the new industrial-style timing at `local_tools/aura_host_diagnostics/src/main.cpp:983-995`.
+- Decisions made: Use value-delta redraws instead of repeated panel clears. Align moving joystick feedback with an approximately 15 Hz minimum human-factors baseline while keeping slow-changing radio diagnostics on a calmer half-second cadence consistent with typical HMI defaults. Keep the diagnostics tool deterministic and simple rather than introducing a full framebuffer system.
+- User corrections: The user reported that the joystick and radio windows were still visibly blinking and explicitly required researched guidance instead of more guesswork.
+- Next recommended step: Upload the rebuilt diagnostics firmware and verify whether the dynamic panes now look stable. If any residual flicker remains, the next step is to raise TFT SPI throughput or add a small off-screen sprite only for the joystick area rather than changing the timing model again.
+
+## 2026-03-25 00:46 IST - Codex
+- User intent: Fix the remaining diagnostics flicker by making the display truly delta-driven: only update on-screen when the effective displayed joystick/radio state actually changes.
+- Discussed: The user correctly pointed out that if the visible radio state or joystick position has not changed, the screen should not repaint. This exposed that the current code was still too timer-driven and too sensitive to raw-sample noise rather than comparing the last displayed state.
+- Changed or created: No code changes in this reply.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: local_tools/aura_host_diagnostics/src/main.cpp; local_tools/aura_host_diagnostics/include/diagnostics_config.h
+- Decisions made: Rework the diagnostics update logic around cached displayed state, jitter filtering/deadband, and change detection before drawing.
+- User corrections: The user explicitly called out that the radio and joystick panes still update visually even when the apparent data is the same, and required true change-only rendering.
+- Next recommended step: Add displayed-state comparison for radio and joystick, apply joystick deadband/filtering, and only repaint the minimal regions when the displayed values actually differ.
+
+## 2026-03-25 00:53 IST - Codex
+- User intent: Make the diagnostics UI truly update only when the displayed joystick/radio state changes, because visible flicker remained and the user correctly observed that unchanged visible data should not repaint.
+- Discussed: The core issue was that the diagnostics app still reacted to timer ticks and noisy raw ADC samples rather than comparing the last displayed values. The proper fix was to separate sampled state from displayed state, filter joystick noise, and redraw only when the visible projected dot/text actually changes. This refinement still follows the earlier official guidance used in the previous turn: Rockwell Automation documents HMI update-rate options of 100/250/500 ms with 500 ms as the default for screens/banners, and FAA AC 23.1311-1B states that critical changing data should update at least 15 Hz while slower map-type information can be much slower.
+- Changed or created: Updated `local_tools/aura_host_diagnostics/include/diagnostics_config.h` again to set joystick redraw cadence to `25 ms` while keeping radio retest at `500 ms`. Updated `local_tools/aura_host_diagnostics/src/main.cpp` to add true displayed-state tracking: introduced cached displayed radio state, filtered joystick state, and change detection helpers. Added `updateFilteredAxis()` to suppress small raw ADC jitter, `radioSnapshotsEqual()` to avoid repainting the radio pane when the visible radio data has not changed, and `joystickNeedsRedraw()` so the joystick pane only repaints when the projected dot, displayed filtered raw values, switch state, or direction actually change. Reworked the static shell so the `INPUTS` panelâ€™s fixed values (`ROT`, `W`, `H`, `BL`, `MODE`) are drawn once and only `TOUCH IRQ` remains dynamic. Rebuilt the diagnostics firmware successfully with PlatformIO after the change-only redraw pass.
+- Files touched: `AI_CONTINUITY_LOG.md`, `local_tools/aura_host_diagnostics/include/diagnostics_config.h`, `local_tools/aura_host_diagnostics/src/main.cpp`
+- Reference points: The refined joystick/radio cadence now lives at `local_tools/aura_host_diagnostics/include/diagnostics_config.h:38-39`. The displayed-state globals now begin at `local_tools/aura_host_diagnostics/src/main.cpp:271-281`. The joystick noise filter now lives at `local_tools/aura_host_diagnostics/src/main.cpp:534-541`, radio equality check at `local_tools/aura_host_diagnostics/src/main.cpp:584-588`, joystick redraw gating at `local_tools/aura_host_diagnostics/src/main.cpp:592-605`, the static one-time `INPUTS` values now render in `local_tools/aura_host_diagnostics/src/main.cpp:867-876`, and the live loop now conditionally repaints radio and joystick panes in `local_tools/aura_host_diagnostics/src/main.cpp:1088-1109`.
+- Decisions made: Stop clearing or repainting any pane solely because time elapsed. Treat analog joystick input as noisy and render filtered, meaningful state rather than every raw ADC wobble. Keep radio retest at an HMI-friendly half-second cadence but only repaint the radio pane if the visible result changed.
+- User corrections: The user explicitly pointed out that the display was still updating even when the visible radio/joystick data appeared unchanged, and required the redraw logic to reflect real state changes instead of timer-driven painting.
+- Next recommended step: Upload this build and verify whether the panes now remain visually still when the hardware is still. If any residual motion remains while untouched, the next refinement should be a slightly wider ADC deadband or a tiny per-axis hysteresis band, not another repaint strategy rewrite.
+
+## 2026-03-25 01:02 IST - Codex
+- User intent: Further refine the diagnostics firmware so joystick motion updates faster, visible flicker during movement is reduced, left/right direction is corrected, and a user-facing centering feature is added for the joystick.
+- Discussed: The remaining movement issue is now localized to the joystick rendering path and calibration behavior rather than the whole screen. The next step is to optimize the moving dot redraw path, invert horizontal interpretation for this hardware, and add a runtime recenter action the user can trigger directly from the diagnostics screen.
+- Changed or created: No code changes in this reply.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: local_tools/aura_host_diagnostics/include/diagnostics_config.h; local_tools/aura_host_diagnostics/src/main.cpp
+- Decisions made: Continue with a focused joystick refinement pass instead of changing unrelated diagnostics areas.
+- User corrections: The user reported that joystick movement still flickers visibly while moving, the joystick is not centered, and left/right are reversed.
+- Next recommended step: Add runtime joystick calibration and optimize the joystick dot redraw logic with corrected horizontal interpretation.
+
+## 2026-03-25 01:10 IST - Codex
+- User intent: Finish the remaining joystick-specific issues in the diagnostics firmware by making motion feel faster, correcting left/right reversal, and adding an actual user-facing centering feature.
+- Discussed: The remaining visible joystick flicker was traced to the moving marker itself still being relatively expensive to repaint, even after the pane-level redraw fixes. The joystick also still used fixed compile-time centering and the original horizontal interpretation. The correct fix was therefore joystick-specific: runtime center variables, a hold-to-center action, corrected horizontal inversion, and a cheaper moving marker.
+- Changed or created: Updated `local_tools/aura_host_diagnostics/include/diagnostics_config.h` to flip horizontal interpretation by setting `kJoystickLeftIsLow = false`, add a relative direction threshold and a hold duration for center capture, and keep the fast 25 ms joystick update cadence. Updated `local_tools/aura_host_diagnostics/src/main.cpp` to add runtime joystick center variables (`runtimeJoystickCenterX/Y`), calibration state, and on-screen calibration status. Reworked normalization and direction detection to use the runtime centers instead of a fixed compile-time center. Added `updateJoystickCalibration()` so holding the joystick switch for `800 ms` captures the current filtered X/Y as the new center and updates the status field to `CENTERED`. Replaced the joystick marker from the previous filled-circle redraw path to a small square marker with a tighter travel radius, so movement repaints are cheaper and do not touch the ring border. The joystick panel now also shows a `CAL` status field and updates left/right according to the corrected horizontal polarity. Rebuilt the diagnostics firmware successfully with PlatformIO after the joystick refinement pass.
+- Files touched: `AI_CONTINUITY_LOG.md`, `local_tools/aura_host_diagnostics/include/diagnostics_config.h`, `local_tools/aura_host_diagnostics/src/main.cpp`
+- Reference points: The joystick inversion and calibration constants now live in `local_tools/aura_host_diagnostics/include/diagnostics_config.h:23-31`. The runtime joystick center/calibration globals now begin in `local_tools/aura_host_diagnostics/src/main.cpp:285-290`. Runtime center-aware normalization begins at `local_tools/aura_host_diagnostics/src/main.cpp:505`. The new calibration handler begins at `local_tools/aura_host_diagnostics/src/main.cpp:611` via `updateJoystickCalibration()`. The static `CAL` label is now added in `local_tools/aura_host_diagnostics/src/main.cpp:929`, and the cheaper joystick marker plus calibration status field now render in `local_tools/aura_host_diagnostics/src/main.cpp:974-1019`. The live loop now applies calibration before redraw decisions in `local_tools/aura_host_diagnostics/src/main.cpp:1111-1116`.
+- Decisions made: Treat centering as an on-device diagnostics feature instead of a source-code constant. Use corrected horizontal polarity in both direction decoding and dot motion. Favor a cheaper marker with protected travel radius over the previous more expensive per-move dot drawing.
+- User corrections: The user reported that joystick motion still flickered visibly, the joystick was not centered, and left/right were reversed.
+- Next recommended step: Upload this build and test the new hold-to-center behavior: leave the joystick at its desired neutral point, hold the switch for roughly 0.8 seconds until the status shows `CENTERED`, then release and verify that the dot stays centered and left/right now move correctly.
+
+## 2026-03-25 01:14 IST - Codex
+- User intent: Make the joystick feel more responsive because flicker is mostly gone but movement is still too sluggish and smaller/faster motions can go undetected.
+- Discussed: The remaining issue is no longer pane flicker or incorrect redraw logic; it is joystick responsiveness and detection sensitivity. The next step is to increase joystick update responsiveness by reducing filtering lag and tightening detection without disturbing the now-stable overall UI.
+- Changed or created: No code changes in this reply.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: local_tools/aura_host_diagnostics/include/diagnostics_config.h; local_tools/aura_host_diagnostics/src/main.cpp
+- Decisions made: Focus only on joystick responsiveness and keep the rest of the display timing stable.
+- User corrections: The user reported that visible flicker is mostly solved but the joystick still feels eye-straining/sluggish and small fast movements can be missed.
+- Next recommended step: Reduce joystick smoothing lag, lower motion deadband, and increase joystick update cadence while preserving change-only redraw behavior.
+
+## 2026-03-25 01:17 IST - Codex
+- User intent: Improve joystick responsiveness further because flicker is mostly solved but motion still feels sluggish and smaller faster movements can go undetected.
+- Discussed: At this stage the remaining issue is joystick responsiveness rather than redraw stability. The correct minimal next move was to make the joystick path react faster without changing the stable radio/UI behavior: faster joystick redraw cadence, less smoothing lag, and a lower change threshold for redraw decisions.
+- Changed or created: Updated `local_tools/aura_host_diagnostics/include/diagnostics_config.h` to reduce the joystick/render interval from `25 ms` to `12 ms`. Updated `local_tools/aura_host_diagnostics/src/main.cpp` to reduce the joystick filter deadband from `6` to `2`, change the filter from a heavier `3:1` average to a faster `1:1` half-step average, and lower the joystick redraw threshold from `4` raw counts to `2` raw counts in the displayed-state comparison. Rebuilt the diagnostics firmware successfully with PlatformIO after the responsiveness pass.
+- Files touched: `AI_CONTINUITY_LOG.md`, `local_tools/aura_host_diagnostics/include/diagnostics_config.h`, `local_tools/aura_host_diagnostics/src/main.cpp`
+- Reference points: The faster joystick cadence now lives at `local_tools/aura_host_diagnostics/include/diagnostics_config.h:38`. The lower-lag joystick filter is now implemented at `local_tools/aura_host_diagnostics/src/main.cpp:517-522`, and the lower joystick redraw thresholds now live at `local_tools/aura_host_diagnostics/src/main.cpp:601-606`.
+- Decisions made: Keep the rest of the diagnostics timing stable and only accelerate the joystick path. Favor a small targeted responsiveness adjustment over another large rendering change.
+- User corrections: The user reported that flicker was mostly solved but joystick motion still felt eye-straining/sluggish and small fast movements could be missed.
+- Next recommended step: Upload this build and confirm whether small/faster joystick movements now register reliably. If it still misses motion, the next step is to sample the joystick more than once per frame and use a short peak/average window rather than increasing display redraw again.
+
+## 2026-03-25 01:24 IST - Codex
+- User intent: Understand the current joystick update rate and CPU implications, and eliminate the remaining visible randomness/flicker in the joystick cursor/X/Y caused by center drift and constantly changing values.
+- Discussed: Clarified that the diagnostics loop was already lightweight, but the remaining visible problem came from displaying every small analog drift value. The right fix was to separate sampled joystick state from displayed joystick state even further, deadband and quantize the displayed values, and moderately increase TFT bus speed now that the panel is stable.
+- Changed or created: Updated `local_tools/aura_host_diagnostics/include/diagnostics_config.h` to add joystick display deadband/step controls and a TFT SPI speed constant, and kept the fast `12 ms` joystick render interval. Updated `local_tools/aura_host_diagnostics/src/main.cpp` so the diagnostics app now computes `displayX` and `displayY` as stabilized, deadbanded, quantized joystick values instead of using every filtered raw ADC change. The cursor position and X/Y text now derive from those displayed values, which removes small random jitter from the visible UI. Increased TFT SPI speed from `8 MHz` to `20 MHz` via `kTftSpiHz`, which reduces the visible cost of the remaining small updates without materially affecting ESP32 CPU load. Removed the now-unused raw-to-pixel helper after switching to displayed-value-driven rendering. Rebuilt the diagnostics firmware successfully with PlatformIO after the stabilization pass.
+- Files touched: `AI_CONTINUITY_LOG.md`, `local_tools/aura_host_diagnostics/include/diagnostics_config.h`, `local_tools/aura_host_diagnostics/src/main.cpp`
+- Reference points: The current joystick/display timing and TFT bus speed now live in `local_tools/aura_host_diagnostics/include/diagnostics_config.h:31-45`, including `kJoystickDisplayDeadband`, `kJoystickDisplayStep`, `kTftSpiHz`, and `kRenderIntervalMs`. The displayed joystick stabilization logic now begins at `local_tools/aura_host_diagnostics/src/main.cpp:514` via `normalizeAxis()` and `stabilizeDisplayedAxis()`, the displayed fields are now part of `JoystickSnapshot` at `local_tools/aura_host_diagnostics/src/main.cpp:134-139`, redraw gating now uses `displayX/displayY` at `local_tools/aura_host_diagnostics/src/main.cpp:617-630`, and the on-screen joystick renderer now uses those stabilized values at `local_tools/aura_host_diagnostics/src/main.cpp:1010-1045`.
+- Decisions made: Keep the diagnostics loop fast at roughly `83 Hz` (`12 ms`) for joystick responsiveness, but make the displayed cursor/text update from stabilized values so the UI looks calm. Raise TFT SPI to `20 MHz` now that the panel is proven stable enough for it. Avoid increasing algorithmic complexity or framebuffer cost because the ESP32 was never CPU-bound here.
+- User corrections: The user noted that joystick motion is now smooth enough but the cursor/X/Y still look randomly flickery because center drift keeps causing visible changes.
+- Next recommended step: Upload this build and judge whether the cursor and X/Y now feel visually stable enough. If raw ADC visibility is still needed later, add a separate low-rate `RAW` readout line while keeping the main cursor/X/Y display stabilized.
+
+## 2026-03-25 01:30 IST - Codex
+- User intent: Understand what increasing TFT SPI speed from 8 MHz to 20 MHz actually means and how that relates to display refresh rates like 30-60 FPS.
+- Discussed: Clarified the distinction between SPI bus clock rate and visible frame rate. The SPI clock controls how fast pixels/commands are transferred to the display controller, while FPS refers to how often a full visible frame is updated. A display can use a 20 MHz SPI link and still only present partial or occasional screen updates well below 60 FPS.
+- Changed or created: No code changes.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: local_tools/aura_host_diagnostics/include/diagnostics_config.h; local_tools/aura_host_diagnostics/src/main.cpp
+- Decisions made: Explain the concepts directly instead of changing code.
+- User corrections: None.
+- Next recommended step: Continue using high SPI transfer speed for small partial updates while keeping visible UI updates driven by meaningful state changes rather than raw data churn.
+
+## 2026-03-25 01:37 IST - Codex
+- User intent: Pause the current hardware diagnostics refinement and return to the broader UI/product design work.
+- Discussed: The user explicitly redirected focus away from hardware bring-up and back to UI design. No implementation work was started in this reply yet.
+- Changed or created: No code changes.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: local_tools/aura_host_diagnostics/ remains the current hardware diagnostics utility; studio_ui/ is the main UI design surface for the next phase.
+- Decisions made: Treat the hardware diagnostics tool as a stable checkpoint and shift attention back to UI design work.
+- User corrections: None.
+- Next recommended step: Resume work in `studio_ui/` and tighten the product-facing UI based on the clarified hardware constraints and deterministic interaction model.
+## 2026-03-25 10:46 +05:30
+- User intent: Continue the product/UI design work in studio_ui without pausing for permission.
+- What was discussed: Resumed from hardware diagnostics back to the browser editor. The focus is now the real user-facing circuit editor flow, not firmware diagnostics.
+- What was changed or created: No files changed yet in this turn. Work resumed with intent to inspect and redesign the current studio_ui shell.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/App.tsx, studio_ui/src/components/Sidebar.tsx, studio_ui/src/components/PropertiesPanel.tsx, studio_ui/src/components/Canvas.tsx, studio_ui/src/index.css
+- Decisions made: Keep the visual direction black-first and deterministic. Avoid pushing to Git during iterative design passes.
+- Disagreements or corrections from the user: The user previously corrected the process: do not push every design pass without knowing it is right.
+- Next recommended step: Audit the editor-mode interaction shell and implement a calmer, more guided default workflow for normal users.
+## 2026-03-25 10:54 +05:30
+- User intent: Continue independently with the main studio_ui product/UI design after the host hardware diagnostics work.
+- What was discussed: The current browser editor still felt like an internal engineering tool instead of a guided product for normal users. The design pass focused on clearer workflow framing, calmer black-first sectioning, and better default guidance without changing deterministic behavior.
+- What was changed or created:
+  - Added a new editor-level product frame in studio_ui/src/App.tsx via EditorWorkspaceShell, including a top banner, workflow strip, and workspace meta summary.
+  - Reworked studio_ui/src/components/Sidebar.tsx to lead with Current Move, a 3-step pick/place/wire flow, clearer package-finding guidance, and armed-placement handling instead of dropping users directly into dense library lists.
+  - Reworked the no-selection inspector state in studio_ui/src/components/PropertiesPanel.tsx into Workspace Guide, with next-step guidance, usage notes, and manifest preview moved behind a disclosure instead of dominating the rail.
+  - Updated studio_ui/src/components/Canvas.tsx to use calmer status labels, show compact part/net counters, and replace the old empty-state card with a clearer 3-step deterministic start message.
+  - Expanded studio_ui/src/index.css with new black-first workflow, callout, disclosure, and empty-state styles for the editor shell.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/App.tsx
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/components/PropertiesPanel.tsx
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/App.tsx: EditorWorkspaceShell, top banner/workflow strip, editor shell wrapper.
+  - studio_ui/src/components/Sidebar.tsx: Current Move callout, studio-flow-grid, library guidance sections, armed-placement cancel path.
+  - studio_ui/src/components/PropertiesPanel.tsx: Workspace Guide, workspaceGuidance, workflowHints, manifest disclosure.
+  - studio_ui/src/components/Canvas.tsx: statusLabel, top-right counters, upgraded empty-state card.
+  - studio_ui/src/index.css: editor-workspace, workspace-banner, workspace-flow-*, studio-callout, studio-flow-*, studio-disclosure, canvas-empty-step.
+- Decisions made: Keep the UI black-first and restrained, but change the experience materially through workflow framing and progressive disclosure rather than another full palette switch.
+- Disagreements or corrections from the user: Preserved the user's correction that the product should not drift away from the black-and-white visual base and should not be pushed to Git every iteration.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Open the updated editor locally, review the new top-level workflow framing against real usage, then tighten the selected-component inspector and component cards so package browsing feels equally deliberate.
+## 2026-03-25 11:04 +05:30
+- User intent: Continue the UI redesign pass and improve the selected-component inspector and package browsing experience.
+- What was discussed: The previous pass improved overall workflow framing. The next step is to make component inspection and library browsing feel equally deliberate for normal users.
+- What was changed or created: No files changed yet in this turn. Work resumed to refine the component-focused rails.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/components/PropertiesPanel.tsx, studio_ui/src/components/Sidebar.tsx, studio_ui/src/index.css
+- Decisions made: Continue locally without pushing to Git.
+- Disagreements or corrections from the user: None in this turn.
+- Next recommended step: Rework the selected-component inspector into clearer task-based sections and improve library browsing with better foregrounded quick-pick patterns.
+## 2026-03-25 11:08 +05:30
+- User intent: Continue the UI/product pass and improve package browsing plus the selected-component editing experience.
+- What was discussed: The remaining friction was at the component level. The library still hid the best entry points, and the selected-component inspector still felt like a long raw parameter form.
+- What was changed or created:
+  - Added quick-pick sections to studio_ui/src/components/Sidebar.tsx for Starter Picks, Reuse On This Stage, and recent Saved Drafts so users can arm common or already-used package bodies without digging through the full family tree.
+  - Added draft arming support in the rail using existing componentDrafts / pendingDraft store paths.
+  - Reworked the selected-component inspector in studio_ui/src/components/PropertiesPanel.tsx with a new component-level guidance callout, clearer identity metadata, package action notes, placement advice, and a staged pin-map disclosure with preview first and full list second.
+  - Added supporting styles in studio_ui/src/index.css for quick rows and nested disclosures.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/components/PropertiesPanel.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/components/Sidebar.tsx: starterItemIds, stageUsedItems, ecentDrafts, rmDraft, Starter Picks, Reuse On This Stage, Saved Drafts.
+  - studio_ui/src/components/PropertiesPanel.tsx: selectedDraft, packageActionNote, placementAdvice, pinPreview, selected-package callout, staged Pin Map disclosure.
+  - studio_ui/src/index.css: studio-quick-row, studio-subdisclosure, studio-subdisclosure-summary.
+- Decisions made: Keep the black-first visual direction, but make the editor faster to enter by foregrounding common packages and collapsing deep detail until needed.
+- Disagreements or corrections from the user: None in this turn.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Review the live editor visually, then tighten the component-family cards themselves so each family has a more distinct package character without drifting into 3D or non-deterministic visuals.
+## 2026-03-25 11:10 +05:30
+- User intent: Continue with the next UI pass and improve visual identity inside the package family cards.
+- What was discussed: The current shell and inspector are improved, but the library family cards still need faster visual recognition without breaking the flat deterministic black-first style.
+- What was changed or created: No files changed yet in this turn. Work resumed to refine the package-family card language.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/components/Sidebar.tsx, studio_ui/src/index.css
+- Decisions made: Keep the visual system flat and restrained; use subtle section identity instead of full color themes or 3D treatment.
+- Disagreements or corrections from the user: None in this turn.
+- Next recommended step: Give each library family a clearer card signature and faster scan pattern through icons, labels, and restrained family accents.
+## 2026-03-25 11:11 +05:30
+- User intent: Continue the next UI pass and improve the visual identity of library family cards.
+- What was discussed: The remaining gap was scan speed in the package library. Families needed clearer recognition without drifting away from the black-first deterministic style.
+- What was changed or created:
+  - Updated studio_ui/src/components/Sidebar.tsx to give each package family card an icon, subtle role badge, and stronger header identity while preserving the same deterministic library structure.
+  - Added family helper functions in the sidebar for accent class, badge label, and icon mapping across integrated, connectors, power, discretes, and controls.
+  - Added supporting family-card styles in studio_ui/src/index.css for restrained accent weighting, icon tiles, and card headers.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/components/Sidebar.tsx: getFamilyAccentClass, getFamilyBadgeLabel, getFamilyIcon, family card section render.
+  - studio_ui/src/index.css: studio-family-card, studio-family-card-head, studio-family-icon, studio-family-badge, and studio-family-card-* accent classes.
+- Decisions made: Use only subtle family-specific accents and structural cues instead of broad color themes, preserving the restrained black-first product direction.
+- Disagreements or corrections from the user: None in this turn.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Move from family-level identity into package-card readability by giving series rows a clearer at-a-glance package summary and pin/size cues before selection.
+## 2026-03-25 11:15 +05:30
+- User intent: Continue autonomously with further UI/product refinement in studio_ui.
+- What was discussed: The user asked to keep going without waiting for direction. The next focus is improving the readability of actual package rows inside the library.
+- What was changed or created: No files changed yet in this turn. Work resumed to refine series and item card scanability.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/components/Sidebar.tsx, studio_ui/src/index.css, studio_ui/src/data/componentCatalog.ts
+- Decisions made: Continue locally and keep deepening package-level readability inside the existing black-first system.
+- Disagreements or corrections from the user: None in this turn.
+- Next recommended step: Improve series/item cards with clearer physical cues such as package kind, growability, pin count, and package signature before selection.
+## 2026-03-25 11:17 +05:30
+- User intent: Keep refining the UI autonomously, specifically the actual package rows inside the library.
+- What was discussed: The family cards had improved, but package selection still depended too much on names alone. The goal was to make each series/item row communicate physical character before selection.
+- What was changed or created:
+  - Updated studio_ui/src/components/Sidebar.tsx with package-level helper functions for kind labels, resize labels, and one-line physical cues.
+  - Reworked single-item and expanded item rows in the library so they now show package kind, pin count, growth mode, and a short physical cue in addition to the package name.
+  - Added shared item-row styles in studio_ui/src/index.css for package cue badges and better hover/readability behavior.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/components/Sidebar.tsx: getPackageKindLabel, getResizeLabel, getItemCue, single-item card rendering, expandable series row rendering.
+  - studio_ui/src/index.css: studio-item-card, studio-item-badges, studio-item-badge, studio-item-cue.
+- Decisions made: Keep the package library flat and deterministic, but let each option expose physical meaning directly through restrained badges and cue lines rather than relying on names alone.
+- Disagreements or corrections from the user: None in this turn.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Move from library readability into stage behavior again by improving selection outlines, pin emphasis, and net visibility so placed circuits read as clearly as the new library rail.
+## 2026-03-25 11:22 +05:30
+- User intent: Stop taking tiny UI steps and make larger, more meaningful design moves, only pausing when a drastic change requires feedback.
+- What was discussed: The user wants larger product/design iterations instead of incremental micro-passes. The next work should bundle multiple stage-clarity improvements into one pass.
+- What was changed or created: No files changed yet in this turn. Work resumed with a larger-scope stage-readability pass planned.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/components/Canvas.tsx, studio_ui/src/index.css, potentially studio_ui/src/App.tsx and studio_ui/src/components/PropertiesPanel.tsx
+- Decisions made: Increase scope per pass. Continue autonomously until a drastic direction change needs user feedback.
+- Disagreements or corrections from the user: The user explicitly corrected the process to avoid overly small steps and to stop only when meaningful feedback is needed.
+- Next recommended step: Execute a broader stage-clarity pass covering selection emphasis, net readability, pin visibility, and more product-like stage overlays in one iteration.
+## 2026-03-25 11:28 +05:30
+- User intent: Increase the scope of each UI iteration and only pause when a drastic direction change needs feedback.
+- What was discussed: A broader stage-readability pass was executed instead of another small library-only tweak. The focus moved to the actual canvas language: selection visibility, pin emphasis, net clarity, and on-canvas guidance.
+- What was changed or created:
+  - Reworked stage emphasis in studio_ui/src/components/Canvas.tsx by adding focus-aware net rendering (selected, elated, idle), brighter guide colors, related-net emphasis for selected bodies/junctions, selected net labels, stronger selected-body labels, and clearer junction emphasis.
+  - Added selection-aware pin rings in enderPinHotspot and stronger selected-component framing in RenderComponent so bodies and endpoints read more clearly on the stage.
+  - Added a new contextual bottom-right on-canvas guidance card in Canvas.tsx summarizing the current stage mode, current target, and basic actions.
+  - Added matching canvas sidecard styles in studio_ui/src/index.css.
+  - Fixed one Tailwind class issue during verification (order-white/12 -> order-white/10).
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/components/Canvas.tsx: stage constants, isConnectionAttachedToComponent, isConnectionAttachedToJunction, estimateStageLabelWidth, getRouteMidpoint, enderPinHotspot, RenderComponent, stageCard, connection rendering block, junction rendering block.
+  - studio_ui/src/index.css: canvas-sidecard, canvas-sidecard-* styles.
+- Decisions made: Treat the canvas itself as a product surface, not just a neutral SVG plane. Use stronger focus hierarchy while keeping the underlying editor deterministic and black-first.
+- Disagreements or corrections from the user: The user explicitly requested larger changes per pass and asked not to stop for tiny incremental iterations.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Continue with another larger pass on stage behavior by improving component-group spacing heuristics and optional readability helpers for denser circuits, but only if the current stage language feels directionally right.
+## 2026-03-25 11:30 +05:30
+- User intent: Continue autonomously with another larger-stage readability pass.
+- What was discussed: The stage hierarchy is improved, and the next move is to help dense circuits stay legible through broader readability behavior instead of more micro-polish.
+- What was changed or created: No files changed yet in this turn. Work resumed to add denser-circuit readability helpers.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/components/Canvas.tsx, studio_ui/src/index.css
+- Decisions made: Continue with a larger canvas pass without stopping.
+- Disagreements or corrections from the user: None in this turn.
+- Next recommended step: Add stage-level readability assistance for cramped layouts, including overlap/crowding visibility and optional clarity overlays.
+## 2026-03-25 11:35 +05:30
+- User intent: Continue autonomously with another larger pass, not micro-steps.
+- What was discussed: The next stage move should help crowded circuits stay readable, not just look better. The focus became readability assistance for dense layouts.
+- What was changed or created:
+  - Added stage-level readability analysis in studio_ui/src/components/Canvas.tsx for component overlaps and crowded spacing zones.
+  - Added a new Clarity mode toggle on the canvas toolbar.
+  - Added on-stage readability overlays for overlap and crowding zones, plus affected-body emphasis when Clarity mode is enabled.
+  - Expanded the bottom-right canvas sidecard to report overlap and crowding counts.
+  - Added matching warning styles in studio_ui/src/index.css for canvas warning states.
+  - Replaced the non-ASCII body-title separator in the stage card with an ASCII - to keep the file clean.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/components/Canvas.tsx: ReadabilityIssue, inflateBounds, doBoundsOverlap, getOverlapBox, getUnionBox, clarityMode, eadabilityIssues, eadabilityIssueLevelByComponent, toolbar Clarity button, readability overlay render block, sidecard warning rows, RenderComponent readability emphasis.
+  - studio_ui/src/index.css: canvas-status-warning, canvas-sidecard-row-alert, canvas-sidecard-row-warn.
+- Decisions made: The stage now actively surfaces legibility problems instead of leaving crowded layouts fully silent. This keeps the editor deterministic while making it more usable for normal users on denser circuits.
+- Disagreements or corrections from the user: This pass follows the user correction to take larger steps and avoid stopping for tiny iterations.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Continue with another broader pass around layout health, likely moving readability signals into the right-side inspector and adding better spacing guidance for component placement before overlaps happen.
+## 2026-03-25 11:38 +05:30
+- User intent: Correct obvious layout issues in the redesigned UI, specifically overlapping tool blocks and oversized empty workflow blocks.
+- What was discussed: The user reported that some tool blocks visually overlap and that the Pick Package, Place Body, and Wire Nets blocks waste too much space with mostly empty interiors.
+- What was changed or created: No files changed yet in this turn. Work resumed to compress the workflow strip and fix overlapping canvas/UI blocks.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/App.tsx, studio_ui/src/components/Canvas.tsx, studio_ui/src/index.css
+- Decisions made: Treat the reported spacing and overlap as a real UI bug, not as an intentional design feature.
+- Disagreements or corrections from the user: The user explicitly called out the overlap and empty-space waste and said they will judge whether the spacing is justified.
+- Next recommended step: Reduce the workflow strip to denser cards or chips and prevent canvas status/tool clusters from colliding under crowded states.
+## 2026-03-25 11:42 +05:30
+- User intent: Fix obvious wasted space and overlap in the redesigned UI rather than treating them as acceptable.
+- What was discussed: The user explicitly called out overlapping tool blocks and the oversized Pick / Place / Wire workflow blocks wasting most of their area.
+- What was changed or created:
+  - Compressed the top workflow area in studio_ui/src/App.tsx and studio_ui/src/index.css into a denser ribbon-style progress strip instead of three stretched dashboard cards.
+  - Shortened the workflow labels from Pick Package / Place Body / Wire Nets to Pick / Place / Wire while preserving the supporting detail line.
+  - Reworked the top canvas HUD in studio_ui/src/components/Canvas.tsx to wrap cleanly instead of fighting for one horizontal lane.
+  - Removed the extra top-right warning chip from the canvas HUD so it no longer collides with the counts/status cluster; warning counts remain in the bottom-right stage card.
+  - Updated responsive behavior in studio_ui/src/index.css so the compact workflow ribbon collapses properly on narrow widths.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/App.tsx
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/App.tsx: compact workflow ribbon markup in EditorWorkspaceShell.
+  - studio_ui/src/components/Canvas.tsx: top HUD wrapper and right-side status cluster.
+  - studio_ui/src/index.css: workspace-flow-strip, workspace-flow-card, workspace-flow-index, workspace-flow-topline, and responsive rules.
+- Decisions made: Treat the empty large workflow blocks and top overlay collisions as actual UI bugs. The workflow strip should read like compact progress guidance, not three oversized cards.
+- Disagreements or corrections from the user: The user explicitly rejected the wasted space and overlap and said they will judge whether empty space is justified.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Continue tightening layout density in the same spirit by auditing any remaining oversized cards or duplicated guidance blocks before moving back into deeper behavior work.
+## 2026-03-25 11:46 +05:30
+- User intent: Continue with the next major UI/product change rather than small cleanup work.
+- What was discussed: The previous pass fixed wasted space and overlap in the top shell. The next step is another broader product-level change.
+- What was changed or created: No files changed yet in this turn. Work resumed to implement the next larger change.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/App.tsx, studio_ui/src/components/Canvas.tsx, studio_ui/src/components/PropertiesPanel.tsx, studio_ui/src/index.css, possibly new shared UI logic under studio_ui/src/utils/
+- Decisions made: Continue autonomously and take another major step instead of incremental polish.
+- Disagreements or corrections from the user: None in this turn.
+- Next recommended step: Turn layout health into a first-class product surface across the editor shell and inspector, not just a canvas-only overlay.
+## 2026-03-25 11:49 +05:30
+- User intent: Execute the next major product/UI change rather than another isolated tweak.
+- What was discussed: The next broader move was to make layout health a first-class editor concept across the shell and inspector, not just a canvas-only overlay.
+- What was changed or created:
+  - Added a shared layout-health utility at studio_ui/src/utils/layoutHealth.ts that computes overlaps, crowded zones, and per-component issue levels from placed bodies.
+  - Updated studio_ui/src/components/Canvas.tsx to consume the shared layout-health report instead of owning separate local overlap logic.
+  - Updated studio_ui/src/App.tsx so the top editor shell now reports layout clean, overlap count, or crowded count in the product meta strip.
+  - Updated studio_ui/src/components/PropertiesPanel.tsx so the workspace guide now includes a Layout Health section, and selected components surface body-specific overlap/crowding warnings directly in the inspector.
+  - Added supporting shell meta-pill styles in studio_ui/src/index.css.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/utils/layoutHealth.ts
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/components/PropertiesPanel.tsx
+  - studio_ui/src/App.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/utils/layoutHealth.ts: computeLayoutHealth, LayoutHealthReport, overlap/crowding detection.
+  - studio_ui/src/components/Canvas.tsx: shared health-report usage and retained canvas clarity overlays.
+  - studio_ui/src/App.tsx: top-shell meta strip health pills.
+  - studio_ui/src/components/PropertiesPanel.tsx: workspace Layout Health section and selected-body health warning.
+  - studio_ui/src/index.css: workspace-meta-pill-clean, workspace-meta-pill-warn, workspace-meta-pill-alert.
+- Decisions made: Layout readability is now treated as a shared product truth instead of a canvas-only debug layer. The shell, inspector, and stage all speak the same health model.
+- Disagreements or corrections from the user: None in this turn.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Continue only if needed into predictive placement guidance, where the stage suggests safer spacing before a body is dropped, rather than just reporting problems after placement.
+## 2026-03-25 11:54 +05:30
+- User intent: Fix a regression where the left panel no longer scrolls, making component picking impossible.
+- What was discussed: The user reported that the library rail scroll is gone after the recent UI changes, blocking access to components.
+- What was changed or created: No files changed yet in this turn. Work resumed to inspect the sidebar scroll/layout regression.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/components/Sidebar.tsx, studio_ui/src/index.css, possibly studio_ui/src/App.tsx
+- Decisions made: Treat the missing library scroll as a blocking regression and fix it before further design work.
+- Disagreements or corrections from the user: The user explicitly reported the regression in the left panel.
+- Next recommended step: Inspect the rail container sizing/overflow rules and restore stable scrolling in the library rail.
+## 2026-03-25 11:55 +05:30
+- User intent: Fix the regression where the left panel no longer scrolls and components cannot be reached.
+- What was discussed: The missing library scroll was treated as a blocking regression caused by the recent shell/rail layout changes.
+- What was changed or created:
+  - Updated studio_ui/src/index.css so .studio-rail-left no longer uses fully visible overflow.
+  - Restored left-rail vertical containment with min-height: 0, overflow-y: hidden, and kept only horizontal visibility for the description hover behavior with overflow-x: visible.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/index.css: .studio-rail-left
+- Decisions made: The left rail must remain a proper scrollable column first; tooltip/hover behavior cannot come at the cost of losing component access.
+- Disagreements or corrections from the user: The user explicitly reported that the left panel scroll was gone and component picking was blocked.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Re-test the library rail interaction in the running app, then continue with the next major UI change only after confirming the regression is fully gone.
+## 2026-03-25 11:59 +05:30
+- User intent: Clarify whether the component library still exists and where it is in the redesigned left rail.
+- What was discussed: The user could not find the component library and asked whether it was deleted or replaced. The likely issue is discoverability in the current rail structure, not missing data.
+- What was changed or created: No files changed yet in this turn.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/components/Sidebar.tsx
+- Decisions made: Explain the current location of the library and treat discoverability as a real UI problem to fix next.
+- Disagreements or corrections from the user: The user clarified that the real issue is not just scrolling, but that the component library itself is hard to find.
+- Next recommended step: Make the actual library section visually unmistakable and move it higher or simplify the left rail so the core package library cannot be mistaken for missing.
+## 2026-03-25 12:04 +05:30
+- User intent: Restore obvious access to the component library, fix the remaining left-rail scrolling problem, and keep future feature placement grounded in actual screen usability.
+- What was discussed: The user clarified that the main problem is not just missing scroll, but that the component library itself is hard to find. They also asked that future feature placement be judged against screen use and visual hierarchy.
+- What was changed or created: No files changed yet in this turn. Work resumed to restructure the left rail and fix scrolling/discoverability together.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/components/Sidebar.tsx, studio_ui/src/index.css
+- Decisions made: Treat the buried library and broken-feeling scroll as a primary UX regression. The component library will be restored as the obvious first destination in the rail.
+- Disagreements or corrections from the user: The user explicitly corrected the diagnosis: the actual issue is not merely scroll, but that the library is not findable and the rail still does not behave correctly.
+- Next recommended step: Reorder the left rail so the library is first, compress or demote helper sections, and simplify the rail scroll rules so the user can always reach component families naturally.
+## 2026-03-25 12:09 +05:30
+- User intent: Make the actual component library easy to find again, ensure the left rail scrolls naturally, and keep future feature placement grounded in real screen use.
+- What was discussed: The user clarified that the deeper problem was discoverability: they could not find the component library and the left rail still felt wrong. The bulky fixed guidance area and helper-first ordering were treated as mistakes.
+- What was changed or created:
+  - Removed the oversized fixed Current Move and sidebar workflow blocks from studio_ui/src/components/Sidebar.tsx so the actual browsing area starts much sooner.
+  - Kept only a compact armed-placement strip near search/filter when needed.
+  - Removed the special studio-rail-scroll-left usage from the sidebar scroll container and returned the left rail to a normal vertical scroll path.
+  - Added explicit hierarchy labels in the scroll area: Quick Access is now clearly marked as shortcuts only, and Component Library is explicitly marked as the main section.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/Sidebar.tsx
+- Reference points:
+  - studio_ui/src/components/Sidebar.tsx: compact top rail section, armed-placement strip, studio-rail-scroll usage, Quick Access, Component Library heading.
+- Decisions made: The component library must remain the obvious primary content of the left rail. Helper sections cannot bury it or compete with it.
+- Disagreements or corrections from the user: The user explicitly corrected the diagnosis: the real failure was that the library was not findable, not just that scrolling felt wrong.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Re-check the running left rail visually. If discoverability and scrolling are back to normal, continue with the next major product change from there.
+## 2026-03-25 12:13 +05:30
+- User intent: Reduce wasted space caused by always-visible explanation text and move explanations into hover popups where appropriate.
+- What was discussed: The user pointed out that many explanatory text blocks occupy space that could be used for more important UI, and suggested hover-based disclosure instead.
+- What was changed or created: No files changed yet in this turn. Work resumed to compress explanatory copy and move it behind hover affordances.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/App.tsx, studio_ui/src/components/Sidebar.tsx, studio_ui/src/components/PropertiesPanel.tsx, studio_ui/src/index.css
+- Decisions made: Treat always-visible explanatory paragraphs as candidates for progressive disclosure rather than fixed layout content, especially in dense rail/header areas.
+- Disagreements or corrections from the user: The user explicitly suggested hover popups for explanatory text to reclaim space.
+- Next recommended step: Add a compact hover-hint pattern and replace large explanatory paragraphs in the shell and rails with hover-based hints.
+## 2026-03-25 12:18 +05:30
+- User intent: Reclaim UI space by moving non-essential explanation copy behind hover popups and use screen space for more important content.
+- What was discussed: The user pointed out that many explanatory text blocks can become hover-only help instead of permanently occupying layout space. The shell and rails were treated as the first targets.
+- What was changed or created:
+  - Added a reusable hover-help component at studio_ui/src/components/HoverHint.tsx using a compact info affordance with native hover/focus text.
+  - Updated studio_ui/src/App.tsx so the main workspace subtitle became a hover hint and workflow-card details moved off the visible surface into hover help.
+  - Updated studio_ui/src/components/Sidebar.tsx to replace several permanently visible explanation paragraphs with compact hover hints in the header, search area, quick access section, starter picks, reuse, drafts, and component library heading.
+  - Updated studio_ui/src/components/PropertiesPanel.tsx to use the same hover-hint pattern for static explanatory section headers such as How To Use This Stage, Layout Health, and Body Sizing.
+  - Added supporting hover-hint styles in studio_ui/src/index.css.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/HoverHint.tsx
+  - studio_ui/src/App.tsx
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/components/PropertiesPanel.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/components/HoverHint.tsx: shared compact info affordance.
+  - studio_ui/src/App.tsx: workspace title hint and workflow-card hint usage.
+  - studio_ui/src/components/Sidebar.tsx: hover-based explanatory compression in top header/search/quick-access/library headings.
+  - studio_ui/src/components/PropertiesPanel.tsx: hover-based explanatory compression for static inspector section headings.
+  - studio_ui/src/index.css: hover-hint, workspace-title-row.
+- Decisions made: Keep immediate state and action labels visible, but move descriptive helper copy behind hover/focus in dense shell and rail areas.
+- Disagreements or corrections from the user: The user explicitly suggested hover-based popups for explanation text so the screen can prioritize more important content.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Continue the same compression audit across any remaining static explanatory copy, but only where removing always-visible text does not hide a critical immediate decision.
+## 2026-03-25 12:21 +05:30
+- User intent: Ask for the next major step to be explained first, then have the edit performed in the same turn.
+- What was discussed: The user wants the next move clarified before implementation. The likely next pass is another density/progressive-disclosure improvement so secondary rail content stops competing with the main working surface.
+- What was changed or created: No files changed yet in this turn. Work resumed to explain the next step and then implement it.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: studio_ui/src/components/Sidebar.tsx, studio_ui/src/components/PropertiesPanel.tsx, studio_ui/src/index.css, possibly a new shared compact section helper.
+- Decisions made: Pause briefly to explain the upcoming edit before changing files, per the user's instruction.
+- Disagreements or corrections from the user: The user explicitly asked to hear the complete next step before editing.
+- Next recommended step: Run a progressive-disclosure pass so secondary rail sections collapse by default while the component library and immediate editing controls stay primary.
+## 2026-03-25 12:25 +05:30
+- User intent: Hear the next full UI step first, then proceed with edits that improve density and placement discipline without stopping for minor checkpoints.
+- What was discussed: The next pass was framed as a progressive-disclosure cleanup: keep the component library and first editing controls visible, and push secondary helper content behind disclosures so the rails stop wasting height.
+- What was changed or created:
+  - Reordered the left rail in `studio_ui/src/components/Sidebar.tsx` so `Component Library` is the primary visible scroll content again.
+  - Moved `Starter Picks`, `Reuse On This Stage`, and `Saved Drafts` into a closed `Quick Access` disclosure so shortcuts no longer bury the real library.
+  - Updated `studio_ui/src/components/PropertiesPanel.tsx` so `How To Use This Stage` and `Layout Health` are collapsed by default in the workspace guide, while core selected-body controls remain visible.
+  - Changed the selected-component `Pin Map` to a closed disclosure by default so identity, placement, and sizing stay higher in the inspector.
+  - Added a small utility-disclosure style in `studio_ui/src/index.css` to visually separate secondary helper blocks from primary editing surfaces.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/components/PropertiesPanel.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - `studio_ui/src/components/Sidebar.tsx`: left-rail scroll section, `Component Library` heading, `Quick Access` disclosure.
+  - `studio_ui/src/components/PropertiesPanel.tsx`: workspace-guide disclosures, selected-component `Pin Map` disclosure.
+  - `studio_ui/src/index.css`: `.studio-utility-disclosure`.
+- Decisions made: The component library is the primary left-rail job and must not compete with shortcut blocks. Guidance and health detail should exist, but default to collapsed unless needed.
+- Disagreements or corrections from the user: The user required the next step to be explained first and explicitly asked for feature placement to be judged by actual screen value and visual hierarchy.
+- Verification:
+  - `studio_ui> npm.cmd run lint`
+  - `studio_ui> npx.cmd tsc -b`
+  - `studio_ui> npm.cmd run build`
+- Next recommended step: Do a larger density pass on the selected-component inspector header and canvas sidecard so repeated metadata chips and explanatory callouts do not consume more height than the actual editing controls.
+## 2026-03-25 12:29 +05:30
+- User intent: Continue without stopping and apply the next major density pass.
+- What was discussed: The next planned move is to compress repeated metadata and explanatory chrome in the selected-component inspector and canvas support UI so editing controls and circuit readability stay primary.
+- What was changed or created: No files changed yet in this turn. Work resumed to implement the next density pass.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - `studio_ui/src/components/PropertiesPanel.tsx`
+  - `studio_ui/src/components/Canvas.tsx`
+  - `studio_ui/src/index.css`
+- Decisions made: Proceed directly with the larger density pass instead of stopping for another checkpoint.
+- Disagreements or corrections from the user: None in this turn.
+- Next recommended step: Reduce repeated header metadata and oversized support blocks while keeping first-use controls immediately visible.
+## 2026-03-25 12:30 +05:30
+- User intent: Continue with the next major UI change without stopping, and improve space usage in the most crowded visible surfaces.
+- What was discussed: The remaining waste was identified in the selected-component inspector and the canvas support UI. Repeated metadata, large descriptive blocks, and multi-row helper cards were treated as layout noise that competes with actual editing.
+- What was changed or created:
+  - Compressed the selected-package header in `studio_ui/src/components/PropertiesPanel.tsx` by moving the package description behind a hover hint and keeping only compact identity tags visible.
+  - Replaced the larger selected-body callout with a smaller `Current Move` note that carries one action sentence plus one status result instead of a stacked explanatory block.
+  - Reduced the canvas helper burden in `studio_ui/src/components/Canvas.tsx` by showing the lower-left chip only for active contexts instead of permanently.
+  - Rebuilt the bottom-right stage sidecard into a tighter summary: title, detail, zoom, and compact action/health chips instead of multiple separate instruction rows.
+  - Added the supporting compact note and sidecard chip styles in `studio_ui/src/index.css`.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/PropertiesPanel.tsx
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - `studio_ui/src/components/PropertiesPanel.tsx`: selected-package header, `Current Move` note.
+  - `studio_ui/src/components/Canvas.tsx`: `stageHintText`, lower-left canvas chip, bottom-right stage sidecard.
+  - `studio_ui/src/index.css`: `.studio-inline-note`, `.canvas-sidecard-metas`, `.canvas-sidecard-meta-alert`, `.canvas-sidecard-meta-warn`.
+- Decisions made: Keep the canvas and inspector calm by default. Persistent help should only stay visible when it reflects active mode or current risk, not as permanent repeated instruction.
+- Disagreements or corrections from the user: None in this turn.
+- Verification:
+  - `studio_ui> npm.cmd run lint`
+  - `studio_ui> npx.cmd tsc -b`
+  - `studio_ui> npm.cmd run build`
+- Next recommended step: Do the next major pass on interaction density inside the library families themselves by tightening series/item expansion behavior and making deeper variant lists open only when the user is clearly browsing that family.
+## 2026-03-25 12:39 +05:30
+- User intent: Continue with the next major UI change and improve the component library browsing behavior.
+- What was discussed: The next major pass is to tighten family and series expansion so the left rail stops opening too much hierarchy at once and feels more deliberate when drilling into variants.
+- What was changed or created: No files changed yet in this turn. Work resumed to restructure left-rail browse behavior.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - `studio_ui/src/components/Sidebar.tsx`
+  - `studio_ui/src/index.css`
+- Decisions made: Proceed directly with library interaction density improvements instead of stopping again.
+- Disagreements or corrections from the user: None in this turn.
+- Next recommended step: Add family-level disclosure control and constrain series expansion so browsing depth follows user intent instead of opening too much by default.
+## 2026-03-25 12:42 +05:30
+- User intent: Continue with the next major pass and make library browsing feel more deliberate instead of expanding too much hierarchy at once.
+- What was discussed: The left rail needed a clearer drill-down model so browsing one family or one variant group does not force the user to scan multiple open stacks at once. Search remains a special case because active filtering is a deliberate narrow intent.
+- What was changed or created:
+  - Updated `studio_ui/src/components/Sidebar.tsx` to add family-level expansion state and family toggle behavior.
+  - Changed the library so one family is open at a time during normal browsing, with the first visible family acting as the default open branch.
+  - Changed series expansion to one open series per family during normal browsing, while search mode still expands matching results more broadly.
+  - Converted family headers into clickable drill-down controls with explicit chevrons.
+  - Added supporting family-header button and chevron styles in `studio_ui/src/index.css`.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - `studio_ui/src/components/Sidebar.tsx`: `expandedFamilyId`, `expandedSeriesByFamily`, `toggleFamily`, `toggleSeries`, family card render path.
+  - `studio_ui/src/index.css`: `.studio-family-card-head-button`, `.studio-family-chevron`.
+- Decisions made: Normal browsing should behave like a deliberate drill-down, not a multi-column dump. Search is the one case where wider expansion is acceptable because the user has already constrained the result set.
+- Disagreements or corrections from the user: None in this turn.
+- Verification:
+  - `studio_ui> npm.cmd run lint`
+  - `studio_ui> npx.cmd tsc -b`
+  - `studio_ui> npm.cmd run build`
+- Next recommended step: Do the next major pass on active placement and wiring affordances so the editor makes mode transitions more obvious at the cursor and on the stage, not just in the rails.
+## 2026-03-25 12:44 +05:30
+- User intent: Continue with the next major change and improve on-stage mode feedback for placement, wiring, and editing.
+- What was discussed: The next pass targets live stage feedback so users can understand current mode transitions directly from the canvas and pointer area instead of depending on the left and right rails.
+- What was changed or created: No files changed yet in this turn. Work resumed to improve active placement and wiring affordances on the stage.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - `studio_ui/src/components/Canvas.tsx`
+  - `studio_ui/src/index.css`
+- Decisions made: Prioritize direct on-stage mode communication before adding more rail structure.
+- Disagreements or corrections from the user: None in this turn.
+- Next recommended step: Add compact live mode badges and cursor-near hints for place, wire, and edit states so the current action is obvious at the point of interaction.
+## 2026-03-25 12:47 +05:30
+- User intent: Continue with the next major pass and make placement, wiring, and edit modes more obvious directly on the stage.
+- What was discussed: The canvas needed stronger live mode feedback so users can understand whether they are placing, wiring, editing, or aligning from the point of interaction, not only from the side rails.
+- What was changed or created:
+  - Added a top-right live mode banner in `studio_ui/src/components/Canvas.tsx` showing the current action state and the active body/net target when applicable.
+  - Added a cursor-near live mode tag in `studio_ui/src/components/Canvas.tsx` so place/wire/edit state follows the user’s working point on the stage.
+  - Kept the lower-left helper chip only for active contexts and left the bottom-right sidecard as the calmer persistent summary from the previous pass.
+  - Used the existing store-backed canvas frame instead of reading DOM refs during render, fixing the lint issue raised by the first implementation attempt.
+  - Added the supporting banner and cursor-tag styles in `studio_ui/src/index.css`.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - `studio_ui/src/components/Canvas.tsx`: `liveMode`, `showCursorModeTag`, top-right mode banner render, cursor-tag render.
+  - `studio_ui/src/index.css`: `.canvas-mode-banner*`, `.canvas-cursor-tag*`.
+- Decisions made: Put live mode communication on the stage itself. Persistent rails remain useful, but the current action must be readable where the user is pointing and dragging.
+- Disagreements or corrections from the user: None in this turn.
+- Verification:
+  - `studio_ui> npm.cmd run lint`
+  - `studio_ui> npx.cmd tsc -b`
+  - `studio_ui> npm.cmd run build`
+- Next recommended step: Do the next major pass on placement onboarding and empty-stage startup so the very first package placement path is as guided and obvious as the now-improved active editing path.
+## 2026-03-25 12:49 +05:30
+- User intent: Continue with the next major pass and provide more detailed explanations of design moves from now on.
+- What was discussed: The next target is first-use onboarding: make the empty-stage and first placement flow clearer for a new user. The user also asked for more detailed explanations of why each move is being made.
+- What was changed or created: No files changed yet in this turn. Work resumed to improve startup guidance and first-placement clarity.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - `studio_ui/src/components/Canvas.tsx`
+  - `studio_ui/src/components/Sidebar.tsx`
+  - `studio_ui/src/components/App.tsx`
+  - `studio_ui/src/index.css`
+- Decisions made: Focus on the first 30 seconds of use: empty stage, first pick, first placement, and the handoff into wiring/editing.
+- Disagreements or corrections from the user: The user asked for explanations to be a bit more detailed so the reasoning behind changes is easier to understand.
+- Next recommended step: Rework empty-stage and first-placement guidance so the tool explains the first action, confirms armed placement clearly, and reduces uncertainty before the first body is placed.
+## 2026-03-25 12:53 +05:30
+- User intent: Continue with the next major pass, improve the first-use experience, and receive slightly more detailed explanations of the design reasoning.
+- What was discussed: The startup path was treated as one connected sequence across shell, left rail, and stage. The design goal was to make the first 30 seconds readable: what to click first, what that click arms, what happens on the stage next, and how the user reaches the first net.
+- What was changed or created:
+  - Added a compact startup guidance strip in `studio_ui/src/App.tsx` so the top shell now explicitly announces the current onboarding step: start with one package, placement armed, or make the first net.
+  - Updated `studio_ui/src/components/Sidebar.tsx` so the left rail now explains first placement when the stage is empty and explains the immediate next action when placement is armed.
+  - Updated `studio_ui/src/components/Canvas.tsx` so the empty-stage card now describes the real pick-arm-place-wire sequence more clearly, and added a new centered `Placement Ready` overlay for the armed-first-body state.
+  - Extended the lower-left stage hint in `studio_ui/src/components/Canvas.tsx` to help with the first-net step once the first body is already placed.
+  - Added the supporting startup strip styles in `studio_ui/src/index.css`.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/App.tsx
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - `studio_ui/src/App.tsx`: `startupGuide`, `workspace-onboarding-strip` render.
+  - `studio_ui/src/components/Sidebar.tsx`: empty-stage `First Placement` note, expanded `Placement Armed` note.
+  - `studio_ui/src/components/Canvas.tsx`: `firstPlacementTitle`, updated empty-stage card, new `Placement Ready` overlay, first-net `stageHintText` extension.
+  - `studio_ui/src/index.css`: `.workspace-onboarding-strip`, `.workspace-onboarding-label`, `.workspace-onboarding-detail`.
+- Decisions made: First-use guidance should not live in only one place. The shell explains the stage in broad terms, the left rail explains the click that arms placement, and the canvas explains the physical action that happens next.
+- Disagreements or corrections from the user: The user asked for more detailed explanations of design moves from this point onward.
+- Verification:
+  - `studio_ui> npm.cmd run lint`
+  - `studio_ui> npx.cmd tsc -b`
+  - `studio_ui> npm.cmd run build`
+- Next recommended step: Tighten the post-placement handoff so once the first body is dropped, the system guides the user cleanly into either reference editing or first-net wiring without leaving both options equally vague.
+## 2026-03-25 12:55 +05:30
+- User intent: Continue with the next major pass and improve the handoff immediately after first placement.
+- What was discussed: The next design problem is the post-placement handoff. After the first body is placed, the tool should make the next two strong paths explicit: refine the body or start the first net.
+- What was changed or created: No files changed yet in this turn. Work resumed to improve the first-body handoff state.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - `studio_ui/src/App.tsx`
+  - `studio_ui/src/components/Canvas.tsx`
+  - `studio_ui/src/components/PropertiesPanel.tsx`
+  - `studio_ui/src/index.css`
+- Decisions made: Focus on the specific state where at least one body exists but zero nets exist, because that is the moment where the UI should guide the user into the first meaningful branch.
+- Disagreements or corrections from the user: None in this turn.
+- Next recommended step: Add a clearer two-path handoff for first-body completion so edit-body and first-net actions are both visible and understandable.
+## 2026-03-25 12:59 +05:30
+- User intent: Continue with the next major pass and make the first-body handoff clearer after the initial placement is completed.
+- What was discussed: The critical state was identified as `bodies present, zero nets`. At that moment the tool should stop implying and start showing the two strong next paths explicitly: refine the body or start the first net.
+- What was changed or created:
+  - Updated `studio_ui/src/App.tsx` so the startup strip now describes the first-body handoff as a choice rather than just telling the user to make the first net.
+  - Updated `studio_ui/src/components/PropertiesPanel.tsx` to add a visible two-path guidance block in the workspace guide for the zero-net state: `Tune The Body` and `Start The Net`.
+  - Updated `studio_ui/src/components/Canvas.tsx` to add a bottom-center first-body handoff card on the stage when components exist but nets do not, making the same two next paths visible directly on the canvas.
+  - Added the supporting choice-card and handoff-card styles in `studio_ui/src/index.css`.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/App.tsx
+  - studio_ui/src/components/PropertiesPanel.tsx
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - `studio_ui/src/App.tsx`: updated `startupGuide` zero-net branch.
+  - `studio_ui/src/components/PropertiesPanel.tsx`: `showFirstHandoff`, `studio-choice-grid` render block.
+  - `studio_ui/src/components/Canvas.tsx`: zero-net handoff card render near the bottom-center of the stage.
+  - `studio_ui/src/index.css`: `.studio-choice-grid`, `.studio-choice-card`, `.canvas-handoff-*`.
+- Decisions made: The post-placement state should present a clean fork instead of a single vague next step. Both valid next actions are now visible at once so the user does not need to infer the intended workflow.
+- Disagreements or corrections from the user: None in this turn.
+- Verification:
+  - `studio_ui> npm.cmd run lint`
+  - `studio_ui> npx.cmd tsc -b`
+  - `studio_ui> npm.cmd run build`
+- Next recommended step: Tighten actual pin-selection affordance for the first-net path so pins read as more obviously clickable targets before the user has built any nets.
+## 2026-03-25 13:01 +05:30
+- User intent: Investigate a creator-mode visual bug where text appears to poke out from behind the canvas near the top-left corner.
+- What was discussed: The issue was treated as a likely layering, overflow, or hidden block problem in the creator workspace, probably involving the canvas edge and an adjacent rail or overlay element.
+- What was changed or created: No files changed yet in this turn. Work resumed to inspect creator-mode layout and identify the leaking element.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - `studio_ui/src/components/ComponentCreatorWorkspace.tsx`
+  - `studio_ui/src/index.css`
+- Decisions made: Diagnose the visual leak before changing layout or z-index rules.
+- Disagreements or corrections from the user: The user reported a creator-mode bug specifically near the top-left corner of the canvas where text from another block appears to show through.
+- Next recommended step: Inspect creator-mode structure, absolute labels, and overflow/z-index rules to identify the leaking source and then patch containment.
+## 2026-03-25 13:05 +05:30
+- User intent: Investigate and fix a creator-mode visual bug where text appears to poke out near the top-left corner of the canvas.
+- What was discussed: The likely problem was treated as a containment/layering leak rather than a single clearly identifiable text block. The creator preview renders many SVG text labels and overlays, and the stage boundary was not hardened enough to guarantee that nothing visually leaks at curved edges.
+- What was changed or created:
+  - Updated `studio_ui/src/index.css` to harden creator-mode containment at the stage boundary.
+  - Made `.creator-stage` relative, overflow-hidden, and isolated.
+  - Made `.creator-stage-panel` overflow-hidden and relative.
+  - Made `.creator-preview-card` isolated and explicitly clipped with rounded inset clipping.
+  - Added a direct child rule for `.creator-preview-card > svg` so the SVG itself is block-level, hidden-overflow, and backed by a black background.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/index.css
+- Reference points:
+  - `studio_ui/src/index.css`: `.creator-stage`, `.creator-stage-panel`, `.creator-preview-card`, `.creator-preview-card > svg`.
+- Decisions made: Fix the class of bug at the containment boundary instead of guessing at one particular leaking text node. This is the safer fix because creator mode contains many SVG labels, dimensions, and overlays that all need to respect the same clip boundary.
+- Disagreements or corrections from the user: The user specifically reported a creator-mode leak near the top-left of the canvas and suspected a hidden block behind the canvas and left panel.
+- Verification:
+  - `studio_ui> npm.cmd run lint`
+  - `studio_ui> npx.cmd tsc -b`
+  - `studio_ui> npm.cmd run build`
+- Next recommended step: Re-check creator mode visually. If any text still leaks, the next pass should inspect edge-positioned SVG labels directly and clamp or hide them when they sit too close to the preview boundary.
+## 2026-03-25 13:09 +05:30
+- User intent: Re-check the creator-mode leak after the first fix failed, with more precise visual detail from the user.
+- What was discussed: The user clarified that the visible letters are `pac`, seen near the margin between the creator left panel and the canvas. That strongly pointed to the creator-stage header text (`Deterministic Package Authoring`) rather than the SVG preview itself.
+- What was changed or created:
+  - Updated `studio_ui/src/components/ComponentCreatorWorkspace.tsx` so the creator left rail now has an explicit `creator-rail` class for stronger stacking containment.
+  - Updated the creator stage header so the left text block is overflow-hidden and the `Deterministic Package Authoring` eyebrow line is explicitly truncated.
+  - Updated `studio_ui/src/index.css` to add `.creator-rail` with explicit stacking and hidden overflow.
+  - Kept `.creator-stage` at lower stacking order and made `.creator-stage-head` overflow-hidden so header text cannot bleed toward the rail boundary.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/ComponentCreatorWorkspace.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - `studio_ui/src/components/ComponentCreatorWorkspace.tsx`: creator aside class list, creator stage header text container, `Deterministic Package Authoring` eyebrow.
+  - `studio_ui/src/index.css`: `.creator-rail`, `.creator-stage`, `.creator-stage-head`.
+- Decisions made: Treat the `pac` clue as evidence that the leaking source is the creator-stage header text rather than the preview SVG. Fixing the header containment and left/center stacking is more targeted than the previous preview-boundary hardening pass.
+- Disagreements or corrections from the user: The user explicitly corrected the location and gave the visible letters `pac`, which changed the diagnosis materially.
+- Verification:
+  - `studio_ui> npm.cmd run lint`
+  - `studio_ui> npx.cmd tsc -b`
+  - `studio_ui> npm.cmd run build`
+- Next recommended step: Re-check creator mode visually. If the leak still exists after this header-specific fix, inspect any remaining edge-positioned creator SVG labels or measure overlays, but the most likely header source has now been addressed directly.
+## 2026-03-25 13:11 +05:30
+- User intent: Re-diagnose the creator-mode top-edge leak after the previous header-specific fix did not change the visible bug.
+- What was discussed: The user clarified that the leaking thing behaves like a horizontally stretched block running across the top above the creator canvas, compressed and partially hidden behind the left panel. That points more strongly to grid-item overflow than to one isolated text label.
+- What was changed or created: No files changed yet in this turn. Work resumed to inspect creator-shell column sizing and horizontal overflow rules.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - `studio_ui/src/components/ComponentCreatorWorkspace.tsx`
+  - `studio_ui/src/index.css`
+- Decisions made: Shift diagnosis from single-label leakage to likely grid/min-width overflow across the creator shell.
+- Disagreements or corrections from the user: The user explicitly said the previous change produced no visible improvement and clarified that the leaking element appears like a long squeezed block spanning across the top of the canvas area.
+- Next recommended step: Inspect creator grid items and add strict `min-w-0` / overflow containment to the center stage column and its internal header strip.
+## 2026-03-25 13:14 +05:30
+- User intent: Continue re-diagnosing the creator-mode leak after the previous header/stacking fix still did not change the visible bug.
+- What was discussed: The user clarified that the leaking block appears stretched across the whole top above the creator canvas and squeezed underneath the left panel. That shifted the likely root cause again: from header text alone to a center-column grid item that was still not allowed to shrink properly.
+- What was changed or created:
+  - Updated `studio_ui/src/index.css` so the creator center stage path now uses `min-w-0` through the critical grid hierarchy: `.creator-stage`, `.creator-stage-panel`, `.creator-stage-head`, and `.creator-stage-toolbar`.
+  - Updated `studio_ui/src/index.css` so `.creator-toolbar-group` can wrap within the available width instead of forcing width expansion.
+  - Updated `studio_ui/src/components/ComponentCreatorWorkspace.tsx` so the right-side chip group in the creator stage header also has `min-w-0`, matching the left-side text block.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/ComponentCreatorWorkspace.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - `studio_ui/src/components/ComponentCreatorWorkspace.tsx`: creator stage header right chip group.
+  - `studio_ui/src/index.css`: `.creator-stage`, `.creator-stage-panel`, `.creator-stage-head`, `.creator-stage-toolbar`, `.creator-toolbar-group`.
+- Decisions made: Treat the symptom as a grid/min-width failure in the creator center column. Without `min-w-0`, wide header or toolbar content can remain wider than the grid track and visually extend underneath the left rail.
+- Disagreements or corrections from the user: The user explicitly said the previous fix had no visible effect and described the leaking element as a stretched top block rather than a small isolated label.
+- Verification:
+  - `studio_ui> npm.cmd run lint`
+  - `studio_ui> npx.cmd tsc -b`
+  - `studio_ui> npm.cmd run build`
+- Next recommended step: Re-check creator mode visually. If the leak still survives after this grid-width fix, then the remaining cause is likely a specific top-row creator element with fixed width, and the next pass should inspect those elements one by one.
+## 2026-03-25 13:17 +05:30
+- User intent: Re-diagnose the hidden strip above the circuit canvas without making unrelated UI changes.
+- What was discussed: The user clarified that the visible block above the canvas is the `Pick / Place / Wire` strip, and that another block exists directly below it but is mostly hidden behind the canvas. That identifies the issue as the editor workspace shell, not the creator workspace.
+- What was changed or created: No files changed yet in this turn. Work resumed to inspect the editor-shell grid and the onboarding strip added beneath the workflow ribbon.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - `studio_ui/src/App.tsx`
+  - `studio_ui/src/index.css`
+- Decisions made: Stop changing creator-mode layout. Focus only on the editor workspace rows and the onboarding strip because the user has now precisely identified the affected block.
+- Disagreements or corrections from the user: The user corrected the location of the bug and explicitly asked not to randomly change other blocks and risk damaging the UI.
+- Next recommended step: Inspect the editor grid row definition against the added onboarding strip and fix that row structure only.
+## 2026-03-25 13:19 +05:30
+- User intent: Fix the hidden strip above the circuit canvas without altering unrelated UI.
+- What was discussed: The user clarified that the visible block above the canvas is the `Pick / Place / Wire` strip and that another block directly below it is mostly hidden behind the canvas. This matched the onboarding strip added earlier in the editor shell.
+- What was changed or created:
+  - Updated `studio_ui/src/index.css` so `.editor-workspace` now defines four grid rows instead of three.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/index.css
+- Reference points:
+  - `studio_ui/src/App.tsx`: editor shell children order is banner, workflow strip, onboarding strip, studio shell.
+  - `studio_ui/src/index.css`: `.editor-workspace` grid row definition.
+- Decisions made: Fix only the editor shell row definition. The real issue was not creator mode and not a leaking overlay; it was that a fourth block was added to the editor workspace without adding a fourth explicit grid row, so the onboarding strip and canvas stack were competing incorrectly.
+- Disagreements or corrections from the user: The user corrected the location precisely and asked that no unrelated blocks be changed.
+- Verification:
+  - `studio_ui> npm.cmd run lint`
+  - `studio_ui> npx.cmd tsc -b`
+  - `studio_ui> npm.cmd run build`
+- Next recommended step: Re-check the circuit editor visually. If the onboarding strip now sits correctly, continue with the next UX pass; if any spacing still feels off, tune only the editor shell spacing around that strip rather than touching creator mode again.
+## 2026-03-25 13:22 +05:30
+- User intent: Understand whether the `Pick / Place / Wire` strip and the onboarding strip beneath it are actually serving a useful role.
+- What was discussed: The user asked for the design purpose of both top-level helper blocks now that the hidden onboarding strip bug has been fixed.
+- What was changed or created: No source files changed in this turn. This was a design clarification turn only.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - `studio_ui/src/App.tsx`: `flowSteps`, `startupGuide`, editor shell layout order.
+  - `studio_ui/src/index.css`: `.workspace-flow-strip`, `.workspace-onboarding-strip`.
+- Decisions made: Treat the question as a product-structure review rather than an implementation task. Evaluate whether these blocks communicate distinct value or duplicate each other.
+- Disagreements or corrections from the user: The user implicitly questioned whether both top helper strips are justified at all.
+- Next recommended step: Decide whether to keep both strips, merge them, or remove one based on whether each contributes unique orientation value.
+## 2026-03-25 13:26 +05:30
+- User intent: Rework the overall UI for normal users rather than developer-facing explanation, parsing the whole interface and optimizing the visible experience accordingly.
+- What was discussed: The user made the priority explicit: design for end users from the start, not for developers. They questioned the value of the duplicated top helper strips and asked for the whole UI and feature framing to be optimized accordingly.
+- What was changed or created: No files changed yet in this turn. Work resumed to simplify and reframe the visible interface around normal-user tasks and reduce developer-centric language and duplication.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - `studio_ui/src/App.tsx`
+  - `studio_ui/src/components/Sidebar.tsx`
+  - `studio_ui/src/components/PropertiesPanel.tsx`
+  - `studio_ui/src/components/Canvas.tsx`
+  - `studio_ui/src/index.css`
+- Decisions made: Treat the next pass as a user-first product framing cleanup: merge redundant guidance, reduce developer/internal wording, and keep only the most useful visible direction.
+- Disagreements or corrections from the user: The user explicitly said they do not have time for developer-oriented design and want the whole UI optimized for end users.
+- Next recommended step: Replace the duplicated top guidance with a single user-facing step bar, simplify visible terminology across rail/canvas/inspector, and push advanced/internal wording further into hover or collapsed areas.
+## 2026-03-25 22:08 IST
+- User intent: Reorient the entire studio UI toward normal users from the start, not developers, and optimize the visible structure, features, and wording accordingly.
+- What was discussed: The user asked for a full user-first parsing of the UI instead of incremental developer-facing framing. Existing top guidance redundancy (Pick / Place / Wire plus the separate onboarding strip) was already identified as likely too heavy for end users.
+- What was changed or created: Started a user-first shell audit pass; no product code changed yet in this entry.
+- Files touched: AI_CONTINUITY_LOG.md
+- Reference points: Main user-facing shell remains in studio_ui/src/App.tsx, studio_ui/src/components/Sidebar.tsx, studio_ui/src/components/PropertiesPanel.tsx, studio_ui/src/components/Canvas.tsx, and studio_ui/src/index.css.
+- Decisions made: Next work should favor normal-user comprehension, reduce redundant guidance blocks, and remove developer-style wording from primary surfaces.
+- Disagreements or corrections from the user: User explicitly said the product must be designed for the user, not the developer.
+- Next recommended step: Inspect the main shell, rail, inspector, and canvas copy/structure together, then replace the dual top guidance rows with one clearer user-first strip.
+## 2026-03-25 22:23 IST
+- User intent: Rework the studio UI from a user-first perspective instead of a developer-first one, parsing the main shell and optimizing the visible flow, wording, and helper structure.
+- What was discussed: The main product issue was not missing features but too much explanatory chrome and too much internal terminology in the visible shell. The duplicated top helper rows were identified as the biggest structural problem, and the main surfaces needed clearer beginner-facing language.
+- What was changed or created:
+  - Replaced the separate Pick / Place / Wire row and onboarding strip with one compact workspace-guide-strip in studio_ui/src/App.tsx.
+  - Updated the app banner wording and status pills to use simpler user-facing labels.
+  - Reframed the left rail in studio_ui/src/components/Sidebar.tsx from Build From Real Packages to Choose Parts, renamed search/helper copy, and simplified first-use instructions.
+  - Reworked the inspector wording in studio_ui/src/components/PropertiesPanel.tsx so the empty-state guide, layout summaries, selected-part controls, and JSON area read more like a normal-use tool and less like an internal authoring surface.
+  - Reworked canvas helper copy in studio_ui/src/components/Canvas.tsx, including mode labels, stage tips, first-use overlays, handoff wording, and status chips, so the stage explains actions in plain user terms.
+  - Updated studio_ui/src/index.css to support the new single top guidance strip and removed the need for the older split top-row structure.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/App.tsx
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/components/PropertiesPanel.tsx
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/App.tsx: lowSteps, workflowGuide, unified workspace-guide-strip.
+  - studio_ui/src/index.css: .editor-workspace, .workspace-guide-strip, .workspace-guide-step*.
+  - studio_ui/src/components/Sidebar.tsx: library header copy, search/help copy, first-start block, library section label.
+  - studio_ui/src/components/PropertiesPanel.tsx: empty-state right rail guide, first-wire handoff, selected-part wording, JSON preview label.
+  - studio_ui/src/components/Canvas.tsx: statusLabel, liveMode, stageCard, stageHintText, empty-stage overlays, handoff card.
+- Decisions made: Prioritized one visible workflow layer instead of two, moved the primary shell language toward part / place / wire wording, and kept stricter technical detail behind secondary surfaces rather than in the main shell.
+- Disagreements or corrections from the user: The user explicitly said the product must be designed for normal users from the start rather than developers, and earlier top-level helper blocks were judged too redundant for the space they took.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Do the next major user-first pass on interaction density: reduce rail/header chip clutter further and make the first visible actions in the left rail and selected-item inspector even more dominant than metadata.
+## 2026-03-25 22:29 IST
+- User intent: Perform a whole UI redesign because the current screen still feels messy, helper blocks are scattered, and important areas like the library and tools do not get enough priority or space.
+- What was discussed: The user judged the current layout as overfilled with low-value explanation blocks (Current Move, Next Step, and similar helpers) and said the interface needs a full redesign that prioritizes feature visibility, sizing, dimensions, placement, and the library/tools workflow over scattered guidance copy.
+- What was changed or created: No source files changed yet in this entry. Work resumed as a full shell reprioritization pass rather than an incremental copy cleanup.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - studio_ui/src/App.tsx
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/components/PropertiesPanel.tsx
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/index.css
+- Decisions made: Treat the next pass as a real layout redesign. Helper explanation blocks should no longer compete with primary tools. Space must be reallocated toward library browsing, canvas controls, and selected-item editing.
+- Disagreements or corrections from the user: The user explicitly said the current UI still looks like a mess and that core areas such as the library/tools are not receiving enough screen priority.
+- Next recommended step: Audit the current rail, canvas HUD, and inspector structure together, then collapse or remove scattered helper blocks and rebuild the shell hierarchy around high-value actions and visible editing controls.
+## 2026-03-25 22:49 IST
+- User intent: Redesign the whole UI because the screen still felt messy, explanatory blocks were scattered, and important areas like library/tools, sizing, dimensions, and placement were not prioritized strongly enough.
+- What was discussed: The user explicitly judged the interface as cluttered by low-value helper blocks (Current Move, Next Step, similar guidance cards) and asked for a whole-layout redesign where important tools get more space and clearer placement. The redesign direction chosen was to reduce persistent explanation surfaces, separate the left rail into true Library and Tools modes, simplify the right rail toward direct editing, and group canvas controls by function.
+- What was changed or created:
+  - Simplified the top shell in studio_ui/src/App.tsx from a larger multi-layer workflow area to one compact top status bar.
+  - Rebalanced shell column widths in studio_ui/src/index.css so the left rail gets more priority and the editor reads more like library -> canvas -> inspector.
+  - Redesigned the left rail in studio_ui/src/components/Sidebar.tsx around Library and Tools tabs.
+  - Moved export/reset into the Tools side, kept the part library as the dominant primary surface, and removed the earlier How To Start style helper block from the persistent rail.
+  - Simplified the empty-state inspector in studio_ui/src/components/PropertiesPanel.tsx so it is now closer to a compact stage summary than a guidance stack.
+  - Simplified the selected-part inspector by removing the always-visible Current Move note and keeping the focus on part stats, naming, position, size, and pins; warnings now only appear when there is a real layout problem.
+  - Redesigned the canvas HUD in studio_ui/src/components/Canvas.tsx so controls are grouped as View, Edit, and Background, with a compact stage status group on the right.
+  - Removed the floating cursor-following mode tag, removed the bottom-right explanatory sidecard, and removed the first-wire handoff block so the stage is less crowded by helper overlays.
+  - Kept only context-only overlays for genuinely transitional states such as empty stage and first placement.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/App.tsx
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/components/PropertiesPanel.tsx
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/App.tsx: compact workspace-banner top shell.
+  - studio_ui/src/index.css: studio-shell widths, studio-rail-tab*, studio-compact-status*, canvas-toolgroup*.
+  - studio_ui/src/components/Sidebar.tsx: ailTab, compact header/status, library-vs-tools separation.
+  - studio_ui/src/components/PropertiesPanel.tsx: compact empty-state Stage Status panel and reduced selected-part note structure.
+  - studio_ui/src/components/Canvas.tsx: grouped top HUD, removed cursor tag, removed sidecard, reduced helper overlays.
+- Decisions made: Persistent screen space now favors actionable surfaces over explanation. Library and tool access were separated, the right rail was pushed toward actual editing, and the canvas HUD was reclassified by purpose instead of mixing all controls and helper text together.
+- Disagreements or corrections from the user: The user explicitly said the existing UI still looked like a mess and that important areas were receiving too little space relative to the amount of explanatory clutter.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Do a second-pass density and alignment cleanup on the new structure itself, especially the selected-part inspector and library card hierarchy, now that the old helper clutter has been removed and the main layout priority is reset.
+## 2026-03-25 22:54 IST
+- User intent: Carry the same user-first cleanup pass into Component Lab and evaluate whether restrained semantic color can improve readability and usability.
+- What was discussed: The user approved the new circuit-studio direction and observed that the top bar now has spare capacity that can hold more tools over time. They asked for the same redesign pass in Component Lab and suggested using color more intentionally, similar to the existing red destructive button, to improve readability and contrast.
+- What was changed or created: No source files changed yet in this entry. Work resumed to redesign Component Lab with the same prioritization logic and to introduce a restrained semantic accent system for shared actions.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - studio_ui/src/components/ComponentCreatorWorkspace.tsx
+  - studio_ui/src/index.css
+- Decisions made: Use color semantically rather than decoratively. Candidate roles are danger/destructive, confirm/apply/export, selection/edit state, and warnings.
+- Disagreements or corrections from the user: The user suggested using more color intentionally and asked for the same layout pass in Component Lab.
+- Next recommended step: Inspect ComponentCreatorWorkspace shell structure, remove scattered helper weight there as done in circuit mode, and add shared semantic accent variants for important actions.
+## 2026-03-25 23:07 IST
+- User intent: Apply the same user-first cleanup pass to Component Lab and assess whether restrained semantic color can improve readability and action clarity.
+- What was discussed: The user approved the circuit-studio layout direction, noted that the top bar now leaves room for future tools, and suggested using limited accent color similarly to the red Clear button so important UI actions become easier to read. The chosen direction was to keep the black-first base and use color only semantically: success/commit, danger/destructive, and neutral/default.
+- What was changed or created:
+  - Redesigned Component Lab shell structure in studio_ui/src/components/ComponentCreatorWorkspace.tsx.
+  - Added creator left-rail work modes via tabs: Setup, Library, and Stack, so the rail no longer shows all three authoring concerns at equal weight all the time.
+  - Added creator right-rail work modes via tabs: Edit, JSON, and Behavior, so the selection editor, definition workflow, and behavior authoring are separated instead of stacked.
+  - Tightened the creator stage header so it now reads as Component Stage with compact status chips, and grouped creator toolbar controls with clearer labels instead of a flatter undifferentiated row.
+  - Removed some low-value persistent helper text in creator rails and kept the UI focused on authoring actions and selected-item editing.
+  - Added shared semantic action variants in studio_ui/src/index.css:
+    - editor-action-button-success
+    - editor-action-button-accent
+    - editor-action-button-danger
+  - Applied those variants to meaningful actions, including creator apply/export/delete flows and the circuit-studio export/clear buttons in studio_ui/src/components/Sidebar.tsx.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - studio_ui/src/components/ComponentCreatorWorkspace.tsx
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/index.css
+- Reference points:
+  - studio_ui/src/components/ComponentCreatorWorkspace.tsx: leftTab, ightTab, creator rail/tab shell, creator stage header/toolbar, JSON and behavior tab surfaces.
+  - studio_ui/src/index.css: semantic action button classes and creator-compatible rail/tab styling reuse.
+  - studio_ui/src/components/Sidebar.tsx: Export JSON and Clear All now use the shared semantic action styling.
+- Decisions made: Color should remain restrained and semantic. Green/success is for apply/export/commit actions, red/danger is for destructive clears/deletes, and neutral remains the default for normal controls. Component Lab now prioritizes one authoring mode at a time instead of presenting every rail section as equally important simultaneously.
+- Disagreements or corrections from the user: The user suggested using color similarly to the red clear button and asked for the same full UI pass inside Component Lab.
+- Verification:
+  - studio_ui> npm.cmd run lint
+  - studio_ui> npx.cmd tsc -b
+  - studio_ui> npm.cmd run build
+- Next recommended step: Do a second creator-specific polish pass on section density inside the Edit tab now that the shell hierarchy is corrected, especially the selected-layer controls and repeated action clusters.
+## 2026-03-25 23:10 IST
+- User intent: Confirm whether the new UI state is in a good place after the circuit-studio and component-lab redesign passes.
+- What was discussed: The user judged the current direction positively, noting that the interface now has room for future additions and that the layout feels more understandable.
+- What was changed or created: No source files changed in this turn. This was a checkpoint confirmation turn only.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - studio_ui/src/App.tsx
+  - studio_ui/src/components/Sidebar.tsx
+  - studio_ui/src/components/PropertiesPanel.tsx
+  - studio_ui/src/components/Canvas.tsx
+  - studio_ui/src/components/ComponentCreatorWorkspace.tsx
+  - studio_ui/src/index.css
+- Decisions made: Keep the current shell direction as the new base. Future additions should be layered into the cleared top bars and tabbed rails instead of reintroducing scattered helper blocks.
+- Disagreements or corrections from the user: None in this turn; the user approved the new readability and growth space.
+- Next recommended step: Add future tools gradually into the new open top-bar and tab structures, while keeping semantic color restrained and preserving action-first layout priority.
+## 2026-03-25 23:14 IST
+- User intent: Take over the next phase directly and shift focus toward defining real components and their detail first, then designing the tools around those concrete needs.
+- What was discussed: The user said the UI/layout pass is sufficient for now and that the next step is to create components and detailed representations by hand first. The tool should then be designed from those real target outcomes rather than invented in abstraction beforehand.
+- What was changed or created: No product source files changed in this turn. This was a handoff and direction-setting turn only.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - Current UI base remains in studio_ui/src/App.tsx, studio_ui/src/components/Sidebar.tsx, studio_ui/src/components/PropertiesPanel.tsx, studio_ui/src/components/Canvas.tsx, studio_ui/src/components/ComponentCreatorWorkspace.tsx, and studio_ui/src/index.css.
+- Decisions made: Freeze the current UI foundation and treat the next phase as component-first. Real component/detail targets should drive the next generation of authoring tools.
+- Disagreements or corrections from the user: The user explicitly redirected the next phase away from more UI work and toward component/detail creation first.
+- Next recommended step: Create a few representative target components manually, identify repeated authoring pain points from that work, then design the next tool features directly from those repeated needs.
+## 2026-03-25 23:20 IST
+- User intent: Start the next phase by using Arduino Nano and Arduino Uno as examples, building them out from real child components down to small SMD passives, and clarify whether those internal child parts should remain purely visual inside Component Lab unless the user explicitly defines behavior.
+- What was discussed: The user described a component-first strategy where boards like Nano/Uno are assembled from real visible subcomponents with correct dimensions and pin order, even when many of those subcomponents are only visual in the lab. The deeper idea is to create a true reusable visual library first so contributors can construct accurate board-level assemblies more easily than competitor tools allow.
+- What was changed or created: No source files changed in this turn. This was an architectural/product-direction turn only.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - studio_ui/src/components/ComponentCreatorWorkspace.tsx
+  - shared/component_definitions_v1/
+  - docs/COMPONENT_DEFINITION_V1.md
+- Decisions made: Treat this as a design decision about layered component truth: visual composition, pin metadata, and behavior should be separable rather than forced to exist at the same time.
+- Disagreements or corrections from the user: The user explicitly clarified that child parts inside Component Lab should remain visual by default, and that behavior should only exist when the author defines it.
+- Next recommended step: Define a three-layer component model: visual-only child parts, optional pin metadata, and optional behavior definitions, then use Uno/Nano as the first concrete board-level targets.
+## 2026-03-25 23:24 IST
+- User intent: Decide how to begin the detailed component-building phase and whether high-detail board/component visuals should stay black-and-white or introduce some color.
+- What was discussed: The user asked how detailed 2D components should be made visually and whether some color should be used. This required answering at the visual-system level rather than changing code.
+- What was changed or created: No source files changed in this turn. This was a design-guidance turn only.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - The decision affects future component assets and the authoring rules around studio_ui/src/components/ComponentCreatorWorkspace.tsx and shared/component_definitions_v1/.
+- Decisions made: Detail should come from structure, line weight, layering, spacing, labels, pads, and package silhouettes first. Color should be optional, restrained, and secondary rather than the main source of readability.
+- Disagreements or corrections from the user: None yet in this turn; the user is asking whether to stay black-and-white or introduce color.
+- Next recommended step: Freeze a visual language for component authoring before building Uno/Nano parts: black-first base, 2D layered detail, semantic line weights, optional restrained accents only for meaning-critical marks.
+## 2026-03-25 23:29 IST
+- User intent: Clarify whether the future component system should require users to manually define shadows, tint, and fine visual polish, or whether the system should generate those automatically.
+- What was discussed: The user agreed with the black-first plus restrained-semantic-color direction but correctly pointed out that if authors must manually place every highlight/shadow/tint detail, the system will become too hard to use. This is a system-design question rather than a code-change request.
+- What was changed or created: No source files changed in this turn. This was a product-architecture clarification turn only.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - Future authoring behavior will affect studio_ui/src/components/ComponentCreatorWorkspace.tsx, component-definition structure in shared/component_definitions_v1/, and the broader visual rules for board/component rendering.
+- Decisions made: Authors should define structure and semantic part classes, not manual polish details. Shadows, highlight bands, subtle tinting, and similar finish effects should be renderer-derived from a shared visual style system.
+- Disagreements or corrections from the user: The user explicitly said that if users must manually author shadows/tint details, the approach is not viable.
+- Next recommended step: Define an automatic rendering pipeline where each component carries structural geometry plus semantic style tags, and the visual renderer derives edge highlights, shadow bands, lead contrast, and optional restrained color from those tags automatically.
+## 2026-03-25 23:36 IST
+- User intent: Start building the new tool foundation, acknowledge that the current library is not useful enough for the new detailed visual standard, and clarify whether KiCad provides actual component visual design or mainly dimensional/package data.
+- What was discussed: The user agreed with using an open-source foundation, said the current library is too simple or wrong for the new direction, and asked whether KiCad gives real component designs or only dimensions.
+- What was changed or created: No source files changed in this turn. This is an architecture clarification turn before implementation.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+- Reference points:
+  - Future work will affect shared/component_definitions_v1/, studio_ui/src/components/ComponentCreatorWorkspace.tsx, and any future import/render pipeline.
+- Decisions made: Clarify KiCad’s real role before designing the import/render system. The current library should be treated as provisional and likely replaced or rebuilt around the new more detailed visual model.
+- Disagreements or corrections from the user: The user explicitly said the current library is of little use for the new detailed component direction.
+- Next recommended step: Confirm KiCad’s usable outputs, then define a pipeline separating package/dimension truth from AURA’s own visual rendering and library definitions.
+## 2026-03-25 23:52 IST
+- User intent: Clarify whether KiCad provides library files for personal/reference use, where those files are obtained, and whether they are downloaded with KiCad.
+- What was discussed: Verified official KiCad library availability and licensing. Confirmed that KiCad libraries are included with the installer/packages for major OSes, and that official libraries are also available from KiCad's GitLab group. Confirmed library license is CC BY-SA 4.0.
+- What was changed or created: No project files changed. Continuity log appended only.
+- Files touched: `AI_CONTINUITY_LOG.md`.
+- Reference points: Official library download page states bundled libraries and GitLab repos; official license page states KiCad libraries are under CC-BY-SA 4.0; footprint docs describe `.pretty` libraries with `.kicad_mod` files and library table management via Preferences -> Manage Footprint Libraries.
+- Decisions made: For AURA import planning, KiCad remains the source of dimensional/library truth and can be used as a user-supplied import source.
+- Next recommended step: Define AURA importer inputs around `.kicad_mod` and `.kicad_pcb`, with post-import editing inside Component Lab.
+## 2026-03-26 00:19 IST
+- User intent: Clean the repo root according to the new component-first direction, remove unnecessary or duplicate root-level folders without touching `AURA _report/`, and create clear file/folder maps showing what exists across products, tools, and support areas.
+- What was discussed: The user allowed future KiCad library download into the repo but asked to focus now on file/folder organization rather than UI. The cleanup standard chosen was to preserve real product roots, avoid touching archive/reference material in `AURA _report/`, and remove only top-level items that are clearly redundant.
+- What was changed or created:
+  - Removed the redundant root `apps/` folder, which only contained a zero-byte `aura_host` placeholder and duplicated the role already served by `host_remote/`.
+  - Added root guide `WORKSPACE_GUIDE.md` as the new fast starting point for understanding what exists in the repo.
+  - Added new root folder `workspace_index/` with categorized inventory files:
+    - `workspace_index/README.md`
+    - `workspace_index/PRODUCTS.md`
+    - `workspace_index/TOOLS.md`
+    - `workspace_index/DOCS_AND_SHARED.md`
+    - `workspace_index/LOCAL_STATE_AND_ARCHIVE.md`
+  - Updated root `README.md` to point readers to `WORKSPACE_GUIDE.md` and `workspace_index/README.md`.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - README.md
+  - WORKSPACE_GUIDE.md
+  - workspace_index/README.md
+  - workspace_index/PRODUCTS.md
+  - workspace_index/TOOLS.md
+  - workspace_index/DOCS_AND_SHARED.md
+  - workspace_index/LOCAL_STATE_AND_ARCHIVE.md
+  - Removed: `apps/`
+- Reference points:
+  - `WORKSPACE_GUIDE.md`: top-level quick map of active product areas, archive/reference area, local machine state, and recommended reading order.
+  - `workspace_index/PRODUCTS.md`: product-surface inventory for `host_remote/`, `studio_ui/`, and `phone_ui/`.
+  - `workspace_index/TOOLS.md`: reusable tool inventory including `local_tools/` and `host_remote/tests/`.
+  - `workspace_index/DOCS_AND_SHARED.md`: split between prose docs in `docs/` and machine-readable shared assets in `shared/`.
+  - `workspace_index/LOCAL_STATE_AND_ARCHIVE.md`: distinction between active source, generated local state, and `AURA _report/` archive/reference material.
+- Decisions made: Keep hidden root support folders like `.qodo/` and `.vscode/` because they are machine/editor support rather than duplicated product roots; make that status explicit in the new guides instead of deleting them blindly.
+- Disagreements or corrections from the user: The user explicitly asked for a broader cleanup of file/folder organization and said not to touch the reports folder.
+- Next recommended step: Add a separate import-oriented folder later for external library intake, for example a future `imports/` or `vendor_reference/` area, before bringing KiCad footprint libraries into the repo.

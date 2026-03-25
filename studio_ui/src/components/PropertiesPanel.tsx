@@ -1,5 +1,6 @@
 import { Box, FileJson, Package2, RotateCcw, RotateCw, Trash2 } from "lucide-react";
 
+import { HoverHint } from "./HoverHint";
 import {
   getLibraryItem,
   resolvePackageByItemId,
@@ -15,6 +16,7 @@ import {
   parseDisplayValueToUm,
 } from "../utils/units";
 import { buildCircuitManifest } from "../utils/manifest";
+import { computeLayoutHealth } from "../utils/layoutHealth";
 
 function getEndpointDetails(
   endpoint: { kind: "pin"; componentId: string; pinId: string } | { kind: "junction"; junctionId: string },
@@ -38,9 +40,12 @@ export function PropertiesPanel() {
   const components = useEditorStore((state) => state.components);
   const junctions = useEditorStore((state) => state.junctions);
   const connections = useEditorStore((state) => state.connections);
+  const componentDrafts = useEditorStore((state) => state.componentDrafts);
   const selectedComponentId = useEditorStore((state) => state.selectedComponentId);
   const selectedJunctionId = useEditorStore((state) => state.selectedJunctionId);
   const selectedConnectionId = useEditorStore((state) => state.selectedConnectionId);
+  const pendingLibraryItemId = useEditorStore((state) => state.pendingLibraryItemId);
+  const pendingDraftId = useEditorStore((state) => state.pendingDraftId);
   const displayUnit = useEditorStore((state) => state.displayUnit);
   const setDisplayUnit = useEditorStore((state) => state.setDisplayUnit);
   const updateComponent = useEditorStore((state) => state.updateComponent);
@@ -51,6 +56,7 @@ export function PropertiesPanel() {
   const removeConnection = useEditorStore((state) => state.removeConnection);
   const clearConnectionRoutePoints = useEditorStore((state) => state.clearConnectionRoutePoints);
   const alternateDisplayUnit = getAlternateDisplayUnit(displayUnit);
+  const layoutHealth = computeLayoutHealth(components);
 
   const selectedComponent =
     components.find((component) => component.id === selectedComponentId) ?? null;
@@ -59,6 +65,9 @@ export function PropertiesPanel() {
     : null;
   const selectedConnection = selectedConnectionId
     ? connections.find((connection) => connection.id === selectedConnectionId) ?? null
+    : null;
+  const pendingDraft = pendingDraftId
+    ? componentDrafts.find((draft) => draft.id === pendingDraftId) ?? null
     : null;
   if (!selectedComponent) {
     if (selectedConnection) {
@@ -72,7 +81,7 @@ export function PropertiesPanel() {
               <div>
                 <p className="editor-eyebrow">Inspector</p>
                 <h2 className="mt-1.5 font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-white">
-                  Net
+                  Wire
                 </h2>
               </div>
               <UnitToggle displayUnit={displayUnit} onChange={setDisplayUnit} />
@@ -83,7 +92,7 @@ export function PropertiesPanel() {
             <div className="studio-rail-body-inner space-y-3">
               <div className="studio-section-card">
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <p className="editor-eyebrow">Selected Net</p>
+                  <p className="editor-eyebrow">Selected Wire</p>
                   <span className="studio-pill">{selectedConnection.id}</span>
                 </div>
 
@@ -130,7 +139,7 @@ export function PropertiesPanel() {
                 className="editor-action-button"
               >
                 <Trash2 className="h-4 w-4" />
-                Delete net
+                Delete wire
               </button>
             </div>
           </div>
@@ -220,15 +229,38 @@ export function PropertiesPanel() {
     }
 
     const manifest = buildCircuitManifest({ components, junctions, connections });
-
+    const workspaceGuidance =
+      pendingDraft || pendingLibraryItemId
+        ? {
+            title: "Place the selected part",
+            detail: `Click the stage to place ${pendingDraft?.title ?? "the selected part"}, then use this side to fine-tune it.`,
+            state: "place",
+          }
+        : components.length === 0
+          ? {
+              title: "Nothing on stage yet",
+              detail: "Choose the first part from the left library, place it, then start wiring from its pins.",
+              state: "pick",
+            }
+          : connections.length === 0
+            ? {
+                title: "Ready for the first wire",
+                detail: "Click one pin and then another to make the first connection, or click the part to rename or rotate it first.",
+                state: "wire",
+              }
+            : {
+                title: "Edit what is selected",
+                detail: "Choose a part, wire, or junction on the stage to change it here without cluttering the layout.",
+                state: "inspect",
+              };
     return (
       <aside className="studio-rail studio-rail-inspector">
         <div className="studio-rail-header border-b border-white px-3 py-3">
-            <div className="studio-rail-head-inner flex items-start justify-between gap-3">
+          <div className="studio-rail-head-inner flex items-start justify-between gap-3">
             <div>
               <p className="editor-eyebrow">Inspector</p>
               <h2 className="mt-1.5 font-sans text-[1rem] font-black uppercase tracking-[0.16em] text-white">
-                Workspace Summary
+                Next Step
               </h2>
             </div>
             <UnitToggle displayUnit={displayUnit} onChange={setDisplayUnit} />
@@ -236,15 +268,27 @@ export function PropertiesPanel() {
         </div>
 
         <div className="studio-rail-scroll px-3 py-3">
-            <div className="studio-rail-body-inner space-y-3">
+          <div className="studio-rail-body-inner space-y-3">
+            <div className="studio-inline-note">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="editor-eyebrow">Stage Status</p>
+                  <h3 className="mt-1 font-sans text-[0.9rem] font-black uppercase tracking-[0.14em] text-white">
+                    {workspaceGuidance.title}
+                  </h3>
+                </div>
+                <span className="studio-pill">{workspaceGuidance.state}</span>
+              </div>
+              <p className="mt-2 text-[10px] leading-4 text-aura-muted">
+                {workspaceGuidance.detail}
+              </p>
+            </div>
+
             <div className="studio-stat-grid">
-              <SummaryCard label="Components" value={components.length} />
+              <SummaryCard label="Parts" value={components.length} />
               <SummaryCard label="Junctions" value={junctions.length} />
-              <SummaryCard label="Connections" value={connections.length} />
-              <SummaryCard
-                label="Used Library"
-                value={manifest.used_library_items.length}
-              />
+              <SummaryCard label="Wires" value={connections.length} />
+              <SummaryCard label="Part Types" value={manifest.used_library_items.length} />
               <SummaryCard
                 label="Grid"
                 value={formatUmForDisplay(manifest.grid_unit_um, displayUnit)}
@@ -253,19 +297,62 @@ export function PropertiesPanel() {
                   alternateDisplayUnit,
                 )}
               />
+              <SummaryCard label="Overlap" value={layoutHealth.overlapCount} />
+              <SummaryCard label="Crowded" value={layoutHealth.crowdedCount} />
             </div>
 
-            <div className="studio-section-card">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-aura-muted">
-                <FileJson className="h-4 w-4" />
-                Manifest Preview
+            <details className="studio-disclosure">
+              <summary className="studio-disclosure-summary">
+                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-aura-muted">
+                  Layout Check
+                  <HoverHint text="Tracks overlap and crowding so the stage stays readable before export." />
+                </span>
+                <span className="studio-pill !h-5 !px-2">
+                  {layoutHealth.overlapCount > 0
+                    ? "alert"
+                    : layoutHealth.crowdedCount > 0
+                      ? "warn"
+                      : "clean"}
+                </span>
+              </summary>
+              <div className="mt-3">
+                {layoutHealth.overlapCount === 0 && layoutHealth.crowdedCount === 0 ? (
+                  <div className="studio-list-note">
+                    The current layout reads cleanly. Keep parts spaced enough that labels and wires can stay simple.
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {layoutHealth.overlapCount > 0 ? (
+                      <div className="studio-list-note">
+                        {layoutHealth.overlapCount} overlap zone
+                        {layoutHealth.overlapCount === 1 ? "" : "s"} detected. Parts are physically colliding on the stage.
+                      </div>
+                    ) : null}
+                    {layoutHealth.crowdedCount > 0 ? (
+                      <div className="studio-list-note">
+                        {layoutHealth.crowdedCount} crowded zone
+                        {layoutHealth.crowdedCount === 1 ? "" : "s"} detected. The stage is still readable, but spacing is getting tight.
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
+            </details>
+
+            <details className="studio-disclosure">
+              <summary className="studio-disclosure-summary">
+                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-aura-muted">
+                  <FileJson className="h-4 w-4" />
+                  Circuit JSON
+                </span>
+                <span className="studio-pill !h-5 !px-2">JSON</span>
+              </summary>
               <textarea
                 readOnly
                 value={JSON.stringify(manifest, null, 2)}
-                className="mt-3 h-[min(50vh,540px)] w-full resize-none rounded-lg border border-white bg-black px-2.5 py-2.5 font-mono text-[10px] leading-4 text-aura-ink outline-none"
+                className="mt-3 h-[min(44vh,460px)] w-full resize-none rounded-lg border border-white bg-black px-2.5 py-2.5 font-mono text-[10px] leading-4 text-aura-ink outline-none"
               />
-            </div>
+            </details>
           </div>
         </div>
       </aside>
@@ -290,6 +377,12 @@ export function PropertiesPanel() {
       (connection.from.kind === "pin" && connection.from.componentId === selectedComponent.id) ||
       (connection.to.kind === "pin" && connection.to.componentId === selectedComponent.id),
   ).length;
+  const selectedDraft = selectedComponent.sourceDraftId
+    ? componentDrafts.find((draft) => draft.id === selectedComponent.sourceDraftId) ?? null
+    : null;
+  const pinPreview = resolvedPackage.pins.slice(0, 6);
+  const remainingPinCount = Math.max(0, resolvedPackage.pins.length - pinPreview.length);
+  const selectedComponentHealth = layoutHealth.issueLevelByComponent.get(selectedComponent.id) ?? null;
 
   return (
     <aside className="studio-rail studio-rail-inspector">
@@ -302,6 +395,10 @@ export function PropertiesPanel() {
           <div className="mt-1.5 rounded-xl border border-white bg-black p-2.5">
             <div className="flex items-start justify-between gap-3">
               <div>
+                <div className="flex items-center gap-1.5">
+                  <p className="editor-eyebrow">Selected Part</p>
+                  <HoverHint text={libraryItem.description} />
+                </div>
                 <h2 className="font-sans text-[0.95rem] font-black tracking-[0.12em] text-white">
                   {selectedComponent.reference}
                 </h2>
@@ -313,21 +410,63 @@ export function PropertiesPanel() {
                 <Package2 className="h-4 w-4" />
               </span>
             </div>
-            <p className="mt-1.5 text-[10px] leading-4 text-aura-muted">
-              {libraryItem.description}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-aura-muted">
+              <span className="rounded-full border border-white/20 px-2 py-1">{libraryItem.seriesLabel}</span>
+              <span className="rounded-full border border-white/20 px-2 py-1">{libraryItem.variantLabel}</span>
+              <span className="rounded-full border border-white/20 px-2 py-1">{resolvedPackage.pins.length} pins</span>
+              {selectedDraft ? (
+                <span className="rounded-full border border-white/20 px-2 py-1">from draft</span>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="studio-rail-scroll px-3 py-3">
         <div className="studio-rail-body-inner space-y-3">
+          <div className="studio-stat-grid">
+            <SummaryCard label="Pins" value={resolvedPackage.pins.length} />
+            <SummaryCard label="Wires" value={connectionCount} />
+            <SummaryCard
+              label="Size"
+              value={formatUmPair(
+                resolvedPackage.bodyWidthUm,
+                resolvedPackage.bodyHeightUm,
+                displayUnit,
+              )}
+              secondaryValue={formatUmPair(
+                resolvedPackage.bodyWidthUm,
+                resolvedPackage.bodyHeightUm,
+                alternateDisplayUnit,
+              )}
+              className="col-span-2"
+            />
+          </div>
+
+          {selectedComponentHealth ? (
+            <div className="studio-inline-note">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="editor-eyebrow">Layout Warning</p>
+                  <p className="mt-1 text-[10px] leading-4 text-aura-muted">
+                    {selectedComponentHealth === "overlap"
+                      ? "This part overlaps another part. Move it before trusting the layout."
+                      : "This part sits in a crowded zone. Add spacing so labels and wires stay readable."}
+                  </p>
+                </div>
+                <span className="studio-pill">
+                  {selectedComponentHealth === "overlap" ? "alert" : "warn"}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
           <div className="studio-section-card">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <p className="editor-eyebrow">Placement</p>
+                <p className="editor-eyebrow">Name And Position</p>
               </div>
-              <span className="studio-pill">{connectionCount} nets</span>
+              <span className="studio-pill">{connectionCount} wires</span>
             </div>
 
             <label className="editor-label">Reference</label>
@@ -404,7 +543,10 @@ export function PropertiesPanel() {
 
           <div className="studio-section-card">
             <div className="mb-3">
-              <p className="editor-eyebrow">Package</p>
+              <div className="flex items-center gap-1.5">
+                <p className="editor-eyebrow">Size And Pins</p>
+                <HoverHint text="Match the visible part to the real package instead of stretching it freely." />
+              </div>
             </div>
 
             {libraryItem.resizeBehavior.mode !== "fixed" ? (
@@ -519,7 +661,7 @@ export function PropertiesPanel() {
                   )
                 ) : resizeBehavior.mode === "mapped-pin-step" ? (
                   <div className="rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
-                    Drag the corner to step through package sizes.
+                    Drag the corner to step through part sizes.
                   </div>
                 ) : (
                   <div className="rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
@@ -529,47 +671,59 @@ export function PropertiesPanel() {
               </div>
             ) : (
               <div className="rounded-lg border border-dashed border-white bg-black px-2.5 py-2.5 text-[11px] leading-4 text-aura-muted">
-                Fixed-size package.
+                Fixed-size part.
               </div>
             )}
           </div>
 
-          <div className="studio-stat-grid">
-            <SummaryCard label="Pins" value={resolvedPackage.pins.length} />
-            <SummaryCard label="Nets" value={connectionCount} />
-            <SummaryCard
-              label="Body"
-              value={formatUmPair(
-                resolvedPackage.bodyWidthUm,
-                resolvedPackage.bodyHeightUm,
-                displayUnit,
-              )}
-              secondaryValue={formatUmPair(
-                resolvedPackage.bodyWidthUm,
-                resolvedPackage.bodyHeightUm,
-                alternateDisplayUnit,
-              )}
-              className="col-span-2"
-            />
-          </div>
+          <details className="studio-disclosure">
+            <summary className="studio-disclosure-summary">
+              <span className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-aura-muted">
+                <Box className="h-4 w-4" />
+                Pin Map
+              </span>
+              <span className="studio-pill !h-5 !px-2">{resolvedPackage.pins.length}</span>
+            </summary>
 
-          <div className="studio-section-card">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-aura-muted">
-              <Box className="h-4 w-4" />
-              Pin Map
-            </div>
-            <div className="mt-3 max-h-[36vh] space-y-1.5 overflow-y-auto pr-1">
-              {resolvedPackage.pins.map((pin) => (
-                <div
-                  key={pin.id}
-                  className="flex items-center justify-between rounded-lg border border-white bg-black px-2.5 py-2 font-mono text-[11px] text-aura-ink"
-                >
-                  <span>{pin.id}</span>
-                  <span className="text-aura-muted">{pin.label}</span>
+            <div className="mt-3 space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                {pinPreview.map((pin) => (
+                  <div
+                    key={pin.id}
+                    className="flex items-center justify-between rounded-lg border border-white bg-black px-2.5 py-2 font-mono text-[11px] text-aura-ink"
+                  >
+                    <span>{pin.id}</span>
+                    <span className="text-aura-muted">{pin.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {remainingPinCount > 0 ? (
+                <div className="rounded-lg border border-dashed border-white/25 bg-black px-2.5 py-2 text-[10px] leading-4 text-aura-muted">
+                  {remainingPinCount} more pins are available below. Open the full list only when
+                  you need exact pin labels.
                 </div>
-              ))}
+              ) : null}
+
+              <details className="studio-subdisclosure">
+                <summary className="studio-subdisclosure-summary">
+                  <span>Full pin list</span>
+                  <span className="studio-pill !h-5 !px-2">expand</span>
+                </summary>
+                <div className="mt-2 max-h-[30vh] space-y-1.5 overflow-y-auto pr-1">
+                  {resolvedPackage.pins.map((pin) => (
+                    <div
+                      key={pin.id}
+                      className="flex items-center justify-between rounded-lg border border-white bg-black px-2.5 py-2 font-mono text-[11px] text-aura-ink"
+                    >
+                      <span>{pin.id}</span>
+                      <span className="text-aura-muted">{pin.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </details>
             </div>
-          </div>
+          </details>
 
           <button
             type="button"
@@ -577,7 +731,7 @@ export function PropertiesPanel() {
             className="editor-action-button"
           >
             <Trash2 className="h-4 w-4" />
-            Delete component
+            Delete part
           </button>
         </div>
       </div>

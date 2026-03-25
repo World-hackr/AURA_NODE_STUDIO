@@ -15,6 +15,10 @@ constexpr int8_t kPinRadioCe = 4;
 constexpr int8_t kPinRadioCsn = 16;
 constexpr int8_t kPinRadioIrq = -1;
 
+// Resistive touch controller on the 2.8 inch SPI TFT module.
+constexpr int8_t kPinTouchCs = 22;
+constexpr int8_t kPinTouchIrq = 17;
+
 // 2-axis joystick plus center push switch.
 constexpr int8_t kPinJoystickX = 33;
 constexpr int8_t kPinJoystickY = 32;

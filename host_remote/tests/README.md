@@ -7,6 +7,7 @@ Each test should live in its own subfolder with its own `platformio.ini` so expe
 Current test projects:
 
 - `display_st7735_smoke/` - first-pass smoke test for a common 1.8 inch SPI TFT display based on the `ST7735` controller family
+- `display_st7789_smoke/` - dedicated smoke test for the new 2.8 inch SPI TFT module using the `ST7789` controller
 - `nrf24_pin_smoke/` - single-radio smoke test that checks `SPI` wiring and proves the `CE` line by forcing a transmit attempt
 - `nrf24_arduino_ide_smoke/` - plain Arduino IDE sketch for quickly testing nRF24L01 wiring without PlatformIO
 

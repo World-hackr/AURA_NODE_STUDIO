@@ -20,4 +20,5 @@ Keep these tools:
 Current tools:
 
 - `board_data/` - local board-data tool with a browser UI for board, port, and spec inspection
+- `aura_host_diagnostics/` - standalone ESP32 on-device diagnostics tool for the current host hardware, including TFT, joystick, touch IRQ, and nRF24 status
 - `windows/list_serial_boards.ps1` - low-level Windows board and serial inspection script used directly and also reused by `board_data/`

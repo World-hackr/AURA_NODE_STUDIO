@@ -6,12 +6,13 @@ The current goal is to start clean with a professional PlatformIO firmware layou
 
 ## Current Approach
 
-The host state is now rendered to the `1.8 inch ST7735 TFT` display and controlled from the wired joystick.
+The host state is now rendered to the `2.8 inch SPI TFT` module wired as an `ILI9341-class` panel and controlled from the wired joystick.
 
 That means:
 - the remote is usable directly from the device, without depending on the serial monitor for navigation
 - the UI now follows a simplified feature-phone style model with icon-first navigation and short-code lists
 - serial output remains available only as a debug mirror of the on-device state
+- the current firmware keeps the proven `160x128` host UI as a centered logical canvas while the larger panel is brought up cleanly first
 
 ## V1 Host Intent
 
@@ -63,15 +64,27 @@ If the joystick direction is flipped on your specific module, adjust the joystic
 
 ## Current Display Wiring
 
-The main host firmware currently assumes the same working ST7735 wiring as the smoke test:
+The main host firmware currently assumes the new `2.8 inch SPI TFT + resistive touch` module with the TFT side wired like this:
 
 - `VCC -> 3V3`
 - `GND -> GND`
 - `SCL/CLK -> GPIO18`
-- `SDA/MOSI -> GPIO23`
+- `SDI/MOSI -> GPIO23`
+- `SDO/MISO -> leave disconnected for now`
 - `CS -> GPIO5`
-- `DC/A0 -> GPIO27`
+- `DC -> GPIO27`
 - `RES/RST -> GPIO26`
+- `LED/BLK -> AO3407 drain`
+
+Touch is wired on the same SPI bus:
+
+- `T_CLK -> GPIO18`
+- `T_DIN -> GPIO23`
+- `T_DO -> GPIO19`
+- `T_CS -> GPIO22`
+- `T_IRQ -> GPIO17`
+
+Touch is electrically parked in firmware so it does not interfere with the shared SPI bus, but touch interaction is not implemented yet. The host still uses the joystick for navigation.
 
 If the panel variant differs, adjust `host_remote/include/tft_display_config.h`.
 
@@ -84,11 +97,22 @@ The current hardware plan for the full remote is:
 - `VCC -> 3V3`
 - `GND -> GND`
 - `SCL / CLK -> GPIO18`
-- `SDA / MOSI -> GPIO23`
+- `SDI / MOSI -> GPIO23`
+- `SDO / MISO -> leave disconnected for now`
 - `CS -> GPIO5`
-- `DC / A0 -> GPIO27`
+- `DC -> GPIO27`
 - `RST / RES -> GPIO26`
 - `LED / BLK -> AO3407 drain`
+
+### Touch controller
+
+- `T_CLK -> GPIO18`
+- `T_DIN -> GPIO23`
+- `T_DO -> GPIO19`
+- `T_CS -> GPIO22`
+- `T_IRQ -> GPIO17`
+
+The touch controller shares the SPI bus with the TFT and nRF24L01. Firmware currently keeps `T_CS` high unless touch support is added.
 
 ### Backlight switch
 
@@ -204,4 +228,4 @@ Display and other hardware experiments should go in `host_remote/tests/` as smal
 
 The first test project is:
 
-- `host_remote/tests/display_st7735_smoke/` - smoke test for a common 1.8 inch SPI TFT display in the `ST7735` family
+- `host_remote/tests/display_st7735_smoke/` - legacy smoke test for the earlier 1.8 inch SPI TFT display in the `ST7735` family
