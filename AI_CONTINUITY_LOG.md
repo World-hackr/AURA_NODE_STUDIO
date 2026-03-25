@@ -4990,3 +4990,31 @@ Use this structure for each new entry:
 - Decisions made: Keep hidden root support folders like `.qodo/` and `.vscode/` because they are machine/editor support rather than duplicated product roots; make that status explicit in the new guides instead of deleting them blindly.
 - Disagreements or corrections from the user: The user explicitly asked for a broader cleanup of file/folder organization and said not to touch the reports folder.
 - Next recommended step: Add a separate import-oriented folder later for external library intake, for example a future `imports/` or `vendor_reference/` area, before bringing KiCad footprint libraries into the repo.
+## 2026-03-26 00:29 IST
+- User intent: Push the current workspace state to GitHub and rewrite `AGENTS.md` so a fresh Codex can understand the full project intent, active modules, current design direction, and next working plan without needing long user explanation.
+- What was discussed: The user said the previous `AGENTS.md` did not communicate the project clearly enough. The goal for this turn was to capture the real AURA intent, current hardware-first/component-first direction, workspace structure, active surfaces, and current tools, then push the current state.
+- What was changed or created:
+  - Rewrote root `AGENTS.md` to include:
+    - expanded read order using `WORKSPACE_GUIDE.md` and `workspace_index/README.md`
+    - explicit product-surface model for `AURA Host`, `AURA Studio`, and `AURA Phone`
+    - current workspace map for `host_remote/`, `studio_ui/`, `local_tools/`, `shared/`, `docs/`, `phone_ui/`, and `AURA _report/`
+    - current user-first UI direction
+    - current component-first authoring strategy
+    - visual/rendering rules for future detailed components
+    - KiCad reference/import role
+    - git/change-management expectations
+    - immediate working baseline and next recommended direction
+  - Committed the current workspace state after the AGENTS update.
+- Files touched:
+  - AI_CONTINUITY_LOG.md
+  - AGENTS.md
+- Reference points:
+  - `AGENTS.md`: new single-file orientation source for fresh sessions
+  - `WORKSPACE_GUIDE.md`: root quick map
+  - `workspace_index/README.md`: categorized folder index
+  - `local_tools/aura_host_diagnostics/`: current host diagnostics tool
+  - `host_remote/tests/display_st7789_smoke/`: isolated ST7789 bring-up test
+  - `studio_ui/src/App.tsx`, `studio_ui/src/components/Sidebar.tsx`, `studio_ui/src/components/PropertiesPanel.tsx`, `studio_ui/src/components/Canvas.tsx`, `studio_ui/src/components/ComponentCreatorWorkspace.tsx`, `studio_ui/src/index.css`: current user-first studio shell state
+- Decisions made: Treat `AGENTS.md` as a true project handoff/orientation file rather than a small rule note. Fresh agents should be able to understand intent, structure, and current direction immediately from repo files.
+- Disagreements or corrections from the user: The user explicitly corrected that the previous `AGENTS.md` was not sufficient for instant understanding by a fresh Codex.
+- Next recommended step: Create a dedicated future import/reference area before bringing KiCad libraries into the repo, then begin the component-import and component-definition pipeline from real package references.
