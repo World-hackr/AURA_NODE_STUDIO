@@ -8102,3 +8102,25 @@ ull, so an empty lab no longer pretends a component is already loaded.
   - Multi-select should be layer-based and deterministic, not dependent on ad hoc regrouping.
   - Undo should track actual editor-content changes, not just selection changes.
 - Next recommended step: Test this flow on a real broken imported Fritzing part and then decide whether the next correction upgrade should be explicit regrouping tools, hierarchy tree editing, or richer alignment/distribution commands.
+## 2026-03-26 23:58:40 +05:30
+- User intent: Push the currently stable Component Lab and Studio state to GitHub before moving on to saving/export work.
+- Discussion: The workspace contained both real product changes and large local reference/untracked folders. The push was scoped to actual repo source and docs, while leaving local offline reference dumps and transient Studio runtime files untracked.
+- Changes made:
+  - Added ignore rules in .gitignore for local Studio temporary runtime artifacts:
+    - studio_ui/.chrome_headless/
+    - studio_ui/.vite*.log
+    - studio_ui/.vite*.txt
+  - Committed the current integrated AURA Studio / Component Lab work as:
+    - 2ada74b Build Wokwi-backed component lab editing workflow
+  - Pushed main to origin successfully after retrying with escalated network permission.
+- Files touched:
+  - .gitignore
+  - AI_CONTINUITY_LOG.md
+- Git result:
+  - Branch: main
+  - Remote: origin
+  - Push result: 2b1e37f..2ada74b main -> main
+- Decisions made:
+  - Keep vendor_reference/, root kicad-footprints/, and IMAGES/ local/untracked for now instead of forcing large reference payloads into the product commit.
+  - Push the real product/docs milestone first so the working app state is safely on GitHub.
+- Next recommended step: Move into saving/export polish and the next-stage component/package persistence flow from the newly pushed baseline.
