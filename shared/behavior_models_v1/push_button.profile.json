@@ -1,0 +1,16 @@
+{
+  "schema": "aura.behavior_profile.v1",
+  "id": "push_button",
+  "family": "input",
+  "targetId": "handle_primary",
+  "signalName": "press",
+  "valueMin": 0,
+  "valueMax": 1,
+  "defaultValue": 0,
+  "travelAxis": "y",
+  "travelMin": 0,
+  "travelMax": 2.8,
+  "offLabel": "up",
+  "onLabel": "down",
+  "autoReset": true
+}

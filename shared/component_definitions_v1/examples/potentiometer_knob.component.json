@@ -1,0 +1,96 @@
+{
+  "schema": "aura.component_definition.v1",
+  "metadata": {
+    "name": "Potentiometer Input",
+    "description": "Behavior-ready potentiometer example with explicit rotary input runtime metadata.",
+    "tags": ["example", "runtime_profile", "potentiometer", "input"]
+  },
+  "base": {
+    "kind": "library_item",
+    "itemId": "potentiometer_knob"
+  },
+  "children": [],
+  "shapeLayers": [],
+  "persistentDimensions": [],
+  "runtimeProfile": {
+    "profileId": "potentiometer",
+    "signalName": "pot_value",
+    "targetId": "handle_primary",
+    "valueMin": 0,
+    "valueMax": 1023,
+    "defaultValue": 512,
+    "angleMin": -135,
+    "angleMax": 135,
+    "travelAxis": "x",
+    "travelMin": -14,
+    "travelMax": 14,
+    "lowVisual": 0.1,
+    "highVisual": 0.95,
+    "detentCount": 24,
+    "autoReset": false,
+    "offLabel": "off",
+    "onLabel": "on",
+    "lightColor": "#ff5a5a"
+  },
+  "compiledRuntime": {
+    "kind": "input",
+    "entry": {
+      "type": "potentiometer",
+      "signal": "pot_value",
+      "target": "handle_primary",
+      "range": [0, 1023],
+      "defaultValue": 512,
+      "angleRange": [-135, 135],
+      "detents": 24
+    }
+  },
+  "behaviorDraft": {
+    "presetId": "snap_rotation",
+    "targetId": "handle_primary",
+    "property": "pot_value",
+    "valueMin": 0,
+    "valueMax": 1023,
+    "angleMin": -135,
+    "angleMax": 135,
+    "axis": "x",
+    "distanceMin": -12,
+    "distanceMax": 12,
+    "originX": 0,
+    "originY": 0,
+    "glowX": 0,
+    "glowY": 0,
+    "glowRadius": 18,
+    "glowBlur": 12,
+    "glowColor": "#ff5a5a",
+    "baseColor": "#ff5a5a",
+    "opacityMin": 0.08,
+    "opacityMax": 0.94,
+    "blinkPeriodMs": 420,
+    "blinkDutyCycle": 50,
+    "pressDepth": 2.4,
+    "detentCount": 24,
+    "autoReset": false,
+    "lightTargetSourceMode": "existingTarget",
+    "helperShapeKind": "circle",
+    "helperX": 0,
+    "helperY": 0,
+    "helperWidth": 56,
+    "helperHeight": 56,
+    "helperRadius": 14,
+    "glowEnabled": true
+  },
+  "compiledBehavior": {
+    "kind": "interactive",
+    "entry": {
+      "id": "handle_primary_snap_rotation",
+      "type": "angle_to_value",
+      "target": "handle_primary",
+      "property": "pot_value",
+      "match": "exact",
+      "range": [0, 1023],
+      "angleRange": [-135, 135],
+      "detents": 24,
+      "transformOrigin": [0, 0]
+    }
+  }
+}

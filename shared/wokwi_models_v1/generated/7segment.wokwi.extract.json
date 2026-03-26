@@ -1,0 +1,55 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "7segment",
+  "tagName": "wokwi-7segment",
+  "className": "SevenSegmentElement",
+  "sourceFile": "7segment-element.ts",
+  "metrics": {
+    "width": "${width}mm",
+    "height": "2",
+    "viewBox": "0 0 ${width} ${height}"
+  },
+  "pinInfo": {
+    "status": "unparsed",
+    "count": 0,
+    "pins": []
+  },
+  "properties": [
+    {
+      "name": "color",
+      "defaultRaw": "'red'"
+    },
+    {
+      "name": "offColor",
+      "defaultRaw": "'#444'"
+    },
+    {
+      "name": "background",
+      "defaultRaw": "'black'"
+    },
+    {
+      "name": "digits",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "1"
+    },
+    {
+      "name": "colon",
+      "decorator": "{ type: Boolean }",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "colonValue",
+      "decorator": "{ type: Boolean }",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "pins",
+      "defaultRaw": "'top'"
+    },
+    {
+      "name": "values",
+      "decorator": "{ type: Array }",
+      "defaultRaw": "[0, 0, 0, 0, 0, 0, 0, 0]"
+    }
+  ]
+}

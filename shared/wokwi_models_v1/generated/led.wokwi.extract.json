@@ -1,0 +1,55 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "led",
+  "tagName": "wokwi-led",
+  "className": "LEDElement",
+  "sourceFile": "led-element.ts",
+  "metrics": {
+    "width": "40",
+    "height": "50",
+    "viewBox": "-10 -5 35.456 39.618"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 2,
+    "pins": [
+      {
+        "name": "A",
+        "xExpression": "anodeX",
+        "y": 42
+      },
+      {
+        "name": "C",
+        "xExpression": "cathodeX",
+        "y": 42
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "value",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "brightness",
+      "defaultRaw": "1.0"
+    },
+    {
+      "name": "color",
+      "defaultRaw": "'red'"
+    },
+    {
+      "name": "lightColor",
+      "defaultRaw": "null"
+    },
+    {
+      "name": "label",
+      "defaultRaw": "''"
+    },
+    {
+      "name": "flip",
+      "decorator": "{ type: Boolean }",
+      "defaultRaw": "false"
+    }
+  ]
+}

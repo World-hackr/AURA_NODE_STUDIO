@@ -1,0 +1,52 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "flame_sensor",
+  "tagName": "wokwi-flame-sensor",
+  "className": "FlameSensorElement",
+  "sourceFile": "flame-sensor-element.ts",
+  "metrics": {
+    "width": "52.904mm",
+    "height": "16.267mm",
+    "viewBox": "0 0 200 61.5"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 4,
+    "pins": [
+      {
+        "name": "VCC",
+        "x": 199,
+        "y": 14.6,
+        "number": 1
+      },
+      {
+        "name": "GND",
+        "x": 199,
+        "y": 24.3,
+        "number": 2
+      },
+      {
+        "name": "DOUT",
+        "x": 199,
+        "y": 34,
+        "number": 3
+      },
+      {
+        "name": "AOUT",
+        "x": 199,
+        "y": 43.7,
+        "number": 4
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "ledPower",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "ledSignal",
+      "defaultRaw": "false"
+    }
+  ]
+}

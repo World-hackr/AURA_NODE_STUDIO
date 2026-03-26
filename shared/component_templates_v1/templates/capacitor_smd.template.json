@@ -1,0 +1,38 @@
+{
+  "schema": "aura.component_template.v1",
+  "id": "capacitor_smd",
+  "class": "capacitor_smd",
+  "label": "Capacitor SMD",
+  "purpose": "Template family for small two-terminal SMD capacitor packages.",
+  "referenceSources": {
+    "visual": ["wokwi-elements"],
+    "geometry": ["kicad-footprints"],
+    "metadata": []
+  },
+  "familyModes": [
+    {
+      "id": "chip_0603",
+      "label": "0603"
+    },
+    {
+      "id": "chip_0805",
+      "label": "0805"
+    }
+  ],
+  "inputs": {
+    "required": ["package_key", "body_width_um", "body_height_um", "pad_pitch_um"],
+    "optional": ["polarity", "fill", "stroke"]
+  },
+  "pins": {
+    "count": 2,
+    "labels": ["1", "2"]
+  },
+  "repeatRules": {
+    "mode": "fixed_family_variant"
+  },
+  "rendererRules": {
+    "autoFinish": ["body_edge_highlight", "terminal_contrast", "subtle_lower_shadow"],
+    "styleTags": ["two_terminal", "smd", "passive", "flat_2d"]
+  },
+  "runtimeHooks": []
+}

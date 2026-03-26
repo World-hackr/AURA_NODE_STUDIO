@@ -1,0 +1,18 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "ir_remote",
+  "tagName": "wokwi-ir-remote",
+  "className": "IRRemoteElement",
+  "sourceFile": "ir-remote-element.ts",
+  "metrics": {
+    "width": "40mm",
+    "height": "83.653mm",
+    "viewBox": "0 0 151 316"
+  },
+  "pinInfo": {
+    "status": "missing",
+    "count": 0,
+    "pins": []
+  },
+  "properties": []
+}

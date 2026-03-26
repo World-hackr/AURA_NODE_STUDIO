@@ -1,0 +1,11 @@
+{
+  "schema": "aura.wokwi_model_index.v1",
+  "version": 1,
+  "models": [
+    "models/led_5mm.wokwi.json",
+    "models/resistor_axial_030.wokwi.json",
+    "models/potentiometer_knob.wokwi.json",
+    "models/slide_switch_spdt.wokwi.json",
+    "models/servo_micro.wokwi.json"
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "schema": "aura.component_definition.v1",
+  "metadata": {
+    "name": "Capacitor 0603 Base",
+    "description": "KiCad-backed 0603 capacitor base using exact footprint pads and synthesized ceramic finish rules.",
+    "tags": [
+      "example",
+      "capacitor",
+      "0603",
+      "base_component",
+      "kicad_backed"
+    ]
+  },
+  "base": {
+    "kind": "library_item",
+    "itemId": "capacitor_0603",
+    "override": {
+      "fill": "#f2f2f2",
+      "stroke": "#111111"
+    }
+  },
+  "children": [],
+  "shapeLayers": [
+    {
+      "id": "pad_1",
+      "name": "Pad 1",
+      "kind": "rect",
+      "x": 105,
+      "y": 135,
+      "width": 180,
+      "height": 190,
+      "radius": 45,
+      "fill": "#d4d4d4",
+      "stroke": "#8e8e8e",
+      "strokeWidth": 1
+    },
+    {
+      "id": "pad_2",
+      "name": "Pad 2",
+      "kind": "rect",
+      "x": 415,
+      "y": 135,
+      "width": 180,
+      "height": 190,
+      "radius": 45,
+      "fill": "#d4d4d4",
+      "stroke": "#8e8e8e",
+      "strokeWidth": 1
+    },
+    {
+      "id": "cap_body_shell",
+      "name": "Capacitor Body",
+      "kind": "rect",
+      "x": 190,
+      "y": 150,
+      "width": 320,
+      "height": 160,
+      "radius": 12.8,
+      "fill": "#fbfbfb",
+      "stroke": "#8c8c8c",
+      "strokeWidth": 1.2
+    },
+    {
+      "id": "cap_body_glaze",
+      "name": "Ceramic Glaze",
+      "kind": "rect",
+      "x": 238,
+      "y": 174,
+      "width": 224,
+      "height": 112,
+      "radius": 13.4,
+      "fill": "rgba(255,255,255,0.28)",
+      "stroke": "#cfcfcf",
+      "strokeWidth": 0.7
+    },
+    {
+      "id": "cap_left_cap",
+      "name": "End Cap Left",
+      "kind": "rect",
+      "x": 215.6,
+      "y": 172.4,
+      "width": 38.4,
+      "height": 115.2,
+      "radius": 4,
+      "fill": "#dddddd",
+      "stroke": "#9a9a9a",
+      "strokeWidth": 0.6
+    },
+    {
+      "id": "cap_right_cap",
+      "name": "End Cap Right",
+      "kind": "rect",
+      "x": 446,
+      "y": 172.4,
+      "width": 38.4,
+      "height": 115.2,
+      "radius": 4,
+      "fill": "#dddddd",
+      "stroke": "#9a9a9a",
+      "strokeWidth": 0.6
+    },
+    {
+      "id": "cap_silk_1",
+      "name": "Silk 1",
+      "kind": "line",
+      "x1": 321.9,
+      "y1": 128,
+      "x2": 378.1,
+      "y2": 128,
+      "stroke": "#1a1a1a",
+      "strokeWidth": 1.6
+    },
+    {
+      "id": "cap_silk_2",
+      "name": "Silk 2",
+      "kind": "line",
+      "x1": 321.9,
+      "y1": 332,
+      "x2": 378.1,
+      "y2": 332,
+      "stroke": "#1a1a1a",
+      "strokeWidth": 1.6
+    }
+  ],
+  "persistentDimensions": [],
+  "behaviorDraft": {
+    "presetId": "light_emitter",
+    "targetId": "body_primary",
+    "property": "brightness",
+    "valueMin": 0,
+    "valueMax": 100,
+    "angleMin": -135,
+    "angleMax": 135,
+    "axis": "x",
+    "distanceMin": -12,
+    "distanceMax": 12,
+    "originX": 0,
+    "originY": 0,
+    "glowX": 0,
+    "glowY": 0,
+    "glowRadius": 18,
+    "glowBlur": 12,
+    "glowColor": "#ff5a5a",
+    "baseColor": "#ff5a5a",
+    "opacityMin": 0.08,
+    "opacityMax": 0.94,
+    "blinkPeriodMs": 420,
+    "blinkDutyCycle": 50,
+    "pressDepth": 2.4,
+    "detentCount": 12,
+    "autoReset": true,
+    "lightTargetSourceMode": "existingTarget",
+    "helperShapeKind": "circle",
+    "helperX": 0,
+    "helperY": 0,
+    "helperWidth": 56,
+    "helperHeight": 56,
+    "helperRadius": 14,
+    "glowEnabled": true
+  },
+  "compiledBehavior": {
+    "kind": "behaviorHelper",
+    "entry": {
+      "id": "body_primary_light",
+      "type": "light_emitter",
+      "property": "brightness",
+      "source": {
+        "type": "target_slot",
+        "target": "body_primary"
+      },
+      "range": [
+        0,
+        100
+      ],
+      "baseColor": "#ff5a5a",
+      "opacityRange": [
+        0.08,
+        0.94
+      ],
+      "glow": {
+        "enabled": true,
+        "color": "#ff5a5a",
+        "reachRange": [
+          8.1,
+          25.2
+        ],
+        "blur": 12,
+        "opacityRange": [
+          0.02,
+          0.68
+        ]
+      }
+    }
+  }
+}

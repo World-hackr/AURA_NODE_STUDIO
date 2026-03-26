@@ -1,0 +1,37 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "ntc_temperature_sensor",
+  "tagName": "wokwi-ntc-temperature-sensor",
+  "className": "NTCTemperatureSensorElement",
+  "sourceFile": "ntc-temperature-sensor-element.ts",
+  "metrics": {
+    "width": "35.826mm",
+    "height": "19mm",
+    "viewBox": "0 0 135.4 71.782"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 3,
+    "pins": [
+      {
+        "name": "GND",
+        "x": 135,
+        "y": 26.2,
+        "number": 1
+      },
+      {
+        "name": "VCC",
+        "x": 135,
+        "y": 35.8,
+        "number": 2
+      },
+      {
+        "name": "OUT",
+        "x": 135,
+        "y": 45.5,
+        "number": 3
+      }
+    ]
+  },
+  "properties": []
+}

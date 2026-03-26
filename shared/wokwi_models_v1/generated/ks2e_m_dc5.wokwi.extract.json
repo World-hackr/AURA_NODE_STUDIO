@@ -1,0 +1,67 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "ks2e_m_dc5",
+  "tagName": "wokwi-ks2e-m-dc5",
+  "className": "KS2EMDC5Element",
+  "sourceFile": "ks2e-m-dc5-element.ts",
+  "metrics": {
+    "width": "21mm",
+    "height": "10mm",
+    "viewBox": "0 0 21 10"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 8,
+    "pins": [
+      {
+        "name": "NO2",
+        "xExpression": "x1Pos",
+        "yExpression": "y1Pos",
+        "number": 8
+      },
+      {
+        "name": "NC2",
+        "xExpression": "x2Pos",
+        "yExpression": "y1Pos",
+        "number": 6
+      },
+      {
+        "name": "P2",
+        "xExpression": "x3Pos",
+        "yExpression": "y1Pos",
+        "number": 4
+      },
+      {
+        "name": "COIL2",
+        "xExpression": "x4Pos",
+        "yExpression": "y1Pos",
+        "number": 1
+      },
+      {
+        "name": "NO1",
+        "xExpression": "x1Pos",
+        "yExpression": "y2Pos",
+        "number": 9
+      },
+      {
+        "name": "NC1",
+        "xExpression": "x2Pos",
+        "yExpression": "y2Pos",
+        "number": 11
+      },
+      {
+        "name": "P1",
+        "xExpression": "x3Pos",
+        "yExpression": "y2Pos",
+        "number": 13
+      },
+      {
+        "name": "COIL1",
+        "xExpression": "x4Pos",
+        "yExpression": "y2Pos",
+        "number": 16
+      }
+    ]
+  },
+  "properties": []
+}

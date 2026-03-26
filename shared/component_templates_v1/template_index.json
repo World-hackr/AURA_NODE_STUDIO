@@ -1,0 +1,36 @@
+{
+  "schema": "aura.component_template_index.v1",
+  "version": 1,
+  "templates": [
+    {
+      "id": "resistor_smd",
+      "label": "Resistor SMD",
+      "file": "templates/resistor_smd.template.json",
+      "class": "resistor_smd"
+    },
+    {
+      "id": "capacitor_smd",
+      "label": "Capacitor SMD",
+      "file": "templates/capacitor_smd.template.json",
+      "class": "capacitor_smd"
+    },
+    {
+      "id": "ic_package",
+      "label": "IC Package",
+      "file": "templates/ic_package.template.json",
+      "class": "ic_package"
+    },
+    {
+      "id": "pin_header",
+      "label": "Pin Header",
+      "file": "templates/pin_header.template.json",
+      "class": "pin_header"
+    },
+    {
+      "id": "usb_connector",
+      "label": "USB Connector",
+      "file": "templates/usb_connector.template.json",
+      "class": "usb_connector"
+    }
+  ]
+}

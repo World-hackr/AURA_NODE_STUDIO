@@ -1,0 +1,28 @@
+{
+  "schema": "aura.wokwi_part.v1",
+  "libraryItemId": "resistor_axial_030",
+  "title": "Resistor Axial",
+  "wokwi": {
+    "tagName": "wokwi-resistor",
+    "modulePath": "vendor_reference/wokwi-elements/dist/esm/resistor-element.js",
+    "naturalSizePx": {
+      "width": 58.8,
+      "height": 11.3
+    },
+    "allowOuterRotation": true
+  },
+  "pins": {
+    "labels": ["1", "2"],
+    "anchors": [
+      { "id": "1", "x": 0, "y": 5.65 },
+      { "id": "2", "x": 58.8, "y": 5.65 }
+    ]
+  },
+  "runtime": {
+    "defaults": null,
+    "staticProps": {
+      "value": "1000"
+    },
+    "propBindings": []
+  }
+}

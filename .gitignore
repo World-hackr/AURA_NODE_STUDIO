@@ -6,3 +6,6 @@
 **/c_cpp_properties.json
 **/ipch/
 AURA _report/~$*
+studio_ui/.chrome_headless/
+studio_ui/.vite*.log
+studio_ui/.vite*.txt

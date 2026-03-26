@@ -1,0 +1,64 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "potentiometer",
+  "tagName": "wokwi-potentiometer",
+  "className": "PotentiometerElement",
+  "sourceFile": "potentiometer-element.ts",
+  "metrics": {
+    "width": "20mm",
+    "height": "20mm",
+    "viewBox": "0 0 20 20"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 3,
+    "pins": [
+      {
+        "name": "GND",
+        "x": 29,
+        "y": 68.5,
+        "number": 1
+      },
+      {
+        "name": "SIG",
+        "x": 39,
+        "y": 68.5,
+        "number": 2
+      },
+      {
+        "name": "VCC",
+        "x": 49,
+        "y": 68.5,
+        "number": 3
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "min",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "max",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "1023"
+    },
+    {
+      "name": "value",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "step",
+      "defaultRaw": "1"
+    },
+    {
+      "name": "startDegree",
+      "defaultRaw": "-135"
+    },
+    {
+      "name": "endDegree",
+      "defaultRaw": "135"
+    }
+  ]
+}

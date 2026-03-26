@@ -1,0 +1,12 @@
+{
+  "schema": "aura.component_package_index.v1",
+  "version": 1,
+  "templates": [
+    {
+      "id": "component_package_template",
+      "path": "component.package.template.json",
+      "description": "Starter template for paired AURA component packages."
+    }
+  ],
+  "packages": []
+}

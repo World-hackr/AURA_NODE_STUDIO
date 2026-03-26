@@ -1,0 +1,39 @@
+{
+  "schema": "aura.component_template.v1",
+  "id": "pin_header",
+  "class": "pin_header",
+  "label": "Pin Header",
+  "purpose": "Template family for repeatable male and female header strips with variable row and column count.",
+  "referenceSources": {
+    "visual": ["wokwi-elements"],
+    "geometry": ["kicad-footprints"],
+    "metadata": []
+  },
+  "familyModes": [
+    {
+      "id": "male_header",
+      "label": "Male Header"
+    },
+    {
+      "id": "female_header",
+      "label": "Female Header"
+    }
+  ],
+  "inputs": {
+    "required": ["package_key", "pin_count", "pin_pitch_um"],
+    "optional": ["column_count", "connector_style", "pin_labels"]
+  },
+  "pins": {
+    "countSource": "dynamic",
+    "labelsSource": "generated_or_imported"
+  },
+  "repeatRules": {
+    "mode": "grid_growth",
+    "controls": ["pin_count", "column_count"]
+  },
+  "rendererRules": {
+    "autoFinish": ["pin_contrast", "body_slot_contrast"],
+    "styleTags": ["connector", "header", "repeatable", "flat_2d"]
+  },
+  "runtimeHooks": []
+}

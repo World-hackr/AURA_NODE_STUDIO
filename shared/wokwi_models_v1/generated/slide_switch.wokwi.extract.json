@@ -1,0 +1,42 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "slide_switch",
+  "tagName": "wokwi-slide-switch",
+  "className": "SlideSwitchElement",
+  "sourceFile": "slide-switch-element.ts",
+  "metrics": {
+    "width": "8.5mm",
+    "height": "9.23mm",
+    "viewBox": "0 0 8.5 9.23"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 3,
+    "pins": [
+      {
+        "name": "1",
+        "x": 6.5,
+        "y": 34,
+        "number": 1
+      },
+      {
+        "name": "2",
+        "x": 16,
+        "y": 34,
+        "number": 2
+      },
+      {
+        "name": "3",
+        "x": 25.5,
+        "y": 34,
+        "number": 3
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "value",
+      "defaultRaw": "0"
+    }
+  ]
+}

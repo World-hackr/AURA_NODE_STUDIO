@@ -1,0 +1,36 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "led_ring",
+  "tagName": "wokwi-led-ring",
+  "className": "LEDRingElement",
+  "sourceFile": "led-ring-element.ts",
+  "metrics": {
+    "width": "5",
+    "height": "5",
+    "viewBox": "0 0 ${width} ${height}"
+  },
+  "pinInfo": {
+    "status": "unparsed",
+    "count": 0,
+    "pins": []
+  },
+  "properties": [
+    {
+      "name": "pixels",
+      "defaultRaw": "16"
+    },
+    {
+      "name": "pixelSpacing",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "background",
+      "defaultRaw": "'#363'"
+    },
+    {
+      "name": "animation",
+      "defaultRaw": "false"
+    }
+  ]
+}

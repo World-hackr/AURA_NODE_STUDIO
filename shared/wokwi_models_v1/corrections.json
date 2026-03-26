@@ -1,0 +1,13 @@
+{
+  "schema": "aura.wokwi_corrections.v1",
+  "version": 1,
+  "parts": {
+    "resistor_axial_030": {
+      "notes": "Lower the snap row to align with the visible axial lead line inside AURA Studio.",
+      "pinAnchorOverrides": {
+        "1": { "y": 10.2 },
+        "2": { "y": 10.2 }
+      }
+    }
+  }
+}

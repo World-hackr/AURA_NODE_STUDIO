@@ -1,0 +1,43 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "dht22",
+  "tagName": "wokwi-dht22",
+  "className": "DHT22Element",
+  "sourceFile": "dht22-element.ts",
+  "metrics": {
+    "width": "15.1mm",
+    "height": "30.885mm",
+    "viewBox": "0 0 15.1 30.885"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 4,
+    "pins": [
+      {
+        "name": "VCC",
+        "x": 15,
+        "y": 114.9,
+        "number": 1
+      },
+      {
+        "name": "SDA",
+        "x": 24.5,
+        "y": 114.9,
+        "number": 2
+      },
+      {
+        "name": "NC",
+        "x": 34.1,
+        "y": 114.9,
+        "number": 3
+      },
+      {
+        "name": "GND",
+        "x": 43.8,
+        "y": 114.9,
+        "number": 4
+      }
+    ]
+  },
+  "properties": []
+}

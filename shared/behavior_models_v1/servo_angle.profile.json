@@ -1,0 +1,12 @@
+{
+  "schema": "aura.behavior_profile.v1",
+  "id": "servo_angle",
+  "family": "output",
+  "targetId": "body_primary",
+  "signalName": "angle",
+  "valueMin": 0,
+  "valueMax": 180,
+  "defaultValue": 90,
+  "angleMin": 0,
+  "angleMax": 180
+}

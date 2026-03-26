@@ -1,0 +1,49 @@
+{
+  "schema": "aura.component_template.v1",
+  "id": "ic_package",
+  "class": "ic_package",
+  "label": "IC Package",
+  "purpose": "Template family for repeatable IC package bodies such as DIP, SOIC, TSSOP, and QFP.",
+  "referenceSources": {
+    "visual": ["wokwi-elements"],
+    "geometry": ["kicad-footprints"],
+    "metadata": ["kicad-symbols"]
+  },
+  "familyModes": [
+    {
+      "id": "dip_family",
+      "label": "DIP"
+    },
+    {
+      "id": "soic_family",
+      "label": "SOIC"
+    },
+    {
+      "id": "tssop_family",
+      "label": "TSSOP"
+    },
+    {
+      "id": "qfp_family",
+      "label": "QFP"
+    }
+  ],
+  "inputs": {
+    "required": ["package_key", "pin_count", "body_width_um", "body_height_um", "pin_pitch_um"],
+    "optional": ["row_spacing_um", "width_mode", "pin_names", "marking_text", "pin1_marker"]
+  },
+  "pins": {
+    "countSource": "dynamic",
+    "labelsSource": "generated_or_imported"
+  },
+  "repeatRules": {
+    "mode": "pin_family_growth",
+    "controls": ["pin_count", "width_mode", "mapped_size_variant"]
+  },
+  "rendererRules": {
+    "autoFinish": ["body_edge_highlight", "lead_contrast", "pin1_mark", "label_zone"],
+    "styleTags": ["ic", "package_family", "flat_2d"]
+  },
+  "runtimeHooks": [
+    "generic_pin_state_surface"
+  ]
+}

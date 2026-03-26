@@ -1,0 +1,48 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "photoresistor_sensor",
+  "tagName": "wokwi-photoresistor-sensor",
+  "className": "PhotoresistorSensorElement",
+  "sourceFile": "photoresistor-sensor-element.ts",
+  "metrics": {
+    "width": "45.95mm",
+    "height": "16.267mm",
+    "viewBox": "0 0 174 61.5"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 4,
+    "pins": [
+      {
+        "name": "VCC",
+        "x": 172,
+        "y": 16
+      },
+      {
+        "name": "GND",
+        "x": 172,
+        "y": 26
+      },
+      {
+        "name": "DO",
+        "x": 172,
+        "y": 35.8
+      },
+      {
+        "name": "AO",
+        "x": 172,
+        "y": 45.5
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "ledDO",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "ledPower",
+      "defaultRaw": "false"
+    }
+  ]
+}

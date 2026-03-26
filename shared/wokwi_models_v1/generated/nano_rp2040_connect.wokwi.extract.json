@@ -1,0 +1,190 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "nano_rp2040_connect",
+  "tagName": "wokwi-nano-rp2040-connect",
+  "className": "NanoRP2040ConnectElement",
+  "sourceFile": "nano-rp2040-connect-element.ts",
+  "metrics": {
+    "width": "44.573mm",
+    "height": "17.956mm",
+    "viewBox": "0 0 168 67.9"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 30,
+    "pins": [
+      {
+        "name": "D12",
+        "x": 20.1,
+        "y": 1
+      },
+      {
+        "name": "D11",
+        "x": 29.8,
+        "y": 1
+      },
+      {
+        "name": "D10",
+        "x": 39.3,
+        "y": 1
+      },
+      {
+        "name": "D9",
+        "x": 48.9,
+        "y": 1
+      },
+      {
+        "name": "D8",
+        "x": 58.5,
+        "y": 1
+      },
+      {
+        "name": "D7",
+        "x": 68.1,
+        "y": 1
+      },
+      {
+        "name": "D6",
+        "x": 77.7,
+        "y": 1
+      },
+      {
+        "name": "D5",
+        "x": 87.3,
+        "y": 1
+      },
+      {
+        "name": "D4",
+        "x": 96.9,
+        "y": 1
+      },
+      {
+        "name": "D3",
+        "x": 106.5,
+        "y": 1
+      },
+      {
+        "name": "D2",
+        "x": 116.1,
+        "y": 1
+      },
+      {
+        "name": "GND.1",
+        "x": 125.2,
+        "y": 1
+      },
+      {
+        "name": "RESET",
+        "x": 135.3,
+        "y": 1
+      },
+      {
+        "name": "RX",
+        "x": 153.9,
+        "y": 1
+      },
+      {
+        "name": "TX",
+        "x": 144.5,
+        "y": 1
+      },
+      {
+        "name": "D13",
+        "x": 20.1,
+        "y": 67.5
+      },
+      {
+        "name": "3.3V",
+        "x": 29.7,
+        "y": 67.5
+      },
+      {
+        "name": "AREF",
+        "x": 39.3,
+        "y": 67.5
+      },
+      {
+        "name": "A0",
+        "x": 48.8,
+        "y": 67.5
+      },
+      {
+        "name": "A1",
+        "x": 58.5,
+        "y": 67.5
+      },
+      {
+        "name": "A2",
+        "x": 68,
+        "y": 67.5
+      },
+      {
+        "name": "A3",
+        "x": 77.6,
+        "y": 67.5
+      },
+      {
+        "name": "A4",
+        "x": 87.3,
+        "y": 67.5
+      },
+      {
+        "name": "A5",
+        "x": 96.9,
+        "y": 67.5
+      },
+      {
+        "name": "A6",
+        "x": 106.5,
+        "y": 67.5
+      },
+      {
+        "name": "A7",
+        "x": 116.1,
+        "y": 67.5
+      },
+      {
+        "name": "5V",
+        "x": 125.5,
+        "y": 67.5
+      },
+      {
+        "name": "RESET.2",
+        "x": 134.9,
+        "y": 67.5
+      },
+      {
+        "name": "GND.2",
+        "x": 145.3,
+        "y": 67.5
+      },
+      {
+        "name": "VIN",
+        "x": 154.1,
+        "y": 67.5
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "ledRed",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "ledGreen",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "ledBlue",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "ledBuiltIn",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "ledPower",
+      "defaultRaw": "false"
+    }
+  ]
+}

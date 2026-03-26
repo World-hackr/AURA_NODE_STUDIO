@@ -1,0 +1,105 @@
+{
+  "schema": "aura.component_definition.v1",
+  "metadata": {
+    "name": "Header 1x8 Base",
+    "description": "Repeat-ready single-column 1x8 header example.",
+    "tags": ["example", "header", "1x8", "base_component"]
+  },
+  "base": {
+    "kind": "library_item",
+    "itemId": "header_strip",
+    "packageState": {
+      "pinCount": 8,
+      "columnCount": 1
+    },
+    "override": {
+      "fill": "#d0d0d0",
+      "stroke": "#111111"
+    }
+  },
+  "children": [],
+  "shapeLayers": [
+    {
+      "id": "header_mark_1",
+      "name": "Pin 1 Mark",
+      "kind": "text",
+      "x": 320,
+      "y": 154,
+      "width": 22,
+      "height": 18,
+      "text": "1",
+      "fill": "#111111",
+      "fontSize": 14
+    },
+    {
+      "id": "header_mark_8",
+      "name": "Pin 8 Mark",
+      "kind": "text",
+      "x": 320,
+      "y": 316,
+      "width": 22,
+      "height": 18,
+      "text": "8",
+      "fill": "#111111",
+      "fontSize": 14
+    }
+  ],
+  "persistentDimensions": [],
+  "behaviorDraft": {
+    "presetId": "light_emitter",
+    "targetId": "body_primary",
+    "property": "brightness",
+    "valueMin": 0,
+    "valueMax": 100,
+    "angleMin": -135,
+    "angleMax": 135,
+    "axis": "x",
+    "distanceMin": -12,
+    "distanceMax": 12,
+    "originX": 0,
+    "originY": 0,
+    "glowX": 0,
+    "glowY": 0,
+    "glowRadius": 18,
+    "glowBlur": 12,
+    "glowColor": "#ff5a5a",
+    "baseColor": "#ff5a5a",
+    "opacityMin": 0.08,
+    "opacityMax": 0.94,
+    "blinkPeriodMs": 420,
+    "blinkDutyCycle": 50,
+    "pressDepth": 2.4,
+    "detentCount": 12,
+    "autoReset": true,
+    "lightTargetSourceMode": "existingTarget",
+    "helperShapeKind": "circle",
+    "helperX": 0,
+    "helperY": 0,
+    "helperWidth": 56,
+    "helperHeight": 56,
+    "helperRadius": 14,
+    "glowEnabled": true
+  },
+  "compiledBehavior": {
+    "kind": "behaviorHelper",
+    "entry": {
+      "id": "body_primary_light",
+      "type": "light_emitter",
+      "property": "brightness",
+      "source": {
+        "type": "target_slot",
+        "target": "body_primary"
+      },
+      "range": [0, 100],
+      "baseColor": "#ff5a5a",
+      "opacityRange": [0.08, 0.94],
+      "glow": {
+        "enabled": true,
+        "color": "#ff5a5a",
+        "reachRange": [8.1, 25.2],
+        "blur": 12,
+        "opacityRange": [0.02, 0.68]
+      }
+    }
+  }
+}

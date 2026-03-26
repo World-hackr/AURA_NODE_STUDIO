@@ -1,0 +1,98 @@
+{
+  "schema": "aura.component_definition.v1",
+  "metadata": {
+    "name": "Slide Switch Input",
+    "description": "Behavior-ready slide switch example with explicit travel and state labels.",
+    "tags": ["example", "runtime_profile", "slide_switch", "input"]
+  },
+  "base": {
+    "kind": "library_item",
+    "itemId": "slide_switch_spdt"
+  },
+  "children": [],
+  "shapeLayers": [],
+  "persistentDimensions": [],
+  "runtimeProfile": {
+    "profileId": "slide_switch",
+    "signalName": "switch_state",
+    "targetId": "handle_primary",
+    "valueMin": 0,
+    "valueMax": 1,
+    "defaultValue": 0,
+    "angleMin": -120,
+    "angleMax": 120,
+    "travelAxis": "x",
+    "travelMin": -18,
+    "travelMax": 18,
+    "lowVisual": 0.1,
+    "highVisual": 0.95,
+    "detentCount": 12,
+    "autoReset": false,
+    "offLabel": "left",
+    "onLabel": "right",
+    "lightColor": "#ff5a5a"
+  },
+  "compiledRuntime": {
+    "kind": "input",
+    "entry": {
+      "type": "slide_switch",
+      "signal": "switch_state",
+      "target": "handle_primary",
+      "states": ["left", "right"],
+      "defaultState": 0,
+      "axis": "x",
+      "translateRange": [-18, 18],
+      "valueRange": [0, 1],
+      "autoReset": false
+    }
+  },
+  "behaviorDraft": {
+    "presetId": "linear_slider",
+    "targetId": "handle_primary",
+    "property": "switch_state",
+    "valueMin": 0,
+    "valueMax": 1,
+    "angleMin": -135,
+    "angleMax": 135,
+    "axis": "x",
+    "distanceMin": -18,
+    "distanceMax": 18,
+    "originX": 0,
+    "originY": 0,
+    "glowX": 0,
+    "glowY": 0,
+    "glowRadius": 18,
+    "glowBlur": 12,
+    "glowColor": "#ff5a5a",
+    "baseColor": "#ff5a5a",
+    "opacityMin": 0.08,
+    "opacityMax": 0.94,
+    "blinkPeriodMs": 420,
+    "blinkDutyCycle": 50,
+    "pressDepth": 2.4,
+    "detentCount": 12,
+    "autoReset": false,
+    "lightTargetSourceMode": "existingTarget",
+    "helperShapeKind": "circle",
+    "helperX": 0,
+    "helperY": 0,
+    "helperWidth": 56,
+    "helperHeight": 56,
+    "helperRadius": 14,
+    "glowEnabled": true
+  },
+  "compiledBehavior": {
+    "kind": "interactive",
+    "entry": {
+      "id": "handle_primary_x_translate",
+      "type": "linear",
+      "target": "handle_primary",
+      "property": "switch_state",
+      "match": "exact",
+      "axis": "x",
+      "range": [0, 1],
+      "translateRange": [-18, 18],
+      "autoReset": false
+    }
+  }
+}

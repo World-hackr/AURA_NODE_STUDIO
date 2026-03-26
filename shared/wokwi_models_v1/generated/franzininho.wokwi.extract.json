@@ -1,0 +1,87 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "franzininho",
+  "tagName": "wokwi-franzininho",
+  "className": "FranzininhoElement",
+  "sourceFile": "franzininho-element.ts",
+  "metrics": {
+    "width": "64mm",
+    "height": "30mm",
+    "viewBox": "0 0 64 30"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 11,
+    "pins": [
+      {
+        "name": "GND.1",
+        "x": 218.5,
+        "y": 23.3
+      },
+      {
+        "name": "VCC.1",
+        "x": 218.5,
+        "y": 32.9
+      },
+      {
+        "name": "PB4",
+        "x": 218.5,
+        "y": 42.5
+      },
+      {
+        "name": "PB5",
+        "x": 218.5,
+        "y": 52.2
+      },
+      {
+        "name": "PB3",
+        "x": 218.5,
+        "y": 61.7
+      },
+      {
+        "name": "PB2",
+        "x": 218.5,
+        "y": 71.2
+      },
+      {
+        "name": "PB1",
+        "x": 218.5,
+        "y": 80.9
+      },
+      {
+        "name": "PB0",
+        "x": 218.5,
+        "y": 90.5
+      },
+      {
+        "name": "VIN",
+        "x": 132.7,
+        "y": 8.1
+      },
+      {
+        "name": "GND.2",
+        "x": 142.9,
+        "y": 8.1
+      },
+      {
+        "name": "VCC.2",
+        "x": 153,
+        "y": 8.1
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "led1",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "ledPower",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "resetPressed",
+      "defaultRaw": "false"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "aura.behavior_profile_index.v1",
+  "profiles": [
+    {
+      "id": "light_output",
+      "label": "Light Output",
+      "path": "shared/behavior_models_v1/light_output.profile.json",
+      "description": "Brightness-driven display profile for LEDs and visible indicators."
+    },
+    {
+      "id": "push_button",
+      "label": "Push Button",
+      "path": "shared/behavior_models_v1/push_button.profile.json",
+      "description": "Momentary push-input profile with press travel and optional auto-return."
+    },
+    {
+      "id": "potentiometer",
+      "label": "Potentiometer",
+      "path": "shared/behavior_models_v1/potentiometer.profile.json",
+      "description": "Rotary analog input profile with range, sweep, and detents."
+    },
+    {
+      "id": "slide_switch",
+      "label": "Slide Switch",
+      "path": "shared/behavior_models_v1/slide_switch.profile.json",
+      "description": "Binary sliding input profile with axis and travel range."
+    },
+    {
+      "id": "toggle_switch",
+      "label": "Toggle Switch",
+      "path": "shared/behavior_models_v1/toggle_switch.profile.json",
+      "description": "Latched lever input profile with explicit off/on labels."
+    },
+    {
+      "id": "servo_angle",
+      "label": "Servo Angle",
+      "path": "shared/behavior_models_v1/servo_angle.profile.json",
+      "description": "Angle-driven actuator output profile for servo-style parts."
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "dip_switch_8",
+  "tagName": "wokwi-dip-switch-8",
+  "className": "DipSwitch8Element",
+  "sourceFile": "dip-switch-8-element.ts",
+  "metrics": {
+    "width": "5.8168",
+    "height": "13",
+    "viewBox": "0 0 82.87 55.355"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 16,
+    "pins": [
+      {
+        "name": "1a",
+        "x": 8.1,
+        "y": 51.3,
+        "number": 1
+      },
+      {
+        "name": "2a",
+        "x": 17.7,
+        "y": 51.3,
+        "number": 2
+      },
+      {
+        "name": "3a",
+        "x": 27.3,
+        "y": 51.3,
+        "number": 3
+      },
+      {
+        "name": "4a",
+        "x": 36.9,
+        "y": 51.3,
+        "number": 4
+      },
+      {
+        "name": "5a",
+        "x": 46.5,
+        "y": 51.3,
+        "number": 5
+      },
+      {
+        "name": "6a",
+        "x": 56.1,
+        "y": 51.3,
+        "number": 6
+      },
+      {
+        "name": "7a",
+        "x": 65.7,
+        "y": 51.3,
+        "number": 7
+      },
+      {
+        "name": "8a",
+        "x": 75.3,
+        "y": 51.3,
+        "number": 8
+      },
+      {
+        "name": "8b",
+        "x": 75.3,
+        "y": 3,
+        "number": 9
+      },
+      {
+        "name": "7b",
+        "x": 65.7,
+        "y": 3,
+        "number": 10
+      },
+      {
+        "name": "6b",
+        "x": 56.1,
+        "y": 3,
+        "number": 11
+      },
+      {
+        "name": "5b",
+        "x": 46.5,
+        "y": 3,
+        "number": 12
+      },
+      {
+        "name": "4b",
+        "x": 36.9,
+        "y": 3,
+        "number": 13
+      },
+      {
+        "name": "3b",
+        "x": 27.3,
+        "y": 3,
+        "number": 14
+      },
+      {
+        "name": "2b",
+        "x": 17.7,
+        "y": 3,
+        "number": 15
+      },
+      {
+        "name": "1b",
+        "x": 8.1,
+        "y": 3,
+        "number": 16
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "values",
+      "decorator": "{ type: Array }",
+      "defaultRaw": "[0, 0, 0, 0, 0, 0, 0, 0]"
+    }
+  ]
+}

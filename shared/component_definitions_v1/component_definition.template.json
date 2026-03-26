@@ -14,6 +14,33 @@
   "children": [],
   "shapeLayers": [],
   "persistentDimensions": [],
+  "runtimeProfile": {
+    "profileId": "none",
+    "signalName": "value",
+    "targetId": "body_primary",
+    "valueMin": 0,
+    "valueMax": 100,
+    "defaultValue": 0,
+    "angleMin": -120,
+    "angleMax": 120,
+    "travelAxis": "x",
+    "travelMin": -14,
+    "travelMax": 14,
+    "lowVisual": 0.1,
+    "highVisual": 0.95,
+    "detentCount": 12,
+    "autoReset": false,
+    "offLabel": "off",
+    "onLabel": "on",
+    "lightColor": "#ff5a5a"
+  },
+  "compiledRuntime": {
+    "kind": "none",
+    "entry": {
+      "type": "none",
+      "signal": null
+    }
+  },
   "behaviorDraft": {
     "presetId": "light_emitter",
     "targetId": "indicator_primary",

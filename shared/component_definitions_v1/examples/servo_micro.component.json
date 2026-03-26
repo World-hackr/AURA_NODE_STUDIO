@@ -1,0 +1,94 @@
+{
+  "schema": "aura.component_definition.v1",
+  "metadata": {
+    "name": "Servo Output",
+    "description": "Behavior-ready servo example with explicit angle output metadata.",
+    "tags": ["example", "runtime_profile", "servo", "output"]
+  },
+  "base": {
+    "kind": "library_item",
+    "itemId": "servo_micro"
+  },
+  "children": [],
+  "shapeLayers": [],
+  "persistentDimensions": [],
+  "runtimeProfile": {
+    "profileId": "servo_angle",
+    "signalName": "servo_angle",
+    "targetId": "body_primary",
+    "valueMin": 0,
+    "valueMax": 180,
+    "defaultValue": 90,
+    "angleMin": 0,
+    "angleMax": 180,
+    "travelAxis": "x",
+    "travelMin": -14,
+    "travelMax": 14,
+    "lowVisual": 0.1,
+    "highVisual": 0.95,
+    "detentCount": 12,
+    "autoReset": false,
+    "offLabel": "off",
+    "onLabel": "on",
+    "lightColor": "#ff5a5a"
+  },
+  "compiledRuntime": {
+    "kind": "output",
+    "entry": {
+      "type": "servo_angle",
+      "signal": "servo_angle",
+      "target": "body_primary",
+      "range": [0, 180],
+      "defaultValue": 90,
+      "angleRange": [0, 180]
+    }
+  },
+  "behaviorDraft": {
+    "presetId": "rotate_actor",
+    "targetId": "body_primary",
+    "property": "servo_angle",
+    "valueMin": 0,
+    "valueMax": 180,
+    "angleMin": 0,
+    "angleMax": 180,
+    "axis": "x",
+    "distanceMin": -12,
+    "distanceMax": 12,
+    "originX": 0,
+    "originY": 0,
+    "glowX": 0,
+    "glowY": 0,
+    "glowRadius": 18,
+    "glowBlur": 12,
+    "glowColor": "#ff5a5a",
+    "baseColor": "#ff5a5a",
+    "opacityMin": 0.08,
+    "opacityMax": 0.94,
+    "blinkPeriodMs": 420,
+    "blinkDutyCycle": 50,
+    "pressDepth": 2.4,
+    "detentCount": 12,
+    "autoReset": false,
+    "lightTargetSourceMode": "existingTarget",
+    "helperShapeKind": "circle",
+    "helperX": 0,
+    "helperY": 0,
+    "helperWidth": 56,
+    "helperHeight": 56,
+    "helperRadius": 14,
+    "glowEnabled": true
+  },
+  "compiledBehavior": {
+    "kind": "interactive",
+    "entry": {
+      "id": "body_primary_rotate",
+      "type": "rotate",
+      "target": "body_primary",
+      "property": "servo_angle",
+      "match": "exact",
+      "range": [0, 180],
+      "angleRange": [0, 180],
+      "transformOrigin": [0, 0]
+    }
+  }
+}

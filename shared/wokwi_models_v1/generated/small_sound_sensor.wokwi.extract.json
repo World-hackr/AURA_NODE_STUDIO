@@ -1,0 +1,52 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "small_sound_sensor",
+  "tagName": "wokwi-small-sound-sensor",
+  "className": "SmallSoundSensorElement",
+  "sourceFile": "small-sound-sensor-element.ts",
+  "metrics": {
+    "width": "35.211mm",
+    "height": "13.346mm",
+    "viewBox": "0 0 133 50.4"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 4,
+    "pins": [
+      {
+        "name": "AOUT",
+        "x": 0,
+        "y": 11,
+        "number": 1
+      },
+      {
+        "name": "GND",
+        "x": 0,
+        "y": 20.5,
+        "number": 2
+      },
+      {
+        "name": "VCC",
+        "x": 0,
+        "y": 30.5,
+        "number": 3
+      },
+      {
+        "name": "DOUT",
+        "x": 0,
+        "y": 40.5,
+        "number": 4
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "ledPower",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "ledSignal",
+      "defaultRaw": "false"
+    }
+  ]
+}

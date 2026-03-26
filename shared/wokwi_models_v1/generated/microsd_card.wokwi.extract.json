@@ -1,0 +1,54 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "microsd_card",
+  "tagName": "wokwi-microsd-card",
+  "className": "MicrosdCardElement",
+  "sourceFile": "microsd-card-element.ts",
+  "metrics": {
+    "width": "21.6mm",
+    "height": "20.4mm",
+    "viewBox": "0 0 21.6 20.4"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 7,
+    "pins": [
+      {
+        "name": "CD",
+        "x": 76.734,
+        "y": 9.3744
+      },
+      {
+        "name": "DO",
+        "x": 76.734,
+        "y": 18.8622
+      },
+      {
+        "name": "GND",
+        "x": 76.734,
+        "y": 28.4634
+      },
+      {
+        "name": "SCK",
+        "x": 76.734,
+        "y": 38.178
+      },
+      {
+        "name": "VCC",
+        "x": 76.734,
+        "y": 47.628
+      },
+      {
+        "name": "DI",
+        "x": 76.734,
+        "y": 57.456
+      },
+      {
+        "name": "CS",
+        "x": 76.734,
+        "y": 66.906
+      }
+    ]
+  },
+  "properties": []
+}

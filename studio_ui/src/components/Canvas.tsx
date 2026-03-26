@@ -1,17 +1,21 @@
-import { Grid3X3, Image as ImageIcon, LocateFixed, RotateCw } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   getDefaultPackageState,
   getLibraryItem,
   GRID_UM,
   isResizableLibraryItem,
+  PLACEMENT_GRID_UM,
   ROUTING_GRID_UM,
   resolvePackageByItemId,
   type PackageDefinition,
   type ResizeHandle,
   UM_TO_PX,
 } from "../data/componentCatalog";
+import {
+  getDefaultRuntimeProfileForLibraryItem,
+  normalizeRuntimeProfileState,
+} from "../data/runtimeProfiles";
 import type {
   CircuitComponent,
   CircuitJunction,
@@ -32,6 +36,8 @@ import {
 } from "../utils/routing";
 import { computeLayoutHealth } from "../utils/layoutHealth";
 import { formatUmPair } from "../utils/units";
+import { getWokwiModel, hasWokwiPart } from "../wokwi/wokwiCatalog";
+import { WokwiPart } from "./WokwiPart";
 
 interface CanvasPointer {
   xPx: number;
@@ -98,16 +104,15 @@ interface BoundsPx {
   centerY: number;
 }
 
-const TEXTURE_KEYS = ["texture1", "texture2", "texture3", "texture4"] as const;
-const GRID_PX = GRID_UM * UM_TO_PX;
+interface RuntimeWokwiLayout {
+  bounds: BoundsPx;
+  pins: Record<string, PinPoint>;
+}
+
+const PLACEMENT_GRID_PX = PLACEMENT_GRID_UM * UM_TO_PX;
+const MAJOR_GRID_PX = GRID_UM * UM_TO_PX;
 const STAGE_HALF_EXTENT_PX = 50000;
 const PACKAGE_OUTLINE = "#111111";
-const PACKAGE_BODY_FILL = "#d8d8d8";
-const PACKAGE_BODY_FILL_DARK = "#c6c6c6";
-const PACKAGE_METAL = "#8f8f8f";
-const PACKAGE_METAL_LIGHT = "#b7b7b7";
-const PACKAGE_DETAIL = "#3a3a3a";
-const PACKAGE_SOCKET_FILL = "#2a2a2a";
 const STAGE_GRID_COLOR = "#ffffff";
 const STAGE_AXIS_COLOR = "#ffffff";
 const STAGE_SELECTION_COLOR = "#ffffff";
@@ -120,13 +125,334 @@ const STAGE_WIRE_GLOW = "#9fd3ff";
 const STAGE_HANDLE_FILL = "#ffffff";
 const STAGE_HANDLE_STROKE = "#111111";
 const STAGE_GUIDE_COLOR = "#9fd3ff";
-const STAGE_PIN_RING = "#cde8ff";
 const STAGE_SELECTION_FILL = "#8fcfff";
 const STAGE_WARNING_OVERLAP = "#ffd5cc";
 const STAGE_WARNING_CROWDED = "#ffe5a8";
 
+const wokwiRuntimeLayoutRegistry = new Map<string, RuntimeWokwiLayout>();
+
+function setRuntimeWokwiLayout(componentId: string, layout: RuntimeWokwiLayout | null) {
+  if (layout) {
+    wokwiRuntimeLayoutRegistry.set(componentId, layout);
+  } else {
+    wokwiRuntimeLayoutRegistry.delete(componentId);
+  }
+}
+
+function getRuntimeWokwiLayout(componentId: string) {
+  return wokwiRuntimeLayoutRegistry.get(componentId) ?? null;
+}
+
+interface PackageVisualProfile {
+  body: string;
+  bodySecondary: string;
+  bodyTertiary: string;
+  metal: string;
+  metalDark: string;
+  accent: string;
+  accentSoft: string;
+  mark: string;
+  label: string;
+  socket: string;
+}
+
+function getPackageVisualProfile(
+  component: CircuitComponent,
+  packageDef: PackageDefinition,
+): PackageVisualProfile {
+  const base: PackageVisualProfile = {
+    body: "#3f454d",
+    bodySecondary: "#2f353d",
+    bodyTertiary: "#59616b",
+    metal: "#c5ccd4",
+    metalDark: "#8d96a0",
+    accent: packageDef.defaultColor ?? "#6fb6ff",
+    accentSoft: "rgba(255,255,255,0.12)",
+    mark: "#e9edf2",
+    label: "#f5f7fa",
+    socket: "#1d2127",
+  };
+
+  switch (component.libraryItemId) {
+    case "resistor_axial_030":
+      return {
+        ...base,
+        body: "#d2b28c",
+        bodySecondary: "#bf9e76",
+        bodyTertiary: "#f0dbc2",
+        accent: "#8f4814",
+        accentSoft: "#f1d863",
+        mark: "#4a3120",
+        label: "#4a3120",
+      };
+    case "resistor_0603":
+    case "resistor_0805":
+      return {
+        ...base,
+        body: "#d8c1a7",
+        bodySecondary: "#c7ae90",
+        bodyTertiary: "#f2dfc7",
+        mark: "#6f533c",
+        label: "#6f533c",
+      };
+    case "capacitor_0603":
+    case "capacitor_0805":
+      return {
+        ...base,
+        body: "#d7c09d",
+        bodySecondary: "#c2ab8a",
+        bodyTertiary: "#efe2cb",
+        mark: "#6a5640",
+        label: "#6a5640",
+      };
+    case "ferrite_0805":
+      return {
+        ...base,
+        body: "#5b645f",
+        bodySecondary: "#464d49",
+        bodyTertiary: "#707a74",
+        mark: "#e5ece7",
+      };
+    case "inductor_1210":
+      return {
+        ...base,
+        body: "#637a3f",
+        bodySecondary: "#4e6130",
+        bodyTertiary: "#8ba362",
+        mark: "#eef4df",
+      };
+    case "diode_sod123":
+      return {
+        ...base,
+        body: "#282b2f",
+        bodySecondary: "#1a1d21",
+        bodyTertiary: "#494f57",
+        accent: "#f2f2f2",
+        mark: "#f4f4f4",
+      };
+    case "led_5mm":
+    case "led_0603":
+      return {
+        ...base,
+        body: packageDef.defaultColor ?? "#ff5252",
+        bodySecondary: "#ffe9e9",
+        bodyTertiary: "#ffd2d2",
+        accent: packageDef.defaultColor ?? "#ff5252",
+        accentSoft: "rgba(255,255,255,0.18)",
+        mark: "#fff8f8",
+        metal: "#b5bcc5",
+      };
+    case "jst_ph":
+      return {
+        ...base,
+        body: "#f3efe7",
+        bodySecondary: "#e5ddd1",
+        bodyTertiary: "#fffaf3",
+        metal: "#cdd3d9",
+        metalDark: "#a2aab4",
+        mark: "#494949",
+        label: "#2d2d2d",
+      };
+    case "terminal_block":
+      return {
+        ...base,
+        body: "#2b7ac7",
+        bodySecondary: "#1f5d99",
+        bodyTertiary: "#6ca5e2",
+        metal: "#d7dde3",
+        metalDark: "#9aa4af",
+        mark: "#eef6ff",
+        label: "#eef6ff",
+      };
+    case "usb_micro_b":
+      return {
+        ...base,
+        body: "#cfd4db",
+        bodySecondary: "#a9b1ba",
+        bodyTertiary: "#eef2f6",
+        metal: "#dfe5ea",
+        metalDark: "#9099a4",
+        accent: "#d9b44a",
+        accentSoft: "#f2d98a",
+        mark: "#414851",
+        label: "#2b3036",
+        socket: "#101317",
+      };
+    case "header_strip":
+    case "female_header":
+    case "idc_box":
+      return {
+        ...base,
+        body: "#23262b",
+        bodySecondary: "#16191d",
+        bodyTertiary: "#464b53",
+        metal: "#d7b867",
+        metalDark: "#9a7c33",
+        accent: "#c7473e",
+        accentSoft: "#f2b7b2",
+        mark: "#f0f0f0",
+        label: "#f0f0f0",
+        socket: "#0f1216",
+      };
+    case "button_tact_6mm":
+    case "button_tact_smd":
+      return {
+        ...base,
+        body: "#d8d8d8",
+        bodySecondary: "#bababa",
+        bodyTertiary: "#f4f4f4",
+        metal: "#b5bcc5",
+        metalDark: "#7f8a95",
+        accent: "#d04747",
+        accentSoft: "#f2b5b5",
+        mark: "#2f2f2f",
+        label: "#2f2f2f",
+      };
+    case "potentiometer_knob":
+      return {
+        ...base,
+        body: "#045881",
+        bodySecondary: "#03415f",
+        bodyTertiary: "#ccdae3",
+        metal: "#b3b1b0",
+        metalDark: "#8a949f",
+        accent: "#e4e8eb",
+        accentSoft: "#c3c2c3",
+        mark: "#ffffff",
+        label: "#ffffff",
+      };
+    case "slide_switch_spdt":
+      return {
+        ...base,
+        body: "#b5b5b5",
+        bodySecondary: "#808080",
+        bodyTertiary: "#d0d0d0",
+        metal: "#aaaaaa",
+        metalDark: "#767676",
+        accent: "#bcbcbc",
+        accentSoft: "#ffffff",
+        mark: "#30343a",
+        label: "#30343a",
+      };
+    case "toggle_switch_spdt":
+      return {
+        ...base,
+        body: "#b4b9bf",
+        bodySecondary: "#90969d",
+        bodyTertiary: "#eef2f5",
+        metal: "#cfd5da",
+        metalDark: "#7b8792",
+        accent: "#d04747",
+        accentSoft: "#f5c0c0",
+        mark: "#2b3036",
+        label: "#2b3036",
+      };
+    case "servo_micro":
+      return {
+        ...base,
+        body: "#345f9e",
+        bodySecondary: "#274a7c",
+        bodyTertiary: "#587db5",
+        metal: "#bcc3ca",
+        metalDark: "#808a95",
+        accent: "#d6d6d6",
+        accentSoft: "#f3f3f3",
+        mark: "#f8fbff",
+        label: "#f8fbff",
+      };
+    default:
+      break;
+  }
+
+  if (
+    packageDef.kind === "dip" ||
+    packageDef.kind === "soic" ||
+    packageDef.kind === "qfp" ||
+    packageDef.kind === "sot23" ||
+    packageDef.kind === "to220"
+  ) {
+    return {
+      ...base,
+      body: "#2e333a",
+      bodySecondary: "#1d2229",
+      bodyTertiary: "#505862",
+      mark: "#edf2f7",
+      label: "#edf2f7",
+    };
+  }
+
+  if (packageDef.kind === "button") {
+    return {
+      ...base,
+      body: "#d9dadb",
+      bodySecondary: "#bcbfc3",
+      bodyTertiary: "#fafafa",
+      accent: "#cf4e4e",
+      accentSoft: "#f5b5b5",
+      mark: "#2f2f2f",
+      label: "#2f2f2f",
+    };
+  }
+
+  if (packageDef.kind === "led") {
+    return {
+      ...base,
+      body: packageDef.defaultColor ?? "#ff5252",
+      bodySecondary: "#ffe9e9",
+      bodyTertiary: "#ffd2d2",
+      accent: packageDef.defaultColor ?? "#ff5252",
+      mark: "#fff8f8",
+    };
+  }
+
+    if (packageDef.kind === "potentiometer") {
+      return {
+        ...base,
+        body: "#045881",
+        bodySecondary: "#03415f",
+        bodyTertiary: "#ccdae3",
+        metal: "#b3b1b0",
+        accent: "#e4e8eb",
+        accentSoft: "#c3c2c3",
+        mark: "#ffffff",
+        label: "#ffffff",
+      };
+    }
+
+    if (packageDef.kind === "slide_switch" || packageDef.kind === "toggle_switch") {
+      return {
+        ...base,
+        body: "#b5b5b5",
+        bodySecondary: "#808080",
+        bodyTertiary: "#d0d0d0",
+        metal: "#aaaaaa",
+        metalDark: "#767676",
+        accent: "#bcbcbc",
+        mark: "#2f3439",
+        label: "#2f3439",
+      };
+  }
+
+  if (packageDef.kind === "servo") {
+    return {
+      ...base,
+      body: packageDef.defaultColor ?? "#345f9e",
+      bodySecondary: "#274a7c",
+      bodyTertiary: "#5b81b9",
+      metal: "#bcc3ca",
+      metalDark: "#7d8692",
+      accent: "#dddddd",
+      accentSoft: "#f4f4f4",
+      mark: "#f7fbff",
+      label: "#f7fbff",
+    };
+  }
+
+  return base;
+}
+
 function snapToGrid(valueUm: number) {
-  return Math.round(valueUm / GRID_UM) * GRID_UM;
+  return Math.round(valueUm / PLACEMENT_GRID_UM) * PLACEMENT_GRID_UM;
 }
 
 function snapToRoutingGrid(valueUm: number) {
@@ -140,9 +466,20 @@ function pointerToCanvasUnits(
   viewportY: number,
   zoom: number,
 ): CanvasPointer {
+  return pointerClientToCanvasUnits(event.clientX, event.clientY, container, viewportX, viewportY, zoom);
+}
+
+function pointerClientToCanvasUnits(
+  clientX: number,
+  clientY: number,
+  container: HTMLDivElement,
+  viewportX: number,
+  viewportY: number,
+  zoom: number,
+): CanvasPointer {
   const rect = container.getBoundingClientRect();
-  const canvasX = (event.clientX - rect.left - viewportX) / zoom;
-  const canvasY = (event.clientY - rect.top - viewportY) / zoom;
+  const canvasX = (clientX - rect.left - viewportX) / zoom;
+  const canvasY = (clientY - rect.top - viewportY) / zoom;
 
   return {
     xPx: canvasX,
@@ -344,6 +681,19 @@ function getBasePinPoint(
   }
 
   if (packageDef.kind === "header") {
+    if (
+      packageDef.connectorStyle === "power-gnd" ||
+      packageDef.connectorStyle === "power-vcc" ||
+      packageDef.connectorStyle === "power-3v3" ||
+      packageDef.connectorStyle === "power-5v"
+    ) {
+      return {
+        xPx: bounds.centerX,
+        yPx: bounds.bottom + 10,
+        label: pin.label,
+      };
+    }
+
     const columnCount = Math.max(1, Math.round(packageDef.bodyWidthUm / packageDef.pinPitchUm));
     const columnIndex = index % columnCount;
     const rowIndex = Math.floor(index / columnCount);
@@ -449,6 +799,30 @@ function getBasePinPoint(
     };
   }
 
+  if (packageDef.kind === "potentiometer") {
+    return {
+      xPx: bounds.left + bounds.width * (0.2 + index * 0.3),
+      yPx: bounds.bottom + leadLengthPx,
+      label: pin.label,
+    };
+  }
+
+  if (packageDef.kind === "slide_switch" || packageDef.kind === "toggle_switch") {
+    return {
+      xPx: bounds.left + bounds.width * (0.18 + index * 0.32),
+      yPx: bounds.bottom + leadLengthPx,
+      label: pin.label,
+    };
+  }
+
+  if (packageDef.kind === "servo") {
+    return {
+      xPx: bounds.left - leadLengthPx,
+      yPx: bounds.top + bounds.height * (0.24 + index * 0.24),
+      label: pin.label,
+    };
+  }
+
   const leftX = bounds.left - leadLengthPx;
   const rightX = bounds.right + leadLengthPx;
   const topY = bounds.top + bounds.height * 0.3;
@@ -462,12 +836,71 @@ function getBasePinPoint(
   return points[index] ?? points[0];
 }
 
+function getWokwiRenderedBounds(
+  localBounds: BoundsPx,
+  libraryItemId: string,
+) {
+  const model = getWokwiModel(libraryItemId);
+  if (!model) {
+    return null;
+  }
+
+  const naturalWidth = model.wokwi.naturalSizePx.width;
+  const naturalHeight = model.wokwi.naturalSizePx.height;
+  const scale = Math.min(localBounds.width / naturalWidth, localBounds.height / naturalHeight);
+  const width = naturalWidth * scale;
+  const height = naturalHeight * scale;
+  const left = localBounds.left + (localBounds.width - width) / 2;
+  const top = localBounds.top + (localBounds.height - height) / 2;
+
+  return {
+    left,
+    top,
+    width,
+    height,
+    scale,
+  };
+}
+
 function getPinPoint(
   component: CircuitComponent,
   packageDef: PackageDefinition,
   pinId: string,
 ): PinPoint {
   const localBounds = getLocalPackageBoundsPx(component, packageDef);
+  const runtimeWokwiLayout = hasWokwiPart(component.libraryItemId)
+    ? getRuntimeWokwiLayout(component.id)
+    : null;
+  if (runtimeWokwiLayout?.pins[pinId]) {
+    const deltaX = localBounds.left - runtimeWokwiLayout.bounds.left;
+    const deltaY = localBounds.top - runtimeWokwiLayout.bounds.top;
+    return {
+      xPx: runtimeWokwiLayout.pins[pinId].xPx + deltaX,
+      yPx: runtimeWokwiLayout.pins[pinId].yPx + deltaY,
+      label: runtimeWokwiLayout.pins[pinId].label,
+    };
+  }
+
+  const wokwiModel = getWokwiModel(component.libraryItemId);
+
+  if (wokwiModel) {
+    const anchor = wokwiModel.pins.anchors.find((entry) => entry.id === pinId);
+    const renderedBounds = getWokwiRenderedBounds(localBounds, component.libraryItemId);
+
+    if (anchor && renderedBounds) {
+      return rotatePoint(
+        {
+          xPx: renderedBounds.left + anchor.x * renderedBounds.scale,
+          yPx: renderedBounds.top + anchor.y * renderedBounds.scale,
+          label: pinId,
+        },
+        localBounds.centerX,
+        localBounds.centerY,
+        component.rotationDeg,
+      );
+    }
+  }
+
   const basePoint = getBasePinPoint(localBounds, packageDef, pinId);
 
   return rotatePoint(
@@ -793,8 +1226,8 @@ function getPlacementAssist(
   }
 
   return {
-    xUm: component.xUm + (bestX?.deltaPx ?? 0) / UM_TO_PX,
-    yUm: component.yUm + (bestY?.deltaPx ?? 0) / UM_TO_PX,
+    xUm: snapToGrid(component.xUm + (bestX?.deltaPx ?? 0) / UM_TO_PX),
+    yUm: snapToGrid(component.yUm + (bestY?.deltaPx ?? 0) / UM_TO_PX),
     guideX: bestX?.guide ?? null,
     guideY: bestY?.guide ?? null,
   };
@@ -978,16 +1411,16 @@ function renderPinHotspot(
   const isFemaleHeader = packageDef.kind === "header" && packageDef.connectorStyle === "female-header";
   const visualRadius =
     packageDef.kind === "chip2"
-      ? 1.7
+      ? 1.15
       : packageDef.kind === "sot23"
-        ? 1.9
+        ? 1.25
         : packageDef.kind === "soic"
-          ? 2.1
+          ? 1.35
           : packageDef.kind === "qfp"
-            ? 2.2
+            ? 1.45
             : packageDef.kind === "header"
-              ? 3
-              : 2.7;
+              ? 1.75
+              : 1.55;
   const hitRadius =
     packageDef.kind === "chip2" || packageDef.kind === "sot23" || packageDef.kind === "soic"
       ? 6
@@ -995,25 +1428,13 @@ function renderPinHotspot(
 
   return (
     <g key={`${componentId}_${pinId}`}>
-      {emphasized ? (
-        <circle
-          cx={point.xPx}
-          cy={point.yPx}
-          r={hitRadius - 1}
-          fill="none"
-          stroke={STAGE_PIN_RING}
-          strokeWidth={0.9}
-          opacity={0.46}
-          pointerEvents="none"
-        />
-      ) : null}
       <circle
         cx={point.xPx}
         cy={point.yPx}
         r={visualRadius}
-        fill={isFemaleHeader ? "#f4f4f4" : "#000000"}
-        stroke={isFemaleHeader ? "#1a1a1a" : "#ffffff"}
-        strokeWidth={0.95}
+        fill={isFemaleHeader ? "#f1f4f8" : emphasized ? "#f1f4f8" : "#111111"}
+        stroke="none"
+        opacity={emphasized ? 1 : 0.92}
       />
       <circle
         cx={point.xPx}
@@ -1035,461 +1456,1329 @@ function renderComponentShape(
   const stageBounds = getComponentBoundsPx(component, packageDef);
   const bounds = getLocalPackageBoundsPx(component, packageDef);
   const rotationDeg = normalizeRotationDeg(component.rotationDeg);
+  const visual = getPackageVisualProfile(component, packageDef);
   const stroke = PACKAGE_OUTLINE;
   const strokeWidth = selected ? 1.8 : 1.4;
-  const leadStroke = PACKAGE_METAL;
-  const fill = PACKAGE_BODY_FILL;
+  const leadStroke = visual.metalDark;
   const pinPoints = packageDef.pins.map((pin) => getBasePinPoint(bounds, packageDef, pin.id));
+  const runtimeProfile = component.runtimeProfile
+    ? normalizeRuntimeProfileState(component.runtimeProfile)
+    : null;
+  const runtimeRatio = runtimeProfile
+    ? Math.max(
+        0,
+        Math.min(
+          1,
+          (runtimeProfile.defaultValue - runtimeProfile.valueMin) /
+            Math.max(1e-6, runtimeProfile.valueMax - runtimeProfile.valueMin),
+        ),
+      )
+    : 0;
+  const lightOpacity =
+    runtimeProfile?.profileId === "light_output"
+      ? runtimeProfile.lowVisual +
+        (runtimeProfile.highVisual - runtimeProfile.lowVisual) * runtimeRatio
+      : 0.92;
+  const mappedTravel = runtimeProfile
+    ? runtimeProfile.travelMin + (runtimeProfile.travelMax - runtimeProfile.travelMin) * runtimeRatio
+    : 0;
+  const mappedAngle = runtimeProfile
+    ? runtimeProfile.angleMin + (runtimeProfile.angleMax - runtimeProfile.angleMin) * runtimeRatio
+    : 0;
 
   const shape = (() => {
     switch (packageDef.kind) {
       case "dip":
         return (
-        <>
-          <rect x={bounds.left} y={bounds.top} width={bounds.width} height={bounds.height} rx={6} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
-          <path
-            d={`M ${bounds.centerX - 7} ${bounds.top} A 7 7 0 0 0 ${bounds.centerX + 7} ${bounds.top}`}
-            fill="none"
-            stroke={PACKAGE_DETAIL}
-            strokeWidth={strokeWidth}
-          />
-          {pinPoints.map((point, index) => (
-            <line
-              key={`${component.id}_lead_${index}`}
-              x1={index < packageDef.pins.length / 2 ? bounds.left : bounds.right}
-              y1={point.yPx}
-              x2={point.xPx}
-              y2={point.yPx}
-              stroke={leadStroke}
-              strokeWidth={1.1}
+          <>
+            <rect
+              x={bounds.left}
+              y={bounds.top}
+              width={bounds.width}
+              height={bounds.height}
+              rx={3}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
             />
-          ))}
-        </>
+            <rect
+              x={bounds.left + 2.5}
+              y={bounds.top + 2.5}
+              width={bounds.width - 5}
+              height={Math.max(8, bounds.height * 0.24)}
+              rx={2}
+              fill={visual.bodyTertiary}
+              opacity={0.32}
+            />
+            <path
+              d={`M ${bounds.centerX - 8} ${bounds.top + 1.5} A 8 8 0 0 0 ${bounds.centerX + 8} ${bounds.top + 1.5}`}
+              fill="none"
+              stroke={visual.mark}
+              strokeWidth={1.1}
+              opacity={0.9}
+            />
+            <circle cx={bounds.left + 6} cy={bounds.top + 6} r={2.2} fill={visual.mark} />
+            {pinPoints.map((point, index) => {
+              const fromLeft = index < packageDef.pins.length / 2;
+              const bodyEdgeX = fromLeft ? bounds.left : bounds.right;
+              const shoulderX = bodyEdgeX + (fromLeft ? -4 : 4);
+
+              return (
+                <g key={`${component.id}_lead_${index}`}>
+                  <line
+                    x1={bodyEdgeX}
+                    y1={point.yPx}
+                    x2={shoulderX}
+                    y2={point.yPx}
+                    stroke={visual.metal}
+                    strokeWidth={1.3}
+                  />
+                  <line
+                    x1={shoulderX}
+                    y1={point.yPx}
+                    x2={point.xPx}
+                    y2={point.yPx}
+                    stroke={leadStroke}
+                    strokeWidth={1.1}
+                  />
+                </g>
+              );
+            })}
+          </>
         );
 
       case "soic":
         return (
-        <>
-          <rect x={bounds.left} y={bounds.top} width={bounds.width} height={bounds.height} rx={4} fill={PACKAGE_BODY_FILL_DARK} stroke={stroke} strokeWidth={strokeWidth} />
-          <circle cx={bounds.left + 5} cy={bounds.top + 5} r={2.2} fill={PACKAGE_DETAIL} />
-          {pinPoints.map((point, index) => (
-            <line
-              key={`${component.id}_lead_${index}`}
-              x1={index < packageDef.pins.length / 2 ? bounds.left : bounds.right}
-              y1={point.yPx}
-              x2={point.xPx}
-              y2={point.yPx}
-              stroke={leadStroke}
-              strokeWidth={1}
+          <>
+            <rect
+              x={bounds.left}
+              y={bounds.top}
+              width={bounds.width}
+              height={bounds.height}
+              rx={2}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
             />
-          ))}
-        </>
+            <rect
+              x={bounds.left + 2}
+              y={bounds.top + 2}
+              width={bounds.width - 4}
+              height={Math.max(6, bounds.height * 0.18)}
+              rx={1.5}
+              fill={visual.bodyTertiary}
+              opacity={0.26}
+            />
+            <circle cx={bounds.left + 4.5} cy={bounds.top + 4.5} r={1.9} fill={visual.mark} />
+            {pinPoints.map((point, index) => {
+              const fromLeft = index < packageDef.pins.length / 2;
+              const bodyEdgeX = fromLeft ? bounds.left : bounds.right;
+              const toeX = point.xPx + (fromLeft ? 2 : -2);
+
+              return (
+                <g key={`${component.id}_lead_${index}`}>
+                  <line
+                    x1={bodyEdgeX}
+                    y1={point.yPx}
+                    x2={toeX}
+                    y2={point.yPx}
+                    stroke={visual.metal}
+                    strokeWidth={1.15}
+                  />
+                  <line
+                    x1={toeX}
+                    y1={point.yPx}
+                    x2={point.xPx}
+                    y2={point.yPx}
+                    stroke={leadStroke}
+                    strokeWidth={0.95}
+                  />
+                </g>
+              );
+            })}
+          </>
         );
 
       case "qfp":
         return (
-        <>
-          <rect x={bounds.left} y={bounds.top} width={bounds.width} height={bounds.height} rx={5} fill={PACKAGE_BODY_FILL_DARK} stroke={stroke} strokeWidth={strokeWidth} />
-          <circle cx={bounds.left + 6} cy={bounds.top + 6} r={2.4} fill={PACKAGE_DETAIL} />
-          {pinPoints.map((point, index) => {
-            const anchorX =
-              point.xPx < bounds.left
-                ? bounds.left
-                : point.xPx > bounds.right
-                  ? bounds.right
-                  : point.xPx;
-            const anchorY =
-              point.yPx < bounds.top
-                ? bounds.top
-                : point.yPx > bounds.bottom
-                  ? bounds.bottom
-                  : point.yPx;
+          <>
+            <rect
+              x={bounds.left}
+              y={bounds.top}
+              width={bounds.width}
+              height={bounds.height}
+              rx={2}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+            />
+            <rect
+              x={bounds.left + 2.5}
+              y={bounds.top + 2.5}
+              width={bounds.width - 5}
+              height={bounds.height - 5}
+              rx={1.5}
+              fill={visual.bodySecondary}
+              stroke={visual.bodyTertiary}
+              strokeWidth={0.8}
+            />
+            <circle cx={bounds.left + 5.5} cy={bounds.top + 5.5} r={2} fill={visual.mark} />
+            {pinPoints.map((point, index) => {
+              const anchorX =
+                point.xPx < bounds.left
+                  ? bounds.left
+                  : point.xPx > bounds.right
+                    ? bounds.right
+                    : point.xPx;
+              const anchorY =
+                point.yPx < bounds.top
+                  ? bounds.top
+                  : point.yPx > bounds.bottom
+                    ? bounds.bottom
+                    : point.yPx;
+              const kneeX = anchorX + (point.xPx === anchorX ? 0 : point.xPx < anchorX ? -2.6 : 2.6);
+              const kneeY = anchorY + (point.yPx === anchorY ? 0 : point.yPx < anchorY ? -2.6 : 2.6);
 
-            return (
-              <line
-                key={`${component.id}_lead_${index}`}
-                x1={anchorX}
-                y1={anchorY}
-                x2={point.xPx}
-                y2={point.yPx}
-                stroke={leadStroke}
-                strokeWidth={1}
-              />
-            );
-          })}
-        </>
+              return (
+                <g key={`${component.id}_lead_${index}`}>
+                  <line
+                    x1={anchorX}
+                    y1={anchorY}
+                    x2={kneeX}
+                    y2={kneeY}
+                    stroke={visual.metal}
+                    strokeWidth={1.05}
+                  />
+                  <line
+                    x1={kneeX}
+                    y1={kneeY}
+                    x2={point.xPx}
+                    y2={point.yPx}
+                    stroke={leadStroke}
+                    strokeWidth={0.95}
+                  />
+                </g>
+              );
+            })}
+          </>
         );
 
       case "sot23": {
         const leftPins = Math.ceil(packageDef.pins.length / 2);
         return (
-        <>
-          <rect x={bounds.left} y={bounds.top} width={bounds.width} height={bounds.height} rx={3} fill={PACKAGE_BODY_FILL_DARK} stroke={stroke} strokeWidth={strokeWidth} />
-          <circle cx={bounds.left + 4} cy={bounds.top + 4} r={1.8} fill={PACKAGE_DETAIL} />
-          {pinPoints.map((point, index) => (
-            <line
-              key={`${component.id}_lead_${index}`}
-              x1={index < leftPins ? bounds.left : bounds.right}
-              y1={point.yPx}
-              x2={point.xPx}
-              y2={point.yPx}
-              stroke={leadStroke}
-              strokeWidth={1}
+          <>
+            <rect
+              x={bounds.left}
+              y={bounds.top}
+              width={bounds.width}
+              height={bounds.height}
+              rx={1.5}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
             />
-          ))}
-        </>
+            <rect
+              x={bounds.left + 1.5}
+              y={bounds.top + 1.5}
+              width={bounds.width - 3}
+              height={Math.max(4, bounds.height * 0.25)}
+              rx={1}
+              fill={visual.bodyTertiary}
+              opacity={0.24}
+            />
+            <circle cx={bounds.left + 3.5} cy={bounds.top + 3.5} r={1.5} fill={visual.mark} />
+            {pinPoints.map((point, index) => (
+              <g key={`${component.id}_lead_${index}`}>
+                <line
+                  x1={index < leftPins ? bounds.left : bounds.right}
+                  y1={point.yPx}
+                  x2={point.xPx}
+                  y2={point.yPx}
+                  stroke={visual.metal}
+                  strokeWidth={1}
+                />
+                <line
+                  x1={point.xPx}
+                  y1={point.yPx - 1.1}
+                  x2={point.xPx}
+                  y2={point.yPx + 1.1}
+                  stroke={leadStroke}
+                  strokeWidth={0.85}
+                />
+              </g>
+            ))}
+          </>
         );
       }
 
       case "chip2": {
         const padWidth = Math.max(3, bounds.width * 0.18);
         const padHeight = Math.max(5, bounds.height * 0.86);
+        const innerLeft = bounds.left + padWidth * 0.55;
+        const innerWidth = bounds.width - padWidth * 1.1;
+        const isLedChip = component.libraryItemId === "led_0603";
+        const isDiode = component.libraryItemId === "diode_sod123";
+        const isFerrite = component.libraryItemId === "ferrite_0805";
+        const isInductor = component.libraryItemId === "inductor_1210";
         return (
-        <>
-          <rect
-            x={bounds.left + padWidth * 0.55}
-            y={bounds.top}
-            width={bounds.width - padWidth * 1.1}
-            height={bounds.height}
-            rx={Math.max(2, bounds.height * 0.2)}
-            fill={PACKAGE_BODY_FILL}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
-          />
-          <rect
-            x={bounds.left - 2}
-            y={bounds.centerY - padHeight / 2}
-            width={padWidth}
-            height={padHeight}
-            rx={2}
-            fill={PACKAGE_METAL}
-            stroke={PACKAGE_OUTLINE}
-            strokeWidth={0.9}
-          />
-          <rect
-            x={bounds.right - padWidth + 2}
-            y={bounds.centerY - padHeight / 2}
-            width={padWidth}
-            height={padHeight}
-            rx={2}
-            fill={PACKAGE_METAL}
-            stroke={PACKAGE_OUTLINE}
-            strokeWidth={0.9}
-          />
-        </>
+          <>
+            <rect
+              x={innerLeft}
+              y={bounds.top}
+              width={innerWidth}
+              height={bounds.height}
+              rx={Math.max(1.4, bounds.height * 0.14)}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+            />
+            <rect
+              x={innerLeft + 1}
+              y={bounds.top + 1}
+              width={Math.max(0, innerWidth - 2)}
+              height={Math.max(0, bounds.height * 0.28)}
+              rx={Math.max(1, bounds.height * 0.1)}
+              fill={visual.bodyTertiary}
+              opacity={isLedChip ? 0.34 : 0.22}
+            />
+            <rect
+              x={bounds.left - 2}
+              y={bounds.centerY - padHeight / 2}
+              width={padWidth}
+              height={padHeight}
+              rx={1.2}
+              fill={visual.metal}
+              stroke={PACKAGE_OUTLINE}
+              strokeWidth={0.8}
+            />
+            <rect
+              x={bounds.right - padWidth + 2}
+              y={bounds.centerY - padHeight / 2}
+              width={padWidth}
+              height={padHeight}
+              rx={1.2}
+              fill={visual.metal}
+              stroke={PACKAGE_OUTLINE}
+              strokeWidth={0.8}
+            />
+            {isLedChip ? (
+              <>
+                <circle
+                  cx={bounds.centerX}
+                  cy={bounds.centerY}
+                  r={Math.min(bounds.width, bounds.height) * 0.16}
+                  fill={visual.mark}
+                  opacity={Math.max(0.24, lightOpacity)}
+                />
+                <rect
+                  x={innerLeft + innerWidth * 0.18}
+                  y={bounds.top + 1.5}
+                  width={Math.max(1.5, innerWidth * 0.18)}
+                  height={bounds.height - 3}
+                  rx={1}
+                  fill="rgba(255,255,255,0.28)"
+                />
+              </>
+            ) : null}
+            {isDiode ? (
+              <>
+                <rect
+                  x={innerLeft + innerWidth * 0.68}
+                  y={bounds.top + 1}
+                  width={Math.max(2, innerWidth * 0.14)}
+                  height={bounds.height - 2}
+                  rx={0.7}
+                  fill={visual.accent}
+                />
+                <line
+                  x1={bounds.centerX - innerWidth * 0.06}
+                  y1={bounds.top + 2}
+                  x2={bounds.centerX - innerWidth * 0.06}
+                  y2={bounds.bottom - 2}
+                  stroke={visual.mark}
+                  strokeWidth={0.95}
+                />
+              </>
+            ) : null}
+            {isFerrite ? (
+              <line
+                x1={innerLeft + 2}
+                y1={bounds.centerY}
+                x2={innerLeft + innerWidth - 2}
+                y2={bounds.centerY}
+                stroke={visual.mark}
+                strokeWidth={0.8}
+                opacity={0.7}
+              />
+            ) : null}
+            {isInductor
+              ? Array.from({ length: 4 }, (_, index) => {
+                  const waveLeft = innerLeft + innerWidth * (0.16 + index * 0.17);
+                  return (
+                    <path
+                      key={`${component.id}_coil_${index}`}
+                      d={`M ${waveLeft} ${bounds.centerY} q ${innerWidth * 0.05} ${-bounds.height * 0.18} ${innerWidth * 0.1} 0`}
+                      fill="none"
+                      stroke={visual.mark}
+                      strokeWidth={0.9}
+                      strokeLinecap="round"
+                    />
+                  );
+                })
+              : null}
+          </>
         );
       }
 
       case "header":
         switch (packageDef.connectorStyle) {
+          case "power-gnd":
+            return (
+              <>
+                <line x1={bounds.centerX} y1={bounds.bottom - 2} x2={pinPoints[0].xPx} y2={pinPoints[0].yPx} stroke={leadStroke} strokeWidth={1.1} />
+                <line x1={bounds.left + bounds.width * 0.18} y1={bounds.top + bounds.height * 0.46} x2={bounds.right - bounds.width * 0.18} y2={bounds.top + bounds.height * 0.46} stroke={visual.mark} strokeWidth={1.2} />
+                <line x1={bounds.left + bounds.width * 0.28} y1={bounds.top + bounds.height * 0.66} x2={bounds.right - bounds.width * 0.28} y2={bounds.top + bounds.height * 0.66} stroke={visual.mark} strokeWidth={1.2} />
+                <line x1={bounds.left + bounds.width * 0.38} y1={bounds.top + bounds.height * 0.84} x2={bounds.right - bounds.width * 0.38} y2={bounds.top + bounds.height * 0.84} stroke={visual.mark} strokeWidth={1.2} />
+                <text x={bounds.centerX} y={bounds.top + bounds.height * 0.22} textAnchor="middle" fill={visual.label} fontFamily="IBM Plex Mono, monospace" fontSize="10" letterSpacing="0.14em">
+                  GND
+                </text>
+              </>
+            );
+
+          case "power-vcc":
+          case "power-3v3":
+          case "power-5v": {
+            const label =
+              packageDef.connectorStyle === "power-vcc"
+                ? "VCC"
+                : packageDef.connectorStyle === "power-3v3"
+                  ? "3V3"
+                  : "5V";
+            return (
+              <>
+                <line x1={bounds.centerX} y1={bounds.bottom - 2} x2={pinPoints[0].xPx} y2={pinPoints[0].yPx} stroke={leadStroke} strokeWidth={1.1} />
+                <polygon
+                  points={`${bounds.centerX},${bounds.top} ${bounds.right - 4},${bounds.bottom - 9} ${bounds.left + 4},${bounds.bottom - 9}`}
+                  fill={visual.accentSoft}
+                  stroke={visual.mark}
+                  strokeWidth={1.1}
+                />
+                <text x={bounds.centerX} y={bounds.top + bounds.height * 0.58} textAnchor="middle" fill={visual.label} fontFamily="IBM Plex Mono, monospace" fontSize="10" letterSpacing="0.12em">
+                  {label}
+                </text>
+              </>
+            );
+          }
+
           case "female-header":
             return (
-            <>
-              <rect
-                x={bounds.left}
-                y={bounds.top}
-                width={bounds.width}
-                height={bounds.height}
-                rx={4}
-                fill={PACKAGE_SOCKET_FILL}
-                stroke="#f4f4f4"
-                strokeWidth={strokeWidth}
-              />
-              {pinPoints.map((point) => (
-                <g key={`${component.id}_${point.label}_socket`}>
-                  <rect
-                    x={point.xPx - 4.2}
-                    y={point.yPx - 4.2}
-                    width={8.4}
-                    height={8.4}
-                    rx={1.6}
-                    fill="#424242"
-                    stroke="#d8d8d8"
-                    strokeWidth={0.75}
-                  />
-                  <circle
-                    cx={point.xPx}
-                    cy={point.yPx}
-                    r={1.9}
-                    fill="#f4f4f4"
-                    stroke="#111111"
-                    strokeWidth={0.65}
-                  />
-                </g>
-              ))}
-            </>
+              <>
+                <rect
+                  x={bounds.left}
+                  y={bounds.top}
+                  width={bounds.width}
+                  height={bounds.height}
+                  rx={2}
+                  fill={visual.body}
+                  stroke={stroke}
+                  strokeWidth={strokeWidth}
+                />
+                <rect
+                  x={bounds.left + 1.5}
+                  y={bounds.top + 1.5}
+                  width={bounds.width - 3}
+                  height={Math.max(4, bounds.height * 0.22)}
+                  rx={1}
+                  fill={visual.bodyTertiary}
+                  opacity={0.16}
+                />
+                {pinPoints.map((point) => (
+                  <g key={`${component.id}_${point.label}_socket`}>
+                    <rect
+                      x={point.xPx - 4.2}
+                      y={point.yPx - 4.2}
+                      width={8.4}
+                      height={8.4}
+                      rx={0.7}
+                      fill={visual.socket}
+                      stroke={visual.bodyTertiary}
+                      strokeWidth={0.65}
+                    />
+                    <circle
+                      cx={point.xPx}
+                      cy={point.yPx}
+                      r={2}
+                      fill={visual.metal}
+                      stroke="#111111"
+                      strokeWidth={0.6}
+                    />
+                  </g>
+                ))}
+              </>
             );
 
           case "jst-ph":
             return (
-            <>
-              <rect
-                x={bounds.left}
-                y={bounds.top}
-                width={bounds.width}
-                height={bounds.height}
-                rx={5}
-                fill={PACKAGE_BODY_FILL}
-                stroke="#111111"
-                strokeWidth={strokeWidth}
-              />
-              <rect
-                x={bounds.left + bounds.width * 0.12}
-                y={bounds.top + bounds.height * 0.22}
-                width={bounds.width * 0.76}
-                height={bounds.height * 0.26}
-                rx={3}
-                fill={PACKAGE_METAL_LIGHT}
-                stroke="#111111"
-                strokeWidth={0.75}
-              />
-              {pinPoints.map((point) => (
-                <g key={`${component.id}_${point.label}_jst`}>
-                  <rect
-                    x={point.xPx - 2.6}
-                    y={point.yPx - 3.6}
-                    width={5.2}
-                    height={7.2}
-                    rx={1.1}
-                    fill={PACKAGE_SOCKET_FILL}
-                    stroke="#ffffff"
-                    strokeWidth={0.6}
-                  />
-                  <line
-                    x1={point.xPx}
-                    y1={point.yPx + 3.6}
-                    x2={point.xPx}
-                    y2={point.yPx + 8}
-                    stroke="#ffffff"
-                    strokeWidth={0.9}
-                  />
-                </g>
-              ))}
-            </>
+              <>
+                <rect
+                  x={bounds.left}
+                  y={bounds.top}
+                  width={bounds.width}
+                  height={bounds.height}
+                  rx={2}
+                  fill={visual.body}
+                  stroke={stroke}
+                  strokeWidth={strokeWidth}
+                />
+                <rect
+                  x={bounds.left + bounds.width * 0.08}
+                  y={bounds.top + bounds.height * 0.14}
+                  width={bounds.width * 0.84}
+                  height={bounds.height * 0.3}
+                  rx={1.4}
+                  fill={visual.bodyTertiary}
+                  stroke={visual.mark}
+                  strokeWidth={0.55}
+                />
+                <rect
+                  x={bounds.left + bounds.width * 0.14}
+                  y={bounds.bottom - bounds.height * 0.24}
+                  width={bounds.width * 0.72}
+                  height={bounds.height * 0.12}
+                  rx={1}
+                  fill={visual.bodySecondary}
+                />
+                {pinPoints.map((point) => (
+                  <g key={`${component.id}_${point.label}_jst`}>
+                    <rect
+                      x={point.xPx - 2.6}
+                      y={point.yPx - 3.2}
+                      width={5.2}
+                      height={6.4}
+                      rx={0.9}
+                      fill="#101215"
+                      stroke={visual.mark}
+                      strokeWidth={0.55}
+                    />
+                    <line
+                      x1={point.xPx}
+                      y1={point.yPx + 3.4}
+                      x2={point.xPx}
+                      y2={point.yPx + 7.8}
+                      stroke={visual.metalDark}
+                      strokeWidth={0.9}
+                    />
+                  </g>
+                ))}
+              </>
             );
 
           case "terminal-block":
             return (
-            <>
-              <rect
-                x={bounds.left}
-                y={bounds.top}
-                width={bounds.width}
-                height={bounds.height}
-                rx={4}
-                fill="#757575"
-                stroke="#111111"
-                strokeWidth={strokeWidth}
-              />
-              {pinPoints.map((point) => (
-                <g key={`${component.id}_${point.label}_terminal`}>
-                  <circle
-                    cx={point.xPx}
-                    cy={bounds.top + bounds.height * 0.34}
-                    r={3.5}
-                    fill="#dcdcdc"
-                    stroke="#111111"
-                    strokeWidth={0.75}
-                  />
-                  <line
-                    x1={point.xPx - 1.8}
-                    y1={bounds.top + bounds.height * 0.34}
-                    x2={point.xPx + 1.8}
-                    y2={bounds.top + bounds.height * 0.34}
-                    stroke="#111111"
-                    strokeWidth={0.75}
-                  />
-                  <rect
-                    x={point.xPx - 3.5}
-                    y={bounds.top + bounds.height * 0.58}
-                    width={7}
-                    height={4.6}
-                    rx={1}
-                    fill={PACKAGE_SOCKET_FILL}
-                    stroke="#f2f2f2"
-                    strokeWidth={0.55}
-                  />
-                </g>
-              ))}
-            </>
+              <>
+                <rect
+                  x={bounds.left}
+                  y={bounds.top}
+                  width={bounds.width}
+                  height={bounds.height}
+                  rx={1.8}
+                  fill={visual.body}
+                  stroke={stroke}
+                  strokeWidth={strokeWidth}
+                />
+                <rect
+                  x={bounds.left + 1.8}
+                  y={bounds.top + 1.4}
+                  width={bounds.width - 3.6}
+                  height={Math.max(5, bounds.height * 0.2)}
+                  rx={1}
+                  fill={visual.bodyTertiary}
+                  opacity={0.18}
+                />
+                {pinPoints.map((point) => (
+                  <g key={`${component.id}_${point.label}_terminal`}>
+                    <circle
+                      cx={point.xPx}
+                      cy={bounds.top + bounds.height * 0.34}
+                      r={3.5}
+                      fill={visual.metal}
+                      stroke="#111111"
+                      strokeWidth={0.75}
+                    />
+                    <line
+                      x1={point.xPx - 1.9}
+                      y1={bounds.top + bounds.height * 0.34}
+                      x2={point.xPx + 1.9}
+                      y2={bounds.top + bounds.height * 0.34}
+                      stroke="#111111"
+                      strokeWidth={0.75}
+                    />
+                    <rect
+                      x={point.xPx - 3.5}
+                      y={bounds.top + bounds.height * 0.58}
+                      width={7}
+                      height={4.6}
+                      rx={0.85}
+                      fill={visual.socket}
+                      stroke={visual.mark}
+                      strokeWidth={0.5}
+                    />
+                  </g>
+                ))}
+              </>
             );
 
           case "idc-box":
             return (
-            <>
-              <rect
-                x={bounds.left}
-                y={bounds.top}
-                width={bounds.width}
-                height={bounds.height}
-                rx={4}
-                fill={PACKAGE_BODY_FILL}
-                stroke="#111111"
-                strokeWidth={strokeWidth}
-              />
-              <rect
-                x={bounds.left + 3}
-                y={bounds.top + 3}
-                width={bounds.width - 6}
-                height={bounds.height - 6}
-                rx={3}
-                fill={PACKAGE_METAL_LIGHT}
-                stroke="#111111"
-                strokeWidth={0.75}
-              />
-              <rect
-                x={bounds.centerX - bounds.width * 0.16}
-                y={bounds.top - 2}
-                width={bounds.width * 0.32}
-                height={4}
-                rx={1}
-                fill="#111111"
-              />
-              {pinPoints.map((point) => (
+              <>
                 <rect
-                  key={`${component.id}_${point.label}_idc`}
-                  x={point.xPx - 2.3}
-                  y={point.yPx - 2.3}
-                  width={4.6}
-                  height={4.6}
-                  rx={0.9}
-                  fill={PACKAGE_SOCKET_FILL}
-                  stroke={STAGE_GUIDE_COLOR}
-                  strokeWidth={0.55}
+                  x={bounds.left}
+                  y={bounds.top}
+                  width={bounds.width}
+                  height={bounds.height}
+                  rx={1.8}
+                  fill={visual.body}
+                  stroke={stroke}
+                  strokeWidth={strokeWidth}
                 />
-              ))}
-            </>
+                <rect
+                  x={bounds.left + 3}
+                  y={bounds.top + 3}
+                  width={bounds.width - 6}
+                  height={bounds.height - 6}
+                  rx={1}
+                  fill={visual.bodySecondary}
+                  stroke={visual.bodyTertiary}
+                  strokeWidth={0.7}
+                />
+                <rect
+                  x={bounds.left + 1}
+                  y={bounds.top + 2}
+                  width={3.2}
+                  height={bounds.height - 4}
+                  rx={0.7}
+                  fill={visual.accent}
+                />
+                <rect
+                  x={bounds.centerX - bounds.width * 0.16}
+                  y={bounds.top - 2}
+                  width={bounds.width * 0.32}
+                  height={4}
+                  rx={0.8}
+                  fill={visual.socket}
+                />
+                {pinPoints.map((point) => (
+                  <rect
+                    key={`${component.id}_${point.label}_idc`}
+                    x={point.xPx - 2.2}
+                    y={point.yPx - 2.2}
+                    width={4.4}
+                    height={4.4}
+                    rx={0.6}
+                    fill={visual.socket}
+                    stroke={visual.metalDark}
+                    strokeWidth={0.5}
+                  />
+                ))}
+              </>
             );
+
+          case "usb-shell": {
+            const openingWidth = bounds.width * 0.64;
+            const openingHeight = bounds.height * 0.34;
+            const pinSpan = Math.min(openingWidth * 0.7, packageDef.pins.length * 2.7);
+            const pinStartX = bounds.centerX - pinSpan / 2;
+            const shellLipY = bounds.top + bounds.height * 0.22;
+
+            return (
+              <>
+                <rect
+                  x={bounds.left}
+                  y={bounds.top}
+                  width={bounds.width}
+                  height={bounds.height}
+                  rx={1.4}
+                  fill={visual.body}
+                  stroke={stroke}
+                  strokeWidth={strokeWidth}
+                />
+                <rect
+                  x={bounds.left + 1.2}
+                  y={bounds.top + 1.2}
+                  width={bounds.width - 2.4}
+                  height={bounds.height * 0.28}
+                  rx={1}
+                  fill={visual.bodyTertiary}
+                  opacity={0.42}
+                />
+                <rect
+                  x={bounds.centerX - openingWidth / 2}
+                  y={shellLipY}
+                  width={openingWidth}
+                  height={openingHeight}
+                  rx={1}
+                  fill={visual.socket}
+                  stroke={visual.metalDark}
+                  strokeWidth={0.75}
+                />
+                <rect
+                  x={pinStartX}
+                  y={shellLipY + openingHeight * 0.1}
+                  width={pinSpan}
+                  height={openingHeight * 0.22}
+                  rx={0.8}
+                  fill={visual.accentSoft}
+                />
+                {pinPoints.map((point, index) => (
+                  <g key={`${component.id}_${point.label}_usb`}>
+                    <rect
+                      x={pinStartX + index * (pinSpan / packageDef.pins.length) + 0.4}
+                      y={shellLipY + openingHeight * 0.18}
+                      width={Math.max(1.4, pinSpan / packageDef.pins.length - 0.8)}
+                      height={openingHeight * 0.32}
+                      rx={0.5}
+                      fill={visual.accent}
+                    />
+                    <line
+                      x1={point.xPx}
+                      y1={bounds.bottom - 1.5}
+                      x2={point.xPx}
+                      y2={point.yPx}
+                      stroke={leadStroke}
+                      strokeWidth={0.9}
+                    />
+                  </g>
+                ))}
+                <rect
+                  x={bounds.left + bounds.width * 0.08}
+                  y={bounds.bottom - bounds.height * 0.18}
+                  width={bounds.width * 0.12}
+                  height={bounds.height * 0.16}
+                  rx={0.6}
+                  fill={visual.bodySecondary}
+                />
+                <rect
+                  x={bounds.right - bounds.width * 0.2}
+                  y={bounds.bottom - bounds.height * 0.18}
+                  width={bounds.width * 0.12}
+                  height={bounds.height * 0.16}
+                  rx={0.6}
+                  fill={visual.bodySecondary}
+                />
+              </>
+            );
+          }
 
           case "pin-header":
           default:
             return (
-            <>
-              <rect
-                x={bounds.left}
-                y={bounds.top}
-                width={bounds.width}
-                height={bounds.height}
-                rx={4}
-                fill={PACKAGE_SOCKET_FILL}
-                stroke="#f4f4f4"
-                strokeWidth={strokeWidth}
-              />
-              {pinPoints.map((point) => (
-                <g key={`${component.id}_${point.label}_pin`}>
-                  <rect
-                    x={point.xPx - 3.4}
-                    y={point.yPx - 3.4}
-                    width={6.8}
-                    height={6.8}
-                    rx={1.1}
-                    fill="#e6e6e6"
-                    stroke="#111111"
-                    strokeWidth={0.65}
-                  />
-                  <rect
-                    x={point.xPx - 1}
-                    y={point.yPx - 6.5}
-                    width={2}
-                    height={4}
-                    rx={0.6}
-                    fill={PACKAGE_METAL_LIGHT}
-                    stroke="#111111"
-                    strokeWidth={0.45}
-                  />
-                </g>
-              ))}
-            </>
+              <>
+                <rect
+                  x={bounds.left}
+                  y={bounds.top}
+                  width={bounds.width}
+                  height={bounds.height}
+                  rx={1.8}
+                  fill={visual.body}
+                  stroke={stroke}
+                  strokeWidth={strokeWidth}
+                />
+                <rect
+                  x={bounds.left + 1.2}
+                  y={bounds.top + 1.2}
+                  width={bounds.width - 2.4}
+                  height={Math.max(4, bounds.height * 0.18)}
+                  rx={1}
+                  fill={visual.bodyTertiary}
+                  opacity={0.16}
+                />
+                {pinPoints.map((point) => (
+                  <g key={`${component.id}_${point.label}_pin`}>
+                    <rect
+                      x={point.xPx - 3.35}
+                      y={point.yPx - 3.35}
+                      width={6.7}
+                      height={6.7}
+                      rx={0.7}
+                      fill={visual.metal}
+                      stroke="#111111"
+                      strokeWidth={0.6}
+                    />
+                    <rect
+                      x={point.xPx - 1}
+                      y={point.yPx - 6.4}
+                      width={2}
+                      height={4}
+                      rx={0.35}
+                      fill={visual.metalDark}
+                      stroke="#111111"
+                      strokeWidth={0.4}
+                    />
+                  </g>
+                ))}
+              </>
             );
         }
 
       case "to220":
         return (
-        <>
-          <rect
-            x={bounds.left}
-            y={bounds.top - bounds.height * 0.35}
-            width={bounds.width}
-            height={bounds.height * 0.35}
-            rx={4}
-            fill={PACKAGE_METAL_LIGHT}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
-          />
-          <circle cx={bounds.centerX} cy={bounds.top - bounds.height * 0.17} r={4} fill="none" stroke={PACKAGE_DETAIL} strokeWidth={1} />
-          <rect x={bounds.left} y={bounds.top} width={bounds.width} height={bounds.height} rx={6} fill={PACKAGE_BODY_FILL_DARK} stroke={stroke} strokeWidth={strokeWidth} />
-          {pinPoints.map((point, index) => (
-            <line
-              key={`${component.id}_lead_${index}`}
-              x1={point.xPx}
-              y1={bounds.bottom}
-              x2={point.xPx}
-              y2={point.yPx}
-              stroke={leadStroke}
-              strokeWidth={1.1}
+          <>
+            <rect
+              x={bounds.left}
+              y={bounds.top - bounds.height * 0.34}
+              width={bounds.width}
+              height={bounds.height * 0.36}
+              rx={1.8}
+              fill={visual.metal}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
             />
-          ))}
-        </>
+            <circle
+              cx={bounds.centerX}
+              cy={bounds.top - bounds.height * 0.16}
+              r={4}
+              fill="none"
+              stroke={visual.metalDark}
+              strokeWidth={1}
+            />
+            <rect
+              x={bounds.left}
+              y={bounds.top}
+              width={bounds.width}
+              height={bounds.height}
+              rx={2}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+            />
+            <rect
+              x={bounds.left + 2}
+              y={bounds.top + 2}
+              width={bounds.width - 4}
+              height={Math.max(6, bounds.height * 0.22)}
+              rx={1}
+              fill={visual.bodyTertiary}
+              opacity={0.18}
+            />
+            {pinPoints.map((point, index) => (
+              <g key={`${component.id}_lead_${index}`}>
+                <line
+                  x1={point.xPx}
+                  y1={bounds.bottom}
+                  x2={point.xPx}
+                  y2={point.yPx}
+                  stroke={visual.metal}
+                  strokeWidth={1.1}
+                />
+                <line
+                  x1={point.xPx - 1.1}
+                  y1={bounds.bottom + 1.8}
+                  x2={point.xPx + 1.1}
+                  y2={bounds.bottom + 1.8}
+                  stroke={visual.metalDark}
+                  strokeWidth={0.8}
+                />
+              </g>
+            ))}
+          </>
         );
 
       case "led":
         return (
-        <>
-          <circle cx={bounds.centerX} cy={bounds.centerY} r={bounds.width / 2} fill={PACKAGE_BODY_FILL} stroke={stroke} strokeWidth={strokeWidth} />
-          <line x1={bounds.left + bounds.width * 0.25} y1={bounds.bottom} x2={pinPoints[0].xPx} y2={pinPoints[0].yPx} stroke={leadStroke} strokeWidth={1.1} />
-          <line x1={bounds.left + bounds.width * 0.75} y1={bounds.bottom} x2={pinPoints[1].xPx} y2={pinPoints[1].yPx} stroke={leadStroke} strokeWidth={1.1} />
-          <line x1={bounds.left + bounds.width * 0.28} y1={bounds.top + 2} x2={bounds.left + bounds.width * 0.28} y2={bounds.bottom - 2} stroke={PACKAGE_DETAIL} strokeWidth={1} />
-        </>
+          <>
+            <circle
+              cx={bounds.centerX}
+              cy={bounds.centerY}
+              r={bounds.width / 2}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              opacity={Math.max(0.35, lightOpacity)}
+            />
+            <ellipse
+              cx={bounds.centerX - bounds.width * 0.12}
+              cy={bounds.centerY - bounds.height * 0.18}
+              rx={bounds.width * 0.18}
+              ry={bounds.height * 0.12}
+              fill={visual.bodySecondary}
+              opacity={Math.max(0.18, lightOpacity)}
+            />
+            <circle
+              cx={bounds.centerX}
+              cy={bounds.centerY}
+              r={bounds.width * 0.34}
+              fill="#ffffff"
+              opacity={Math.max(0.08, lightOpacity * 0.28)}
+            />
+            <line x1={bounds.left + bounds.width * 0.25} y1={bounds.bottom} x2={pinPoints[0].xPx} y2={pinPoints[0].yPx} stroke={visual.metal} strokeWidth={1.1} />
+            <line x1={bounds.left + bounds.width * 0.75} y1={bounds.bottom} x2={pinPoints[1].xPx} y2={pinPoints[1].yPx} stroke={leadStroke} strokeWidth={1.1} />
+            <line x1={bounds.left + bounds.width * 0.28} y1={bounds.top + 2} x2={bounds.left + bounds.width * 0.28} y2={bounds.bottom - 2} stroke={visual.mark} strokeWidth={1} />
+          </>
         );
 
       case "resistor":
         return (
-        <>
-          <line x1={pinPoints[0].xPx} y1={pinPoints[0].yPx} x2={bounds.left} y2={bounds.centerY} stroke={leadStroke} strokeWidth={1.1} />
-          <line x1={bounds.right} y1={bounds.centerY} x2={pinPoints[1].xPx} y2={pinPoints[1].yPx} stroke={leadStroke} strokeWidth={1.1} />
-          <rect x={bounds.left} y={bounds.top} width={bounds.width} height={bounds.height} rx={bounds.height / 2} fill={PACKAGE_BODY_FILL} stroke={stroke} strokeWidth={strokeWidth} />
-          {[0.2, 0.4, 0.6, 0.8].map((ratio) => (
-            <line
-              key={`${component.id}_band_${ratio}`}
-              x1={bounds.left + bounds.width * ratio}
-              y1={bounds.top + 1.5}
-              x2={bounds.left + bounds.width * ratio}
-              y2={bounds.bottom - 1.5}
-              stroke={PACKAGE_DETAIL}
-              strokeWidth={1.1}
+          <>
+            <line x1={pinPoints[0].xPx} y1={pinPoints[0].yPx} x2={bounds.left} y2={bounds.centerY} stroke={leadStroke} strokeWidth={1.1} />
+            <line x1={bounds.right} y1={bounds.centerY} x2={pinPoints[1].xPx} y2={pinPoints[1].yPx} stroke={leadStroke} strokeWidth={1.1} />
+            <rect
+              x={bounds.left}
+              y={bounds.top}
+              width={bounds.width}
+              height={bounds.height}
+              rx={Math.max(2, bounds.height * 0.34)}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
             />
-          ))}
-        </>
+            <rect
+              x={bounds.left + 1.2}
+              y={bounds.top + 1.2}
+              width={bounds.width - 2.4}
+              height={Math.max(3, bounds.height * 0.24)}
+              rx={Math.max(1.5, bounds.height * 0.18)}
+              fill={visual.bodyTertiary}
+              opacity={0.4}
+            />
+            {["#8f4814", "#000000", "#fb0000", "#f1d863"].map((bandColor, index) => {
+              const ratio = [0.24, 0.4, 0.58, 0.78][index];
+              return (
+                <rect
+                  key={`${component.id}_band_${ratio}`}
+                  x={bounds.left + bounds.width * ratio}
+                  y={bounds.top + 1}
+                  width={Math.max(1.2, bounds.width * 0.06)}
+                  height={bounds.height - 2}
+                  rx={0.6}
+                  fill={bandColor}
+                />
+              );
+            })}
+          </>
         );
 
       case "capacitor":
         return (
-        <>
-          <circle cx={bounds.centerX} cy={bounds.centerY} r={bounds.width / 2} fill={PACKAGE_BODY_FILL_DARK} stroke={stroke} strokeWidth={strokeWidth} />
-          <line x1={bounds.left + bounds.width * 0.25} y1={bounds.bottom} x2={pinPoints[0].xPx} y2={pinPoints[0].yPx} stroke={leadStroke} strokeWidth={1.1} />
-          <line x1={bounds.left + bounds.width * 0.75} y1={bounds.bottom} x2={pinPoints[1].xPx} y2={pinPoints[1].yPx} stroke={leadStroke} strokeWidth={1.1} />
-          <line x1={bounds.left + bounds.width * 0.32} y1={bounds.top + bounds.height * 0.18} x2={bounds.left + bounds.width * 0.32} y2={bounds.top + bounds.height * 0.82} stroke={PACKAGE_DETAIL} strokeWidth={1} />
-        </>
+          <>
+            <circle
+              cx={bounds.centerX}
+              cy={bounds.centerY}
+              r={bounds.width / 2}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+            />
+            <ellipse
+              cx={bounds.centerX}
+              cy={bounds.top + bounds.height * 0.25}
+              rx={bounds.width * 0.28}
+              ry={bounds.height * 0.1}
+              fill={visual.bodyTertiary}
+              opacity={0.35}
+            />
+            <line x1={bounds.left + bounds.width * 0.25} y1={bounds.bottom} x2={pinPoints[0].xPx} y2={pinPoints[0].yPx} stroke={visual.metal} strokeWidth={1.1} />
+            <line x1={bounds.left + bounds.width * 0.75} y1={bounds.bottom} x2={pinPoints[1].xPx} y2={pinPoints[1].yPx} stroke={leadStroke} strokeWidth={1.1} />
+            <rect
+              x={bounds.left + bounds.width * 0.25}
+              y={bounds.top + bounds.height * 0.18}
+              width={Math.max(2, bounds.width * 0.12)}
+              height={bounds.height * 0.64}
+              rx={0.8}
+              fill={visual.mark}
+              opacity={0.85}
+            />
+          </>
         );
 
-      case "button":
+      case "button": {
+        const buttonTravelY =
+          runtimeProfile?.profileId === "push_button" ? mappedTravel : 0;
+        const plungerRadius = bounds.width * 0.24;
+        const plungerCenterY = bounds.centerY + buttonTravelY;
         return (
-        <>
-          <rect x={bounds.left} y={bounds.top} width={bounds.width} height={bounds.height} rx={6} fill={PACKAGE_BODY_FILL_DARK} stroke={stroke} strokeWidth={strokeWidth} />
-          <circle cx={bounds.centerX} cy={bounds.centerY} r={bounds.width * 0.24} fill={PACKAGE_METAL_LIGHT} stroke={stroke} strokeWidth={1} />
-          {pinPoints.map((point, index) => (
-            <line
-              key={`${component.id}_lead_${index}`}
-              x1={index < 2 ? bounds.left : bounds.right}
-              y1={point.yPx}
-              x2={point.xPx}
-              y2={point.yPx}
-              stroke={leadStroke}
+          <>
+            <rect
+              x={bounds.left}
+              y={bounds.top}
+              width={bounds.width}
+              height={bounds.height}
+              rx={1.8}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+            />
+            <rect
+              x={bounds.left + 1.2}
+              y={bounds.top + 1.2}
+              width={bounds.width - 2.4}
+              height={bounds.height - 2.4}
+              rx={1.3}
+              fill={visual.bodyTertiary}
+              opacity={0.35}
+            />
+            <circle
+              cx={bounds.centerX}
+              cy={plungerCenterY}
+              r={plungerRadius}
+              fill={visual.accent}
+              stroke={stroke}
+              strokeWidth={1}
+            />
+            <circle
+              cx={bounds.centerX - bounds.width * 0.06}
+              cy={plungerCenterY - bounds.height * 0.08}
+              r={bounds.width * 0.08}
+              fill={visual.accentSoft}
+              opacity={Math.max(0.32, 1 - runtimeRatio * 0.28)}
+            />
+            {runtimeProfile?.profileId === "push_button" ? (
+              <rect
+                x={bounds.left + bounds.width * 0.24}
+                y={bounds.top + bounds.height * 0.72}
+                width={bounds.width * 0.52}
+                height={bounds.height * 0.08}
+                rx={0.8}
+                fill={visual.bodySecondary}
+                opacity={0.65}
+              />
+            ) : null}
+            {pinPoints.map((point, index) => (
+              <g key={`${component.id}_lead_${index}`}>
+                <line
+                  x1={index < 2 ? bounds.left : bounds.right}
+                  y1={point.yPx}
+                  x2={point.xPx}
+                  y2={point.yPx}
+                  stroke={visual.metal}
+                  strokeWidth={1.1}
+                />
+                <line
+                  x1={point.xPx}
+                  y1={point.yPx - 1}
+                  x2={point.xPx}
+                  y2={point.yPx + 1}
+                  stroke={leadStroke}
+                  strokeWidth={0.8}
+                />
+              </g>
+            ))}
+          </>
+        );
+      }
+
+      case "potentiometer": {
+        const knobCenterY = bounds.centerY - bounds.height * 0.04;
+        const knobRadius = bounds.width * 0.29;
+        const knobIndicatorLength = bounds.width * 0.15;
+        const knobRadians = ((mappedAngle - 90) * Math.PI) / 180;
+        const knobIndicatorX = bounds.centerX + Math.cos(knobRadians) * knobIndicatorLength;
+        const knobIndicatorY = knobCenterY + Math.sin(knobRadians) * knobIndicatorLength;
+        return (
+          <>
+            <rect
+              x={bounds.left}
+              y={bounds.top}
+              width={bounds.width}
+              height={bounds.height}
+              rx={2}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+            />
+            <rect
+              x={bounds.left + bounds.width * 0.27}
+              y={bounds.top + bounds.height * 0.04}
+              width={bounds.width * 0.46}
+              height={bounds.height * 0.1}
+              rx={0.9}
+              fill={visual.bodyTertiary}
+            />
+            {[
+              [bounds.left + bounds.width * 0.08, bounds.top + bounds.height * 0.09],
+              [bounds.right - bounds.width * 0.08, bounds.top + bounds.height * 0.09],
+              [bounds.left + bounds.width * 0.08, bounds.bottom - bounds.height * 0.09],
+              [bounds.right - bounds.width * 0.08, bounds.bottom - bounds.height * 0.09],
+            ].map(([x, y], index) => (
+              <circle key={`${component.id}_pot_screw_${index}`} cx={x} cy={y} r={bounds.width * 0.035} fill={visual.mark} />
+            ))}
+            <circle
+              cx={bounds.centerX}
+              cy={knobCenterY}
+              r={knobRadius}
+              fill={visual.accent}
+              stroke={visual.metalDark}
               strokeWidth={1.1}
             />
-          ))}
-        </>
+            <circle
+              cx={bounds.centerX}
+              cy={knobCenterY}
+              r={bounds.width * 0.2}
+              fill="#c6cbcf"
+              stroke={visual.metalDark}
+              strokeWidth={0.8}
+            />
+            <line
+              x1={bounds.centerX}
+              y1={knobCenterY}
+              x2={knobIndicatorX}
+              y2={knobIndicatorY}
+              stroke={visual.mark}
+              strokeWidth={1.2}
+              strokeLinecap="round"
+            />
+            <rect
+              x={bounds.left + bounds.width * 0.18}
+              y={bounds.bottom - bounds.height * 0.18}
+              width={bounds.width * 0.64}
+              height={bounds.height * 0.1}
+              rx={1}
+              fill={visual.bodySecondary}
+            />
+            {pinPoints.map((point, index) => (
+              <g key={`${component.id}_pot_pin_${index}`}>
+                <line
+                  x1={point.xPx}
+                  y1={bounds.bottom}
+                  x2={point.xPx}
+                  y2={point.yPx}
+                  stroke={visual.metal}
+                  strokeWidth={1}
+                />
+                <circle
+                  cx={point.xPx}
+                  cy={bounds.bottom + 2}
+                  r={1.2}
+                  fill={visual.metalDark}
+                />
+              </g>
+            ))}
+          </>
         );
+      }
+
+      case "slide_switch": {
+        const slideThumbWidth = bounds.width * 0.2;
+        const slideThumbHeight = bounds.height * 0.34;
+        const slideThumbCenterX =
+          bounds.centerX +
+          (runtimeProfile?.travelAxis === "x" ? mappedTravel : 0);
+        const slideThumbCenterY =
+          bounds.top +
+          bounds.height * 0.17 +
+          slideThumbHeight / 2 +
+          (runtimeProfile?.travelAxis === "y" ? mappedTravel : 0);
+        const slideThumbX = slideThumbCenterX - slideThumbWidth / 2;
+        const slideThumbTop = slideThumbCenterY - slideThumbHeight / 2;
+        return (
+          <>
+            <rect
+              x={bounds.left}
+              y={bounds.top + bounds.height * 0.18}
+              width={bounds.width}
+              height={bounds.height * 0.46}
+              rx={1.5}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+            />
+            <path
+              d={`M ${slideThumbX + slideThumbWidth * 0.18} ${slideThumbTop}
+                  L ${slideThumbX + slideThumbWidth * 0.26} ${slideThumbTop - slideThumbHeight * 0.36}
+                  L ${slideThumbX + slideThumbWidth * 0.36} ${slideThumbTop - slideThumbHeight * 0.18}
+                  L ${slideThumbX + slideThumbWidth * 0.48} ${slideThumbTop - slideThumbHeight * 0.36}
+                  L ${slideThumbX + slideThumbWidth * 0.6} ${slideThumbTop - slideThumbHeight * 0.18}
+                  L ${slideThumbX + slideThumbWidth * 0.72} ${slideThumbTop - slideThumbHeight * 0.36}
+                  L ${slideThumbX + slideThumbWidth * 0.82} ${slideThumbTop}
+                  L ${slideThumbX + slideThumbWidth * 0.82} ${slideThumbTop + slideThumbHeight}
+                  L ${slideThumbX + slideThumbWidth * 0.18} ${slideThumbTop + slideThumbHeight} Z`}
+              fill={visual.accent}
+              stroke={visual.metalDark}
+              strokeWidth={0.8}
+            />
+            <rect
+              x={bounds.left + bounds.width * 0.16}
+              y={bounds.bottom - bounds.height * 0.18}
+              width={bounds.width * 0.68}
+              height={bounds.height * 0.08}
+              rx={0.8}
+              fill={visual.bodySecondary}
+            />
+            {pinPoints.map((point, index) => (
+              <line
+                key={`${component.id}_slide_pin_${index}`}
+                x1={point.xPx}
+                y1={bounds.bottom}
+                x2={point.xPx}
+                y2={point.yPx}
+                stroke={index === 1 ? visual.metal : visual.metalDark}
+                strokeWidth={1}
+              />
+            ))}
+          </>
+        );
+      }
+
+      case "toggle_switch": {
+        const togglePivotX = bounds.centerX;
+        const togglePivotY = bounds.top + bounds.height * 0.38;
+        const toggleLength = bounds.height * 0.28;
+        const toggleRadians = ((mappedAngle - 90) * Math.PI) / 180;
+        const toggleEndX = togglePivotX + Math.cos(toggleRadians) * toggleLength;
+        const toggleEndY = togglePivotY + Math.sin(toggleRadians) * toggleLength;
+        return (
+          <>
+            <rect
+              x={bounds.left + bounds.width * 0.16}
+              y={bounds.top + bounds.height * 0.42}
+              width={bounds.width * 0.68}
+              height={bounds.height * 0.24}
+              rx={1.2}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+            />
+            <circle
+              cx={bounds.centerX}
+              cy={bounds.top + bounds.height * 0.4}
+              r={bounds.width * 0.09}
+              fill={visual.metal}
+              stroke={visual.metalDark}
+              strokeWidth={0.8}
+            />
+            <line
+              x1={togglePivotX}
+              y1={togglePivotY}
+              x2={toggleEndX}
+              y2={toggleEndY}
+              stroke={visual.accent}
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+            <line
+              x1={togglePivotX}
+              y1={togglePivotY}
+              x2={
+                togglePivotX +
+                Math.cos(toggleRadians) * Math.max(1, toggleLength * 0.72)
+              }
+              y2={
+                togglePivotY +
+                Math.sin(toggleRadians) * Math.max(1, toggleLength * 0.72)
+              }
+              stroke={visual.accentSoft}
+              strokeWidth={0.8}
+              strokeLinecap="round"
+            />
+            {pinPoints.map((point, index) => (
+              <g key={`${component.id}_toggle_pin_${index}`}>
+                <line
+                  x1={point.xPx}
+                  y1={bounds.bottom - bounds.height * 0.1}
+                  x2={point.xPx}
+                  y2={point.yPx}
+                  stroke={visual.metal}
+                  strokeWidth={1}
+                />
+                <circle
+                  cx={point.xPx}
+                  cy={bounds.bottom - bounds.height * 0.08}
+                  r={1.2}
+                  fill={index === 1 ? visual.accent : visual.metalDark}
+                />
+              </g>
+            ))}
+          </>
+        );
+      }
+
+      case "servo": {
+        const hornPivotX = bounds.left + bounds.width * 0.62;
+        const hornPivotY = bounds.centerY;
+        const hornLengthPrimary = bounds.width * 0.28;
+        const hornLengthSecondary = bounds.width * 0.22;
+        const hornRadians = ((mappedAngle - 90) * Math.PI) / 180;
+        return (
+          <>
+            <line
+              x1={bounds.left}
+              y1={bounds.top + bounds.height * 0.24}
+              x2={pinPoints[0]?.xPx ?? bounds.left - 12}
+              y2={pinPoints[0]?.yPx ?? bounds.top + bounds.height * 0.24}
+              stroke="#8b4a22"
+              strokeWidth={1.1}
+            />
+            <line
+              x1={bounds.left}
+              y1={bounds.top + bounds.height * 0.48}
+              x2={pinPoints[1]?.xPx ?? bounds.left - 12}
+              y2={pinPoints[1]?.yPx ?? bounds.top + bounds.height * 0.48}
+              stroke="#c73a2f"
+              strokeWidth={1.1}
+            />
+            <line
+              x1={bounds.left}
+              y1={bounds.top + bounds.height * 0.72}
+              x2={pinPoints[2]?.xPx ?? bounds.left - 12}
+              y2={pinPoints[2]?.yPx ?? bounds.top + bounds.height * 0.72}
+              stroke="#d38d2a"
+              strokeWidth={1.1}
+            />
+            <rect
+              x={bounds.left + bounds.width * 0.1}
+              y={bounds.top + bounds.height * 0.12}
+              width={bounds.width * 0.68}
+              height={bounds.height * 0.66}
+              rx={2}
+              fill={visual.body}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+            />
+            <rect
+              x={bounds.left + bounds.width * 0.72}
+              y={bounds.top + bounds.height * 0.2}
+              width={bounds.width * 0.18}
+              height={bounds.height * 0.5}
+              rx={1}
+              fill={visual.bodySecondary}
+            />
+            <rect
+              x={bounds.left + bounds.width * 0.2}
+              y={bounds.top + bounds.height * 0.08}
+              width={bounds.width * 0.48}
+              height={bounds.height * 0.08}
+              rx={1}
+              fill={visual.bodyTertiary}
+              opacity={0.4}
+            />
+            <circle
+              cx={hornPivotX}
+              cy={hornPivotY}
+              r={bounds.height * 0.12}
+              fill={visual.accent}
+              stroke={visual.metalDark}
+              strokeWidth={0.9}
+            />
+            <line
+              x1={hornPivotX}
+              y1={hornPivotY}
+              x2={hornPivotX + Math.cos(hornRadians) * hornLengthPrimary}
+              y2={hornPivotY + Math.sin(hornRadians) * hornLengthPrimary}
+              stroke={visual.accent}
+              strokeWidth={2.1}
+              strokeLinecap="round"
+            />
+            <line
+              x1={hornPivotX}
+              y1={hornPivotY}
+              x2={hornPivotX + Math.cos(hornRadians + Math.PI / 2) * hornLengthSecondary}
+              y2={hornPivotY + Math.sin(hornRadians + Math.PI / 2) * hornLengthSecondary}
+              stroke={visual.accentSoft}
+              strokeWidth={1}
+              strokeLinecap="round"
+            />
+          </>
+        );
+      }
     }
   })();
 
@@ -1565,7 +2854,7 @@ function RenderComponent({
   selected: boolean;
   emphasizedPins: boolean;
   readabilityIssue: "overlap" | "crowded" | null;
-  onComponentMouseDown: (event: React.MouseEvent<SVGGElement>, componentId: string) => void;
+  onComponentMouseDown: (event: React.MouseEvent<Element>, componentId: string) => void;
   onPinMouseDown: (
     event: React.MouseEvent<SVGCircleElement>,
     componentId: string,
@@ -1576,6 +2865,7 @@ function RenderComponent({
   const bounds = getComponentBoundsPx(component, packageDef);
   const pinPoints = packageDef.pins.map((pin) => getPinPoint(component, packageDef, pin.id));
   const labelWidth = estimateStageLabelWidth(component.reference);
+  const useWokwiShape = hasWokwiPart(component.libraryItemId);
 
   return (
     <g onMouseDown={(event) => onComponentMouseDown(event, component.id)}>
@@ -1629,7 +2919,20 @@ function RenderComponent({
         </>
       ) : null}
 
-      {renderComponentShape(component, packageDef, selected)}
+      {useWokwiShape ? (
+        <rect
+          x={bounds.left - 8}
+          y={bounds.top - 8}
+          width={bounds.width + 16}
+          height={bounds.height + 16}
+          fill="rgba(255,255,255,0.001)"
+          stroke="none"
+          pointerEvents="all"
+          onMouseDown={(event) => onComponentMouseDown(event, component.id)}
+        />
+      ) : null}
+
+      {!useWokwiShape ? renderComponentShape(component, packageDef, selected) : null}
       {renderResizeAffordance(component, packageDef, selected)}
 
       {pinPoints.map((point, index) =>
@@ -1677,6 +2980,59 @@ export function Canvas() {
   const panRef = useRef<PanState | null>(null);
   const routeDragRef = useRef<RouteDragState | null>(null);
   const junctionDragRef = useRef<JunctionDragState | null>(null);
+  const [, setWokwiLayoutVersion] = useState(0);
+
+  const handleWokwiLayoutChange = useCallback(
+    (
+      componentId: string,
+      layout: {
+        left: number;
+        top: number;
+        width: number;
+        height: number;
+        centerX: number;
+        centerY: number;
+        pins: Array<{ id: string; label: string; x: number; y: number }>;
+      } | null,
+    ) => {
+      if (!layout) {
+        setRuntimeWokwiLayout(componentId, null);
+        setWokwiLayoutVersion((current) => current + 1);
+        return;
+      }
+
+      setRuntimeWokwiLayout(componentId, {
+        bounds: {
+          left: layout.left,
+          top: layout.top,
+          right: layout.left + layout.width,
+          bottom: layout.top + layout.height,
+          width: layout.width,
+          height: layout.height,
+          centerX: layout.centerX,
+          centerY: layout.centerY,
+        },
+        pins: Object.fromEntries(
+          layout.pins.map((pin) => [
+            pin.id,
+            {
+              xPx: pin.x,
+              yPx: pin.y,
+              label: pin.label,
+            },
+          ]),
+        ),
+      });
+      setWokwiLayoutVersion((current) => current + 1);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    return () => {
+      wokwiRuntimeLayoutRegistry.clear();
+    };
+  }, []);
 
   const components = useEditorStore((state) => state.components);
   const junctions = useEditorStore((state) => state.junctions);
@@ -1690,6 +3046,13 @@ export function Canvas() {
   const pendingLibraryItemId = useEditorStore((state) => state.pendingLibraryItemId);
   const pendingDraftId = useEditorStore((state) => state.pendingDraftId);
   const componentDrafts = useEditorStore((state) => state.componentDrafts);
+  const gridVisible = useEditorStore((state) => state.gridVisible);
+  const gridOpacity = useEditorStore((state) => state.gridOpacity);
+  const clarityMode = useEditorStore((state) => state.clarityMode);
+  const textureVisible = useEditorStore((state) => state.textureVisible);
+  const textureKey = useEditorStore((state) => state.textureKey);
+  const textureEditMode = useEditorStore((state) => state.textureEditMode);
+  const junctionEditMode = useEditorStore((state) => state.junctionEditMode);
   const selectComponent = useEditorStore((state) => state.selectComponent);
   const selectJunction = useEditorStore((state) => state.selectJunction);
   const selectConnection = useEditorStore((state) => state.selectConnection);
@@ -1734,26 +3097,11 @@ export function Canvas() {
     x: null,
     y: null,
   });
-  const [gridVisible, setGridVisible] = useState(true);
-  const [gridOpacity, setGridOpacity] = useState(0.4);
-  const [clarityMode, setClarityMode] = useState(true);
-  const [textureVisible, setTextureVisible] = useState(true);
-  const [textureKey, setTextureKey] = useState<'texture1' | 'texture2' | 'texture3' | 'texture4'>('texture2');
-  const [textureEditMode, setTextureEditMode] = useState(false);
-  const [junctionEditMode, setJunctionEditMode] = useState(false);
   const [textureViewport, setTextureViewport] = useState({
     x: 0,
     y: 0,
     zoom: 1,
   });
-  const stopCanvasGesturePropagation = (
-    event:
-      | React.MouseEvent<HTMLElement>
-      | React.PointerEvent<HTMLElement>
-      | React.WheelEvent<HTMLElement>,
-  ) => {
-    event.stopPropagation();
-  };
 
   useEffect(() => {
     if (!containerRef.current) {
@@ -2357,54 +3705,62 @@ export function Canvas() {
   };
 
   const handleComponentMouseDown = (
-    event: React.MouseEvent<SVGGElement>,
+    event: React.MouseEvent<Element>,
     componentId: string,
   ) => {
-    if (event.button !== 0 || !containerRef.current) {
-      return;
-    }
-
     event.stopPropagation();
-    selectComponent(componentId);
-
-    const component = useEditorStore
-      .getState()
-      .components.find((entry) => entry.id === componentId);
-    if (!component) {
-      return;
-    }
-
-    const pointer = pointerToCanvasUnits(
-      event,
-      containerRef.current,
-      viewport.x,
-      viewport.y,
-      viewport.zoom,
-    );
-    const packageDef = resolvePackageByItemId(
-      component.libraryItemId,
-      component.packageState,
-    );
-    const resizeZone = getResizeZone(component, packageDef, pointer.xPx, pointer.yPx);
-
-    if (resizeZone) {
-      resizeRef.current = {
-        componentId,
-        handle: resizeZone,
-      };
-      setCursor(getResizeCursor(resizeZone));
-      return;
-    }
-
-    dragRef.current = {
-      componentId,
-      startXUm: component.xUm,
-      startYUm: component.yUm,
-      startPointerXUm: pointer.xUm,
-      startPointerYUm: pointer.yUm,
-    };
-    setCursor("grabbing");
+    beginComponentInteraction(componentId, event.clientX, event.clientY, event.button);
   };
+
+  const beginComponentInteraction = useCallback(
+    (componentId: string, clientX: number, clientY: number, button = 0) => {
+      if (button !== 0 || !containerRef.current) {
+        return;
+      }
+
+      selectComponent(componentId);
+
+      const component = useEditorStore
+        .getState()
+        .components.find((entry) => entry.id === componentId);
+      if (!component) {
+        return;
+      }
+
+      const pointer = pointerClientToCanvasUnits(
+        clientX,
+        clientY,
+        containerRef.current,
+        viewport.x,
+        viewport.y,
+        viewport.zoom,
+      );
+      const packageDef = resolvePackageByItemId(
+        component.libraryItemId,
+        component.packageState,
+      );
+      const resizeZone = getResizeZone(component, packageDef, pointer.xPx, pointer.yPx);
+
+      if (resizeZone) {
+        resizeRef.current = {
+          componentId,
+          handle: resizeZone,
+        };
+        setCursor(getResizeCursor(resizeZone));
+        return;
+      }
+
+      dragRef.current = {
+        componentId,
+        startXUm: component.xUm,
+        startYUm: component.yUm,
+        startPointerXUm: pointer.xUm,
+        startPointerYUm: pointer.yUm,
+      };
+      setCursor("grabbing");
+    },
+    [viewport.x, viewport.y, viewport.zoom, selectComponent],
+  );
 
   const handlePinMouseDown = (
     event: React.MouseEvent<SVGCircleElement>,
@@ -2637,6 +3993,9 @@ export function Canvas() {
         yUm: hoverPointer.yUm,
         rotationDeg: pendingDraft.rotationDeg,
         packageState: pendingDraft.packageState,
+        runtimeProfile:
+          pendingDraft.runtimeProfile ??
+          getDefaultRuntimeProfileForLibraryItem(pendingDraft.libraryItemId),
       }
     : pendingLibraryItemId
       ? {
@@ -2647,6 +4006,7 @@ export function Canvas() {
           yUm: hoverPointer.yUm,
           rotationDeg: 0,
           packageState: getDefaultPackageState(pendingLibraryItemId),
+          runtimeProfile: getDefaultRuntimeProfileForLibraryItem(pendingLibraryItemId),
         }
       : null;
   const pendingPlacementAssist = pendingPlacementBaseComponent
@@ -2682,15 +4042,7 @@ export function Canvas() {
         }
       : { x: null, y: null };
 
-  const resetFrame = () => {
-    if (!containerRef.current) {
-      setViewport({ x: 0, y: 0, zoom: 1 });
-      return;
-    }
-
-    setViewport({ x: 0, y: containerRef.current.clientHeight, zoom: 1 });
-  };
-  const screenGridStep = GRID_PX * viewport.zoom;
+  const screenGridStep = PLACEMENT_GRID_PX * viewport.zoom;
   const showFineGrid = screenGridStep > 5;
   const pointerLabel = formatUmPair(hoverPointer.xUm, hoverPointer.yUm, displayUnit);
   const liveMode = pendingDraft
@@ -2776,137 +4128,24 @@ export function Canvas() {
       onMouseDown={handleBackgroundMouseDown}
       onContextMenu={(event) => event.preventDefault()}
     >
-      <div
-        className="absolute inset-x-3 top-3 z-20 flex flex-wrap items-start justify-between gap-2"
-        onMouseDown={stopCanvasGesturePropagation}
-        onPointerDown={stopCanvasGesturePropagation}
-        onWheel={stopCanvasGesturePropagation}
-      >
-        <div className="flex min-w-0 max-w-full flex-wrap items-start gap-2">
-          <div className="canvas-toolgroup">
-            <span className="canvas-toolgroup-label">View</span>
-            <div className="px-2.5 flex items-center">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={Math.round(gridOpacity * 100)}
-                onChange={(event) => setGridOpacity(Number(event.target.value) / 100)}
-                className="canvas-slider"
-                title="Grid opacity"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => setGridVisible((value) => !value)}
-              className={`canvas-icon-button ${gridVisible ? "canvas-control-active" : ""}`}
-              title="Toggle grid visibility"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </button>
-            <div className="canvas-sep" />
-            <button
-              type="button"
-              onClick={resetFrame}
-              className="canvas-icon-button"
-              title="Snap to origin"
-            >
-              <LocateFixed className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="canvas-toolgroup">
-            <span className="canvas-toolgroup-label">Edit</span>
-            <button
-              type="button"
-              onClick={() => {
-                if (selectedComponentId) {
-                  rotateComponent(selectedComponentId, 90);
-                }
-              }}
-              disabled={!selectedComponentId}
-              className={`canvas-icon-button ${selectedComponentId ? "" : "opacity-40"}`}
-              title="Rotate selected component 90 degrees"
-            >
-              <RotateCw className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setJunctionEditMode((value) => !value)}
-              className={`canvas-text-button ${junctionEditMode ? "canvas-control-active" : ""}`}
-              title="Place and move junctions"
-            >
-              Junction
-            </button>
-            <button
-              type="button"
-              onClick={() => setClarityMode((value) => !value)}
-              className={`canvas-text-button ${clarityMode ? "canvas-control-active" : ""}`}
-              title="Show readability warnings for dense layouts"
-            >
-              Clarity
-            </button>
-          </div>
-
-          <div className="canvas-toolgroup">
-            <span className="canvas-toolgroup-label">Background</span>
-            <button
-              type="button"
-              onClick={() => setTextureEditMode((value) => !value)}
-              className={`canvas-text-button ${textureEditMode ? "canvas-control-active" : ""}`}
-              title="Align background"
-            >
-              Align
-            </button>
-            <button
-              type="button"
-              onClick={() => setTextureVisible((value) => !value)}
-              className={`canvas-icon-button ${textureVisible ? "canvas-control-active" : ""}`}
-              title="Toggle texture"
-            >
-              <ImageIcon className="h-4 w-4" />
-            </button>
-          </div>
-
-          {textureVisible || textureEditMode ? (
-            <div className="canvas-toolgroup">
-              <span className="canvas-toolgroup-label">Texture</span>
-              {TEXTURE_KEYS.map((key, index) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => {
-                    setTextureVisible(true);
-                    setTextureKey(key);
-                  }}
-                  className={`canvas-text-button ${textureKey === key ? "canvas-control-active" : ""}`}
-                  title={`Use texture ${index + 1}`}
-                >
-                  T{index + 1}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-
+      <div className="absolute inset-x-3 top-3 z-20 flex flex-wrap items-start justify-end gap-2">
         <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
           <div className={`canvas-mode-banner ${liveMode.toneClass}`}>
             <span className="canvas-mode-banner-label">{liveMode.label}</span>
             <span className="canvas-mode-banner-detail">{liveMode.detail}</span>
           </div>
 
-          <div className="canvas-toolgroup">
-            <span className="canvas-toolgroup-label">Stage</span>
+          <div className="canvas-status-strip">
             <div className="canvas-text-chip">
-              <span className="text-aura-muted">Parts</span>
+              <span className="text-aura-muted">P</span>
               <span>{components.length}</span>
             </div>
             <div className="canvas-text-chip">
-              <span className="text-aura-muted">Wires</span>
+              <span className="text-aura-muted">W</span>
               <span>{connections.length}</span>
             </div>
             <div className="canvas-text-chip">
-              <span className="text-aura-muted">Pointer</span>
+              <span className="text-aura-muted">XY</span>
               <span>{pointerLabel}</span>
             </div>
           </div>
@@ -3002,18 +4241,18 @@ export function Canvas() {
         </div>
       ) : null}
 
-      <svg width="100%" height="100%" className="absolute inset-0" style={{ cursor }}>
+      <svg width="100%" height="100%" className="absolute inset-0" style={{ cursor, zIndex: 1 }}>
         <defs>
           <pattern
             id="aura-stage-grid-fine"
             x="0"
             y="0"
-            width={GRID_PX}
-            height={GRID_PX}
+            width={PLACEMENT_GRID_PX}
+            height={PLACEMENT_GRID_PX}
             patternUnits="userSpaceOnUse"
           >
             <path
-              d={`M ${GRID_PX} 0 L 0 0 0 ${GRID_PX}`}
+              d={`M ${PLACEMENT_GRID_PX} 0 L 0 0 0 ${PLACEMENT_GRID_PX}`}
               fill="none"
               stroke={STAGE_GRID_COLOR}
               strokeWidth="0.8"
@@ -3023,12 +4262,12 @@ export function Canvas() {
             id="aura-stage-grid-major"
             x="0"
             y="0"
-            width={GRID_PX * 8}
-            height={GRID_PX * 8}
+            width={MAJOR_GRID_PX * 4}
+            height={MAJOR_GRID_PX * 4}
             patternUnits="userSpaceOnUse"
           >
             <path
-              d={`M ${GRID_PX * 8} 0 L 0 0 0 ${GRID_PX * 8}`}
+              d={`M ${MAJOR_GRID_PX * 4} 0 L 0 0 0 ${MAJOR_GRID_PX * 4}`}
               fill="none"
               stroke={STAGE_GRID_COLOR}
               strokeWidth="1"
@@ -3490,7 +4729,10 @@ export function Canvas() {
             </g>
           ) : null}
 
-          {pendingPlacementComponent && pendingPlacementPackage && pendingPlacementBounds ? (
+          {pendingPlacementComponent &&
+          pendingPlacementPackage &&
+          pendingPlacementBounds &&
+          !hasWokwiPart(pendingPlacementComponent.libraryItemId) ? (
             <g opacity={0.62}>
               {renderComponentShape(
                 pendingPlacementComponent,
@@ -3508,6 +4750,35 @@ export function Canvas() {
             </g>
           ) : null}
 
+          {components.map((component) => {
+            if (!hasWokwiPart(component.libraryItemId)) {
+              return null;
+            }
+
+            const packageDef = resolvePackageByItemId(component.libraryItemId, component.packageState);
+            const localBounds = getLocalPackageBoundsPx(component, packageDef);
+
+            return (
+              <WokwiPart
+                key={`wokwi-${component.id}`}
+                componentId={component.id}
+                libraryItemId={component.libraryItemId}
+                runtimeProfile={component.runtimeProfile}
+                x={localBounds.left}
+                y={localBounds.top}
+                width={localBounds.width}
+                height={localBounds.height}
+                rotationDeg={component.rotationDeg}
+                onLayoutChange={handleWokwiLayoutChange}
+                onNativeMouseDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  beginComponentInteraction(component.id, event.clientX, event.clientY, event.button);
+                }}
+              />
+            );
+          })}
+
           {components.map((component) => (
             <RenderComponent
               key={component.id}
@@ -3519,6 +4790,33 @@ export function Canvas() {
               onPinMouseDown={handlePinMouseDown}
             />
           ))}
+
+          {pendingPlacementComponent &&
+          pendingPlacementPackage &&
+          pendingPlacementBounds &&
+          hasWokwiPart(pendingPlacementComponent.libraryItemId) ? (
+            (() => {
+              const localBounds = getLocalPackageBoundsPx(
+                pendingPlacementComponent,
+                pendingPlacementPackage,
+              );
+
+              return (
+                <WokwiPart
+                  key={`pending-wokwi-${pendingPlacementComponent.libraryItemId}-${localBounds.left}-${localBounds.top}-${pendingPlacementComponent.rotationDeg}`}
+                  componentId={pendingPlacementComponent.id}
+                  libraryItemId={pendingPlacementComponent.libraryItemId}
+                  runtimeProfile={pendingPlacementComponent.runtimeProfile}
+                  x={localBounds.left}
+                  y={localBounds.top}
+                  width={localBounds.width}
+                  height={localBounds.height}
+                  rotationDeg={pendingPlacementComponent.rotationDeg}
+                  opacity={0.62}
+                />
+              );
+            })()
+          ) : null}
         </g>
       </svg>
     </main>

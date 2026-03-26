@@ -1,0 +1,18 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "lcd2004",
+  "tagName": "wokwi-lcd2004",
+  "className": "LCD2004Element",
+  "sourceFile": "lcd2004-element.ts",
+  "metrics": {
+    "width": null,
+    "height": null,
+    "viewBox": null
+  },
+  "pinInfo": {
+    "status": "missing",
+    "count": 0,
+    "pins": []
+  },
+  "properties": []
+}

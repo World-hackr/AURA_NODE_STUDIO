@@ -1,0 +1,37 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "pir_motion_sensor",
+  "tagName": "wokwi-pir-motion-sensor",
+  "className": "PIRMotionSensorElement",
+  "sourceFile": "pir-motion-sensor-element.ts",
+  "metrics": {
+    "width": "24mm",
+    "height": "24.448mm",
+    "viewBox": "0 0 90.7 92.4"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 3,
+    "pins": [
+      {
+        "name": "VCC",
+        "x": 36.178,
+        "y": 92,
+        "number": 1
+      },
+      {
+        "name": "OUT",
+        "x": 45.9175,
+        "y": 92,
+        "number": 2
+      },
+      {
+        "name": "GND",
+        "x": 55.6415,
+        "y": 92,
+        "number": 3
+      }
+    ]
+  },
+  "properties": []
+}

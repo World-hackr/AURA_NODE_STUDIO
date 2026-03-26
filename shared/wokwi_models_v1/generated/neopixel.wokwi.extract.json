@@ -1,0 +1,56 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "neopixel",
+  "tagName": "wokwi-neopixel",
+  "className": "NeoPixelElement",
+  "sourceFile": "neopixel-element.ts",
+  "metrics": {
+    "width": "5.6631mm",
+    "height": "5mm",
+    "viewBox": "0 0 5.6631 5"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 4,
+    "pins": [
+      {
+        "name": "VDD",
+        "x": 1,
+        "y": 3.5,
+        "number": 1
+      },
+      {
+        "name": "DOUT",
+        "x": 1,
+        "y": 14,
+        "number": 2
+      },
+      {
+        "name": "VSS",
+        "x": 21,
+        "y": 14,
+        "number": 3
+      },
+      {
+        "name": "DIN",
+        "x": 21,
+        "y": 3.5,
+        "number": 4
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "r",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "g",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "b",
+      "defaultRaw": "0"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "ili9341",
+  "tagName": "wokwi-ili9341",
+  "className": "ILI9341Element",
+  "sourceFile": "ili9341-element.ts",
+  "metrics": {
+    "width": "46.5mm",
+    "height": "77.6mm",
+    "viewBox": "0 0 46.5 77.6"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 9,
+    "pins": [
+      {
+        "name": "VCC",
+        "x": 48.3,
+        "y": 287.2
+      },
+      {
+        "name": "GND",
+        "x": 57.9012,
+        "y": 287.2
+      },
+      {
+        "name": "CS",
+        "x": 67.5024,
+        "y": 287.2
+      },
+      {
+        "name": "RST",
+        "x": 77.1036,
+        "y": 287.2
+      },
+      {
+        "name": "D/C",
+        "x": 86.7048,
+        "y": 287.2
+      },
+      {
+        "name": "MOSI",
+        "x": 96.306,
+        "y": 287.2
+      },
+      {
+        "name": "SCK",
+        "x": 105.9072,
+        "y": 287.2
+      },
+      {
+        "name": "LED",
+        "x": 115.5084,
+        "y": 287.2
+      },
+      {
+        "name": "MISO",
+        "x": 125.1096,
+        "y": 287.2
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "flipHorizontal",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "flipVertical",
+      "defaultRaw": "false"
+    }
+  ]
+}

@@ -27,6 +27,26 @@ export interface CircuitManifest {
       pin_count?: number;
       width_mode?: string;
     };
+    runtime_profile?: {
+      profile_id: string;
+      signal_name: string;
+      target_id: string;
+      value_min: number;
+      value_max: number;
+      default_value: number;
+      angle_min: number;
+      angle_max: number;
+      travel_axis: string;
+      travel_min: number;
+      travel_max: number;
+      low_visual: number;
+      high_visual: number;
+      detent_count: number;
+      auto_reset: boolean;
+      off_label: string;
+      on_label: string;
+      light_color: string;
+    };
   }>;
   junctions: Array<{
     id: string;
@@ -114,6 +134,30 @@ export function buildCircuitManifest(snapshot: Snapshot): CircuitManifest {
                 ...(component.packageState.widthMode
                   ? { width_mode: component.packageState.widthMode }
                   : {}),
+              },
+            }
+          : {}),
+        ...(component.runtimeProfile
+          ? {
+              runtime_profile: {
+                profile_id: component.runtimeProfile.profileId,
+                signal_name: component.runtimeProfile.signalName,
+                target_id: component.runtimeProfile.targetId,
+                value_min: component.runtimeProfile.valueMin,
+                value_max: component.runtimeProfile.valueMax,
+                default_value: component.runtimeProfile.defaultValue,
+                angle_min: component.runtimeProfile.angleMin,
+                angle_max: component.runtimeProfile.angleMax,
+                travel_axis: component.runtimeProfile.travelAxis,
+                travel_min: component.runtimeProfile.travelMin,
+                travel_max: component.runtimeProfile.travelMax,
+                low_visual: component.runtimeProfile.lowVisual,
+                high_visual: component.runtimeProfile.highVisual,
+                detent_count: component.runtimeProfile.detentCount,
+                auto_reset: component.runtimeProfile.autoReset,
+                off_label: component.runtimeProfile.offLabel,
+                on_label: component.runtimeProfile.onLabel,
+                light_color: component.runtimeProfile.lightColor,
               },
             }
           : {}),

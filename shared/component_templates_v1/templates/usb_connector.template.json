@@ -1,0 +1,38 @@
+{
+  "schema": "aura.component_template.v1",
+  "id": "usb_connector",
+  "class": "usb_connector",
+  "label": "USB Connector",
+  "purpose": "Template family for USB board connectors used on modules and dev boards.",
+  "referenceSources": {
+    "visual": ["wokwi-elements"],
+    "geometry": ["kicad-footprints"],
+    "metadata": ["kicad-symbols"]
+  },
+  "familyModes": [
+    {
+      "id": "usb_micro_b",
+      "label": "USB Micro-B"
+    },
+    {
+      "id": "usb_c_receptacle",
+      "label": "USB-C Receptacle"
+    }
+  ],
+  "inputs": {
+    "required": ["package_key", "body_width_um", "body_height_um", "pin_count"],
+    "optional": ["shield_pads", "pin_names", "mount_tabs"]
+  },
+  "pins": {
+    "countSource": "family_mode",
+    "labelsSource": "imported"
+  },
+  "repeatRules": {
+    "mode": "fixed_family_variant"
+  },
+  "rendererRules": {
+    "autoFinish": ["shell_contrast", "port_opening_detail", "mount_tab_contrast"],
+    "styleTags": ["connector", "usb", "module_edge", "flat_2d"]
+  },
+  "runtimeHooks": []
+}

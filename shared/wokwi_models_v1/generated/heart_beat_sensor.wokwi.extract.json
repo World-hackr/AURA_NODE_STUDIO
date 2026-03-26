@@ -1,0 +1,37 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "heart_beat_sensor",
+  "tagName": "wokwi-heart-beat-sensor",
+  "className": "HeartBeatSensorElement",
+  "sourceFile": "heart-beat-sensor-element.ts",
+  "metrics": {
+    "width": "23.4mm",
+    "height": "20.943mm",
+    "viewBox": "0 0 88.4 79.2"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 3,
+    "pins": [
+      {
+        "name": "GND",
+        "x": 87,
+        "y": 17.8,
+        "number": 1
+      },
+      {
+        "name": "VCC",
+        "x": 87,
+        "y": 27.5,
+        "number": 2
+      },
+      {
+        "name": "OUT",
+        "x": 87,
+        "y": 37.5,
+        "number": 3
+      }
+    ]
+  },
+  "properties": []
+}

@@ -5,6 +5,10 @@ import {
   getLibraryItem,
   resolvePackageByItemId,
 } from "../data/componentCatalog";
+import {
+  getRuntimeProfileDefinition,
+  RUNTIME_PROFILE_DEFINITIONS,
+} from "../data/runtimeProfiles";
 import { useEditorStore } from "../store/useEditorStore";
 import {
   formatUmForDisplay,
@@ -17,6 +21,7 @@ import {
 } from "../utils/units";
 import { buildCircuitManifest } from "../utils/manifest";
 import { computeLayoutHealth } from "../utils/layoutHealth";
+import { getWokwiBehaviorSupport } from "../wokwi/wokwiCatalog";
 
 function getEndpointDetails(
   endpoint: { kind: "pin"; componentId: string; pinId: string } | { kind: "junction"; junctionId: string },
@@ -383,6 +388,11 @@ export function PropertiesPanel() {
   const pinPreview = resolvedPackage.pins.slice(0, 6);
   const remainingPinCount = Math.max(0, resolvedPackage.pins.length - pinPreview.length);
   const selectedComponentHealth = layoutHealth.issueLevelByComponent.get(selectedComponent.id) ?? null;
+  const selectedRuntimeProfile = selectedComponent.runtimeProfile;
+  const selectedRuntimeDefinition = selectedRuntimeProfile
+    ? getRuntimeProfileDefinition(selectedRuntimeProfile.profileId)
+    : null;
+  const selectedWokwiBehavior = getWokwiBehaviorSupport(selectedComponent.libraryItemId);
 
   return (
     <aside className="studio-rail studio-rail-inspector">
@@ -414,6 +424,12 @@ export function PropertiesPanel() {
               <span className="rounded-full border border-white/20 px-2 py-1">{libraryItem.seriesLabel}</span>
               <span className="rounded-full border border-white/20 px-2 py-1">{libraryItem.variantLabel}</span>
               <span className="rounded-full border border-white/20 px-2 py-1">{resolvedPackage.pins.length} pins</span>
+              {libraryItem.circuitCategory ? (
+                <span className="rounded-full border border-white/20 px-2 py-1">{libraryItem.circuitCategory}</span>
+              ) : null}
+              {libraryItem.source ? (
+                <span className="rounded-full border border-white/20 px-2 py-1">{libraryItem.source}</span>
+              ) : null}
               {selectedDraft ? (
                 <span className="rounded-full border border-white/20 px-2 py-1">from draft</span>
               ) : null}
@@ -456,6 +472,22 @@ export function PropertiesPanel() {
                 </div>
                 <span className="studio-pill">
                   {selectedComponentHealth === "overlap" ? "alert" : "warn"}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          {selectedWokwiBehavior && selectedWokwiBehavior.status !== "static" ? (
+            <div className="studio-inline-note">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="editor-eyebrow">Vendor Runtime</p>
+                  <p className="mt-1 text-[10px] leading-4 text-aura-muted">
+                    {selectedWokwiBehavior.summary}
+                  </p>
+                </div>
+                <span className="studio-pill">
+                  {selectedWokwiBehavior.status === "implemented" ? "ready" : "placeholder"}
                 </span>
               </div>
             </div>
@@ -675,6 +707,419 @@ export function PropertiesPanel() {
               </div>
             )}
           </div>
+
+          {selectedRuntimeProfile && selectedRuntimeDefinition ? (
+            <div className="studio-section-card">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5">
+                  <p className="editor-eyebrow">Runtime State</p>
+                  <HoverHint text="This is the part's editable state contract in Circuit Studio. It changes visible preview only for now, not full simulation." />
+                </div>
+                <span className="studio-pill">{selectedRuntimeDefinition.short}</span>
+              </div>
+
+              <label className="editor-label">Runtime Type</label>
+              <select
+                value={selectedRuntimeProfile.profileId}
+                onChange={(event) =>
+                  updateComponent(selectedComponent.id, {
+                    runtimeProfile: {
+                      ...selectedRuntimeProfile,
+                      profileId: event.target.value as typeof selectedRuntimeProfile.profileId,
+                    },
+                  })
+                }
+                className="editor-input"
+              >
+                {RUNTIME_PROFILE_DEFINITIONS.filter((profile) => profile.id !== "none").map((profile) => (
+                  <option key={profile.id} value={profile.id}>
+                    {profile.label}
+                  </option>
+                ))}
+              </select>
+
+              <div className="mt-3">
+                <label className="editor-label">Signal Name</label>
+                <input
+                  type="text"
+                  value={selectedRuntimeProfile.signalName}
+                  onChange={(event) =>
+                    updateComponent(selectedComponent.id, {
+                      runtimeProfile: { ...selectedRuntimeProfile, signalName: event.target.value },
+                    })
+                  }
+                  className="editor-input"
+                />
+              </div>
+
+              {selectedRuntimeProfile.profileId === "light_output" ? (
+                <>
+                  <div className="mt-3">
+                    <label className="editor-label">Light Color</label>
+                    <input
+                      type="color"
+                      value={selectedRuntimeProfile.lightColor}
+                      onChange={(event) =>
+                        updateComponent(selectedComponent.id, {
+                          runtimeProfile: { ...selectedRuntimeProfile, lightColor: event.target.value },
+                        })
+                      }
+                      className="editor-color-input"
+                    />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="editor-label">Dim Level</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={selectedRuntimeProfile.lowVisual}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: {
+                              ...selectedRuntimeProfile,
+                              lowVisual: Number(event.target.value),
+                            },
+                          })
+                        }
+                        className="editor-slider"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Bright Level</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={selectedRuntimeProfile.highVisual}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: {
+                              ...selectedRuntimeProfile,
+                              highVisual: Number(event.target.value),
+                            },
+                          })
+                        }
+                        className="editor-slider"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : null}
+
+              {(selectedRuntimeProfile.profileId === "potentiometer" ||
+                selectedRuntimeProfile.profileId === "servo_angle") ? (
+                <>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="editor-label">Min</label>
+                      <input
+                        type="number"
+                        value={selectedRuntimeProfile.valueMin}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, valueMin: Number(event.target.value) },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Max</label>
+                      <input
+                        type="number"
+                        value={selectedRuntimeProfile.valueMax}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, valueMax: Number(event.target.value) },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Current</label>
+                      <input
+                        type="number"
+                        value={selectedRuntimeProfile.defaultValue}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, defaultValue: Number(event.target.value) },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="editor-label">Angle Min</label>
+                      <input
+                        type="number"
+                        value={selectedRuntimeProfile.angleMin}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, angleMin: Number(event.target.value) },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Angle Max</label>
+                      <input
+                        type="number"
+                        value={selectedRuntimeProfile.angleMax}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, angleMax: Number(event.target.value) },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    {selectedRuntimeProfile.profileId === "potentiometer" ? (
+                      <div>
+                        <label className="editor-label">Detents</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={selectedRuntimeProfile.detentCount}
+                          onChange={(event) =>
+                            updateComponent(selectedComponent.id, {
+                              runtimeProfile: {
+                                ...selectedRuntimeProfile,
+                                detentCount: Number(event.target.value),
+                              },
+                            })
+                          }
+                          className="editor-input"
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                </>
+              ) : null}
+
+              {(selectedRuntimeProfile.profileId === "slide_switch" ||
+                selectedRuntimeProfile.profileId === "push_button") ? (
+                <>
+                  <div className="mt-3">
+                    <label className="editor-label">Axis</label>
+                    <div className="editor-segmented">
+                      {(["x", "y"] as const).map((axis) => (
+                        <button
+                          key={axis}
+                          type="button"
+                          onClick={() =>
+                            updateComponent(selectedComponent.id, {
+                              runtimeProfile: { ...selectedRuntimeProfile, travelAxis: axis },
+                            })
+                          }
+                          className={`editor-segment-button ${selectedRuntimeProfile.travelAxis === axis ? "editor-segment-button-active" : ""}`}
+                        >
+                          {axis}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="editor-label">Travel Min</label>
+                      <input
+                        type="number"
+                        value={selectedRuntimeProfile.travelMin}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, travelMin: Number(event.target.value) },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Travel Max</label>
+                      <input
+                        type="number"
+                        value={selectedRuntimeProfile.travelMax}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, travelMax: Number(event.target.value) },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">
+                        {selectedRuntimeProfile.profileId === "push_button" ? "Current State" : "Current"}
+                      </label>
+                      <div className="editor-segmented">
+                        {[0, 1].map((value) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() =>
+                              updateComponent(selectedComponent.id, {
+                                runtimeProfile: { ...selectedRuntimeProfile, defaultValue: value },
+                              })
+                            }
+                            className={`editor-segment-button ${selectedRuntimeProfile.defaultValue === value ? "editor-segment-button-active" : ""}`}
+                          >
+                            {value === 0 ? selectedRuntimeProfile.offLabel : selectedRuntimeProfile.onLabel}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="editor-label">
+                        {selectedRuntimeProfile.profileId === "push_button" ? "Idle Label" : "Off Label"}
+                      </label>
+                      <input
+                        type="text"
+                        value={selectedRuntimeProfile.offLabel}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, offLabel: event.target.value },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">
+                        {selectedRuntimeProfile.profileId === "push_button" ? "Pressed Label" : "On Label"}
+                      </label>
+                      <input
+                        type="text"
+                        value={selectedRuntimeProfile.onLabel}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, onLabel: event.target.value },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">
+                        {selectedRuntimeProfile.profileId === "push_button" ? "Release" : "Return"}
+                      </label>
+                      <div className="editor-segmented">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateComponent(selectedComponent.id, {
+                              runtimeProfile: { ...selectedRuntimeProfile, autoReset: false },
+                            })
+                          }
+                          className={`editor-segment-button ${selectedRuntimeProfile.autoReset ? "" : "editor-segment-button-active"}`}
+                        >
+                          Latched
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateComponent(selectedComponent.id, {
+                              runtimeProfile: { ...selectedRuntimeProfile, autoReset: true },
+                            })
+                          }
+                          className={`editor-segment-button ${selectedRuntimeProfile.autoReset ? "editor-segment-button-active" : ""}`}
+                        >
+                          Spring
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : null}
+
+              {selectedRuntimeProfile.profileId === "toggle_switch" ? (
+                <>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="editor-label">Off Label</label>
+                      <input
+                        type="text"
+                        value={selectedRuntimeProfile.offLabel}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, offLabel: event.target.value },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">On Label</label>
+                      <input
+                        type="text"
+                        value={selectedRuntimeProfile.onLabel}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, onLabel: event.target.value },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Current</label>
+                      <div className="editor-segmented">
+                        {[0, 1].map((value) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() =>
+                              updateComponent(selectedComponent.id, {
+                                runtimeProfile: { ...selectedRuntimeProfile, defaultValue: value },
+                              })
+                            }
+                            className={`editor-segment-button ${selectedRuntimeProfile.defaultValue === value ? "editor-segment-button-active" : ""}`}
+                          >
+                            {value === 0 ? selectedRuntimeProfile.offLabel : selectedRuntimeProfile.onLabel}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="editor-label">Angle Min</label>
+                      <input
+                        type="number"
+                        value={selectedRuntimeProfile.angleMin}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, angleMin: Number(event.target.value) },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Angle Max</label>
+                      <input
+                        type="number"
+                        value={selectedRuntimeProfile.angleMax}
+                        onChange={(event) =>
+                          updateComponent(selectedComponent.id, {
+                            runtimeProfile: { ...selectedRuntimeProfile, angleMax: Number(event.target.value) },
+                          })
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : null}
+            </div>
+          ) : null}
 
           <details className="studio-disclosure">
             <summary className="studio-disclosure-summary">

@@ -1,0 +1,47 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "servo",
+  "tagName": "wokwi-servo",
+  "className": "ServoElement",
+  "sourceFile": "servo-element.ts",
+  "metrics": {
+    "width": "45mm",
+    "height": "31.63mm",
+    "viewBox": "0 0 170.08 119.55"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 3,
+    "pins": [
+      {
+        "name": "GND",
+        "x": 0,
+        "y": 50
+      },
+      {
+        "name": "V+",
+        "x": 0,
+        "y": 59.5
+      },
+      {
+        "name": "PWM",
+        "x": 0,
+        "y": 69
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "angle",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "horn",
+      "defaultRaw": "'single'"
+    },
+    {
+      "name": "hornColor",
+      "defaultRaw": "'#ccc'"
+    }
+  ]
+}

@@ -23,6 +23,60 @@
       "label": "Nano Controller Board",
       "path": "shared/component_definitions_v1/examples/nano_controller_board.component.json",
       "description": "More detailed black-and-white board example with onboard parts and readable labels."
+    },
+    {
+      "id": "resistor_0603_base",
+      "label": "Resistor 0603 Base",
+      "path": "shared/component_definitions_v1/examples/resistor_0603.component.json",
+      "description": "KiCad-backed 0603 resistor base with exact footprint pads and AURA finish layers."
+    },
+    {
+      "id": "capacitor_0603_base",
+      "label": "Capacitor 0603 Base",
+      "path": "shared/component_definitions_v1/examples/capacitor_0603.component.json",
+      "description": "KiCad-backed 0603 capacitor base with exact footprint pads and ceramic finish layers."
+    },
+    {
+      "id": "soic_16_package_base",
+      "label": "SOIC-16 Package Base",
+      "path": "shared/component_definitions_v1/examples/soic_16_package.component.json",
+      "description": "Repeat-ready SOIC package base for the first IC family pass."
+    },
+    {
+      "id": "header_1x8_base",
+      "label": "Header 1x8 Base",
+      "path": "shared/component_definitions_v1/examples/header_1x8.component.json",
+      "description": "Repeat-ready 1x8 header base for the first connector family pass."
+    },
+    {
+      "id": "usb_micro_b_base",
+      "label": "USB Micro-B Base",
+      "path": "shared/component_definitions_v1/examples/usb_micro_b.component.json",
+      "description": "Board-edge USB Micro-B connector base for the first module-connector pass."
+    },
+    {
+      "id": "potentiometer_runtime",
+      "label": "Potentiometer Input",
+      "path": "shared/component_definitions_v1/examples/potentiometer_knob.component.json",
+      "description": "Behavior-ready rotary input component with explicit runtime metadata."
+    },
+    {
+      "id": "slide_switch_runtime",
+      "label": "Slide Switch Input",
+      "path": "shared/component_definitions_v1/examples/slide_switch_spdt.component.json",
+      "description": "Behavior-ready sliding input component with deterministic state and travel metadata."
+    },
+    {
+      "id": "toggle_switch_runtime",
+      "label": "Toggle Switch Input",
+      "path": "shared/component_definitions_v1/examples/toggle_switch_spdt.component.json",
+      "description": "Behavior-ready toggle input component with explicit off and on labeling."
+    },
+    {
+      "id": "servo_runtime",
+      "label": "Servo Output",
+      "path": "shared/component_definitions_v1/examples/servo_micro.component.json",
+      "description": "Behavior-ready actuator component with explicit angle output metadata."
     }
   ]
 }

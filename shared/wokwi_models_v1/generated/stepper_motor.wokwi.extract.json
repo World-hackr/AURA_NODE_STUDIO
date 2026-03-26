@@ -1,0 +1,40 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "stepper_motor",
+  "tagName": "wokwi-stepper-motor",
+  "className": "StepperMotorElement",
+  "sourceFile": "stepper-motor-element.ts",
+  "metrics": {
+    "width": "${frameSize + 1}mm",
+    "height": "${frameSize + 5}mm",
+    "viewBox": "0 0 ${(1 + frameSize) * mmToPix} ${(5 + frameSize) * mmToPix}"
+  },
+  "pinInfo": {
+    "status": "missing",
+    "count": 0,
+    "pins": []
+  },
+  "properties": [
+    {
+      "name": "angle",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "arrow",
+      "defaultRaw": "''"
+    },
+    {
+      "name": "value",
+      "defaultRaw": "''"
+    },
+    {
+      "name": "units",
+      "defaultRaw": "''"
+    },
+    {
+      "name": "size",
+      "defaultRaw": "defaultSize"
+    }
+  ]
+}

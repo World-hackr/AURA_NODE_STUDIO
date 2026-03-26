@@ -1,0 +1,39 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "hc_sr04",
+  "tagName": "wokwi-hc-sr04",
+  "className": "HCSR04Element",
+  "sourceFile": "hc-sr04-element.ts",
+  "metrics": {
+    "width": "45mm",
+    "height": "25mm",
+    "viewBox": "0 0 45 25"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 4,
+    "pins": [
+      {
+        "name": "VCC",
+        "x": 71.3,
+        "y": 94.5
+      },
+      {
+        "name": "TRIG",
+        "x": 81.3,
+        "y": 94.5
+      },
+      {
+        "name": "ECHO",
+        "x": 91.3,
+        "y": 94.5
+      },
+      {
+        "name": "GND",
+        "x": 101.3,
+        "y": 94.5
+      }
+    ]
+  },
+  "properties": []
+}

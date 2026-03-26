@@ -20,6 +20,8 @@ Use it when you want to know:
   Planning docs, shared contracts, and component-definition assets.
 - `LOCAL_STATE_AND_ARCHIVE.md`
   Build output, editor state, and archive/reference areas that should not be confused with active source.
+- `VENDOR_REFERENCES.md`
+  External offline source repos and image-reference areas used for import, visual study, and schema planning.
 
 ## Fast Rule
 
@@ -29,6 +31,13 @@ If you are trying to build or change the product, start with:
 - `studio_ui/`
 - `shared/`
 - `docs/`
+
+If you are trying to work on reusable parts, imports, or deterministic render/runtime packaging, read:
+
+- `docs/AURA_COMPONENT_PACKAGE_V1.md`
+- `shared/component_definitions_v1/`
+- `shared/component_packages_v1/`
+- `shared/wokwi_models_v1/`
 
 If you are trying to understand utilities or one-off support tools, check:
 

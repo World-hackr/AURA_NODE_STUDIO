@@ -1,0 +1,59 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "analog_joystick",
+  "tagName": "wokwi-analog-joystick",
+  "className": "AnalogJoystickElement",
+  "sourceFile": "analog-joystick-element.ts",
+  "metrics": {
+    "width": "27.2mm",
+    "height": "31.8mm",
+    "viewBox": "0 0 27.2 31.8"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 5,
+    "pins": [
+      {
+        "name": "VCC",
+        "x": 33,
+        "y": 115.8
+      },
+      {
+        "name": "VERT",
+        "x": 42.6012,
+        "y": 115.8
+      },
+      {
+        "name": "HORZ",
+        "x": 52.2024,
+        "y": 115.8
+      },
+      {
+        "name": "SEL",
+        "x": 61.8036,
+        "y": 115.8
+      },
+      {
+        "name": "GND",
+        "x": 71.4048,
+        "y": 115.8
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "xValue",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "yValue",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "pressed",
+      "defaultRaw": "false"
+    }
+  ]
+}

@@ -1,14 +1,14 @@
-# Component Lab Authoring Rules
+# Component Lab Import And Correction Rules
 
 Date: 2026-03-24
 
 ## Purpose
 
-These rules define how `Component Lab` should feel and what kinds of components belong in the reusable library.
+These rules define how `Component Lab` should feel when it is used as an import, correction, and packaging workspace for reusable components.
 
 The goal is not a flashy drawing toy.
 
-The goal is a deterministic authoring system that:
+The goal is a deterministic edit-and-package system that:
 
 - students can understand quickly
 - children can read without fear or clutter
@@ -17,7 +17,7 @@ The goal is a deterministic authoring system that:
 
 ## Product Stance
 
-`Component Lab` is a flat 2D authoring tool with high contrast and exact structure.
+`Component Lab` is a flat 2D correction tool with high contrast and exact structure.
 
 That means:
 
@@ -58,11 +58,13 @@ That means:
 
 ## Composition Rules
 
-- Start from a known package when possible.
+- Import a real source when possible.
+- Start from a known package when no good source exists or when a clean AURA-native base is genuinely faster.
 - Use `blank_board` only when the component is truly a board-style aggregate.
 - Use child parts for onboard LEDs, headers, ICs, regulators, connectors, and buttons.
 - Use shape layers for silk labels, slot outlines, cutouts, markers, shields, and panel graphics.
 - Save persistent dimensions only for relationships contributors must preserve.
+- Treat pin correction, naming cleanup, and runtime cleanup as first-class work, not as optional polish.
 
 ## Determinism Rules
 
@@ -78,6 +80,7 @@ A reusable component is ready when:
 
 - its silhouette is recognizable in black and white
 - its internal detail improves recognition instead of cluttering the part
+- imported or vendor-derived pins have been checked and corrected where needed
 - the JSON round-trips through `Component Lab`
 - the behavior block is either correct or intentionally minimal
 - another contributor can open the definition and understand the structure quickly

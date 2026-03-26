@@ -1,0 +1,105 @@
+{
+  "schema": "aura.component_definition.v1",
+  "metadata": {
+    "name": "SOIC-16 Package Base",
+    "description": "Repeat-ready SOIC family example using the resizable IC package base.",
+    "tags": ["example", "ic_package", "soic", "base_component"]
+  },
+  "base": {
+    "kind": "library_item",
+    "itemId": "soic_ic",
+    "packageState": {
+      "pinCount": 16
+    },
+    "override": {
+      "fill": "#d8d8d8",
+      "stroke": "#111111"
+    }
+  },
+  "children": [],
+  "shapeLayers": [
+    {
+      "id": "soic_label_plate",
+      "name": "Top Label Plate",
+      "kind": "rect",
+      "x": 288,
+      "y": 198,
+      "width": 124,
+      "height": 42,
+      "radius": 8,
+      "fill": "#f6f6f6",
+      "stroke": "#7a7a7a",
+      "strokeWidth": 1
+    },
+    {
+      "id": "soic_mark",
+      "name": "Top Mark",
+      "kind": "text",
+      "x": 306,
+      "y": 208,
+      "width": 96,
+      "height": 22,
+      "text": "SOIC16",
+      "fill": "#111111",
+      "fontSize": 16
+    }
+  ],
+  "persistentDimensions": [],
+  "behaviorDraft": {
+    "presetId": "light_emitter",
+    "targetId": "body_primary",
+    "property": "brightness",
+    "valueMin": 0,
+    "valueMax": 100,
+    "angleMin": -135,
+    "angleMax": 135,
+    "axis": "x",
+    "distanceMin": -12,
+    "distanceMax": 12,
+    "originX": 0,
+    "originY": 0,
+    "glowX": 0,
+    "glowY": 0,
+    "glowRadius": 18,
+    "glowBlur": 12,
+    "glowColor": "#ff5a5a",
+    "baseColor": "#ff5a5a",
+    "opacityMin": 0.08,
+    "opacityMax": 0.94,
+    "blinkPeriodMs": 420,
+    "blinkDutyCycle": 50,
+    "pressDepth": 2.4,
+    "detentCount": 12,
+    "autoReset": true,
+    "lightTargetSourceMode": "existingTarget",
+    "helperShapeKind": "circle",
+    "helperX": 0,
+    "helperY": 0,
+    "helperWidth": 56,
+    "helperHeight": 56,
+    "helperRadius": 14,
+    "glowEnabled": true
+  },
+  "compiledBehavior": {
+    "kind": "behaviorHelper",
+    "entry": {
+      "id": "body_primary_light",
+      "type": "light_emitter",
+      "property": "brightness",
+      "source": {
+        "type": "target_slot",
+        "target": "body_primary"
+      },
+      "range": [0, 100],
+      "baseColor": "#ff5a5a",
+      "opacityRange": [0.08, 0.94],
+      "glow": {
+        "enabled": true,
+        "color": "#ff5a5a",
+        "reachRange": [8.1, 25.2],
+        "blur": 12,
+        "opacityRange": [0.02, 0.68]
+      }
+    }
+  }
+}

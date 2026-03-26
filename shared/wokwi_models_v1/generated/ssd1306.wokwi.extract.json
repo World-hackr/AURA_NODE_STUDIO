@@ -1,0 +1,63 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "ssd1306",
+  "tagName": "wokwi-ssd1306",
+  "className": "SSD1306Element",
+  "sourceFile": "ssd1306-element.ts",
+  "metrics": {
+    "width": "${width}",
+    "height": "${height}",
+    "viewBox": null
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 8,
+    "pins": [
+      {
+        "name": "DATA",
+        "x": 36.5,
+        "y": 12.5
+      },
+      {
+        "name": "CLK",
+        "x": 45.5,
+        "y": 12.5
+      },
+      {
+        "name": "DC",
+        "x": 54.5,
+        "y": 12.5
+      },
+      {
+        "name": "RST",
+        "x": 64.5,
+        "y": 12.5
+      },
+      {
+        "name": "CS",
+        "x": 74.5,
+        "y": 12.5
+      },
+      {
+        "name": "3V3",
+        "x": 83.5,
+        "y": 12.5
+      },
+      {
+        "name": "VIN",
+        "x": 93.5,
+        "y": 12.5
+      },
+      {
+        "name": "GND",
+        "x": 103.5,
+        "y": 12
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "imageData"
+    }
+  ]
+}

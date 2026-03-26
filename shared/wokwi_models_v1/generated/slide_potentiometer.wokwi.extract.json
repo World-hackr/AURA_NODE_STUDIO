@@ -1,0 +1,63 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "slide_potentiometer",
+  "tagName": "wokwi-slide-potentiometer",
+  "className": "SlidePotentiometerElement",
+  "sourceFile": "slide-potentiometer-element.ts",
+  "metrics": {
+    "width": "${travelLength + 25}mm",
+    "height": "29mm",
+    "viewBox": "0 0 ${travelLength + 25} 29"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 3,
+    "pins": [
+      {
+        "name": "VCC",
+        "x": 1,
+        "y": 43,
+        "number": 1
+      },
+      {
+        "name": "SIG",
+        "x": 1,
+        "y": 63,
+        "number": 2
+      },
+      {
+        "name": "GND",
+        "xExpression": "93.6 + this.travelLength * mmToPix",
+        "y": 43,
+        "number": 3
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "travelLength",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "30"
+    },
+    {
+      "name": "value",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "min",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "max",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "100"
+    },
+    {
+      "name": "step",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "2"
+    }
+  ]
+}

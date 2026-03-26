@@ -5,6 +5,7 @@ import {
   getDefaultPackageState,
   getLibraryItem,
   GRID_UM,
+  PLACEMENT_GRID_UM,
   ROUTING_GRID_UM,
   normalizePackageState,
   resizePackageStateForHandle,
@@ -12,6 +13,11 @@ import {
   type ResizeHandle,
   UM_TO_PX,
 } from "../data/componentCatalog";
+import {
+  getDefaultRuntimeProfileForLibraryItem,
+  normalizeRuntimeProfileState,
+  type RuntimeProfileState,
+} from "../data/runtimeProfiles";
 import type { DisplayUnit } from "../utils/units";
 
 export interface CircuitComponent {
@@ -23,6 +29,7 @@ export interface CircuitComponent {
   yUm: number;
   rotationDeg: number;
   packageState: ComponentPackageState;
+  runtimeProfile: RuntimeProfileState | null;
 }
 
 export interface ComponentDraft {
@@ -31,6 +38,7 @@ export interface ComponentDraft {
   libraryItemId: string;
   packageState: ComponentPackageState;
   rotationDeg: number;
+  runtimeProfile: RuntimeProfileState | null;
   updatedAt: string;
 }
 
@@ -57,6 +65,8 @@ export interface Viewport {
   zoom: number;
 }
 
+export type StageTextureKey = "texture1" | "texture2" | "texture3" | "texture4";
+
 interface CanvasFrame {
   widthPx: number;
   heightPx: number;
@@ -78,6 +88,13 @@ interface EditorState {
   displayUnit: DisplayUnit;
   viewport: Viewport;
   canvasFrame: CanvasFrame;
+  gridVisible: boolean;
+  gridOpacity: number;
+  clarityMode: boolean;
+  textureVisible: boolean;
+  textureKey: StageTextureKey;
+  textureEditMode: boolean;
+  junctionEditMode: boolean;
   activeWire: ActiveWire | null;
   pendingLibraryItemId: string | null;
   pendingDraftId: string | null;
@@ -102,7 +119,15 @@ interface EditorState {
   ) => void;
   removeComponent: (id: string) => void;
   setViewport: (updates: Partial<Viewport>) => void;
+  resetViewport: () => void;
   setCanvasFrame: (widthPx: number, heightPx: number) => void;
+  setGridVisible: (visible: boolean) => void;
+  setGridOpacity: (opacity: number) => void;
+  setClarityMode: (enabled: boolean) => void;
+  setTextureVisible: (visible: boolean) => void;
+  setTextureKey: (key: StageTextureKey) => void;
+  setTextureEditMode: (enabled: boolean) => void;
+  setJunctionEditMode: (enabled: boolean) => void;
   addJunctionAt: (xUm: number, yUm: number) => CircuitJunction;
   updateJunction: (id: string, updates: Partial<CircuitJunction>) => void;
   removeJunction: (id: string) => void;
@@ -120,7 +145,7 @@ interface EditorState {
 }
 
 function snapToGrid(valueUm: number): number {
-  return Math.round(valueUm / GRID_UM) * GRID_UM;
+  return Math.round(valueUm / PLACEMENT_GRID_UM) * PLACEMENT_GRID_UM;
 }
 
 function snapToRoutingGrid(valueUm: number): number {
@@ -150,6 +175,9 @@ function normalizeComponent(component: CircuitComponent): CircuitComponent {
     yUm: snapToGrid(component.yUm),
     rotationDeg: normalizeRotationDeg(component.rotationDeg),
     packageState: normalizePackageState(component.libraryItemId, component.packageState),
+    runtimeProfile: component.runtimeProfile
+      ? normalizeRuntimeProfileState(component.runtimeProfile)
+      : null,
   };
 }
 
@@ -276,6 +304,9 @@ function loadComponentDrafts(): ComponentDraft[] {
           ...draft,
           packageState: normalizePackageState(draft.libraryItemId, draft.packageState),
           rotationDeg: normalizeRotationDeg(draft.rotationDeg),
+          runtimeProfile: draft.runtimeProfile
+            ? normalizeRuntimeProfileState(draft.runtimeProfile)
+            : null,
         }))
       : [];
   } catch {
@@ -302,6 +333,13 @@ export const useEditorStore = create<EditorState>((set) => ({
   displayUnit: "mm",
   viewport: { x: 120, y: 80, zoom: 1 },
   canvasFrame: { widthPx: 1280, heightPx: 720 },
+  gridVisible: true,
+  gridOpacity: 0.4,
+  clarityMode: true,
+  textureVisible: true,
+  textureKey: "texture2",
+  textureEditMode: false,
+  junctionEditMode: false,
   activeWire: null,
   pendingLibraryItemId: null,
   pendingDraftId: null,
@@ -319,6 +357,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         yUm: center.yUm,
         rotationDeg: 0,
         packageState: getDefaultPackageState(libraryItemId),
+        runtimeProfile: getDefaultRuntimeProfileForLibraryItem(libraryItemId),
       });
 
       return {
@@ -345,6 +384,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         yUm,
         rotationDeg: 0,
         packageState: getDefaultPackageState(libraryItemId),
+        runtimeProfile: getDefaultRuntimeProfileForLibraryItem(libraryItemId),
       });
 
       return {
@@ -380,6 +420,8 @@ export const useEditorStore = create<EditorState>((set) => ({
         yUm,
         rotationDeg: draft.rotationDeg,
         packageState: draft.packageState,
+        runtimeProfile:
+          draft.runtimeProfile ?? getDefaultRuntimeProfileForLibraryItem(draft.libraryItemId),
       });
 
       return {
@@ -417,6 +459,9 @@ export const useEditorStore = create<EditorState>((set) => ({
         libraryItemId: component.libraryItemId,
         packageState: normalizePackageState(component.libraryItemId, component.packageState),
         rotationDeg: normalizeRotationDeg(component.rotationDeg),
+        runtimeProfile: component.runtimeProfile
+          ? normalizeRuntimeProfileState(component.runtimeProfile)
+          : null,
         updatedAt: new Date().toISOString(),
       };
       savedDraft = nextDraft;
@@ -479,6 +524,13 @@ export const useEditorStore = create<EditorState>((set) => ({
             updates.packageState != null
               ? { ...component.packageState, ...updates.packageState }
               : component.packageState,
+          runtimeProfile:
+            updates.runtimeProfile != null
+              ? normalizeRuntimeProfileState({
+                  ...(component.runtimeProfile ?? getDefaultRuntimeProfileForLibraryItem(component.libraryItemId) ?? {}),
+                  ...updates.runtimeProfile,
+                })
+              : component.runtimeProfile,
         });
       });
       const nextConnections = filterValidConnections(
@@ -612,7 +664,33 @@ export const useEditorStore = create<EditorState>((set) => ({
       viewport: { ...state.viewport, ...updates },
     })),
 
+  resetViewport: () =>
+    set((state) => ({
+      viewport: {
+        x: 0,
+        y: state.canvasFrame.heightPx || 0,
+        zoom: 1,
+      },
+    })),
+
   setCanvasFrame: (widthPx, heightPx) => set({ canvasFrame: { widthPx, heightPx } }),
+
+  setGridVisible: (visible) => set({ gridVisible: visible }),
+
+  setGridOpacity: (opacity) =>
+    set({
+      gridOpacity: Math.min(1, Math.max(0, opacity)),
+    }),
+
+  setClarityMode: (enabled) => set({ clarityMode: enabled }),
+
+  setTextureVisible: (visible) => set({ textureVisible: visible }),
+
+  setTextureKey: (key) => set({ textureKey: key }),
+
+  setTextureEditMode: (enabled) => set({ textureEditMode: enabled }),
+
+  setJunctionEditMode: (enabled) => set({ junctionEditMode: enabled }),
 
   addJunctionAt: (xUm, yUm) => {
     const nextJunction = normalizeJunction({

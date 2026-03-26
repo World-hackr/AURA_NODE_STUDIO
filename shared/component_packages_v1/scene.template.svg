@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="700"
+  height="460"
+  viewBox="0 0 700 460"
+  data-aura-scene="v1"
+  data-aura-component-name="Starter Component"
+  data-aura-component-slug="starter_component_package"
+>
+  <title>Starter Component</title>
+  <desc>Minimal template scene for a packaged AURA component.</desc>
+  <g id="body_primary" data-aura-node-id="body_primary" data-aura-node-kind="base-body">
+    <rect
+      data-aura-shape-kind="rect"
+      data-aura-shape-id="starter_body"
+      x="280"
+      y="170"
+      width="140"
+      height="84"
+      rx="12"
+      fill="#d4d4d4"
+      stroke="#111111"
+      stroke-width="2"
+    />
+  </g>
+  <g id="pins_primary" data-aura-node-id="pins_primary" data-aura-node-kind="base-pins">
+    <line
+      data-aura-shape-kind="line"
+      data-aura-shape-id="starter_pinlead_left"
+      x1="280"
+      y1="212"
+      x2="248"
+      y2="212"
+      stroke="#a3a3a3"
+      stroke-width="3"
+      stroke-linecap="round"
+    />
+    <line
+      data-aura-shape-kind="line"
+      data-aura-shape-id="starter_pinlead_right"
+      x1="420"
+      y1="212"
+      x2="452"
+      y2="212"
+      stroke="#a3a3a3"
+      stroke-width="3"
+      stroke-linecap="round"
+    />
+    <circle
+      id="pin_base_1"
+      data-pin-id="1"
+      data-pin-label="IN"
+      data-pin-owner="base"
+      cx="248"
+      cy="212"
+      r="3.4"
+      fill="#ffffff"
+      stroke="#000000"
+      stroke-width="1.2"
+    />
+    <circle
+      id="pin_base_2"
+      data-pin-id="2"
+      data-pin-label="OUT"
+      data-pin-owner="base"
+      cx="452"
+      cy="212"
+      r="3.4"
+      fill="#ffffff"
+      stroke="#000000"
+      stroke-width="1.2"
+    />
+  </g>
+</svg>

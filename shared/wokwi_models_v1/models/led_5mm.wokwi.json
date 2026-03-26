@@ -1,0 +1,41 @@
+{
+  "schema": "aura.wokwi_part.v1",
+  "libraryItemId": "led_5mm",
+  "title": "LED 5 mm",
+  "wokwi": {
+    "tagName": "wokwi-led",
+    "modulePath": "vendor_reference/wokwi-elements/dist/esm/led-element.js",
+    "naturalSizePx": {
+      "width": 40,
+      "height": 50
+    },
+    "allowOuterRotation": true
+  },
+  "pins": {
+    "labels": ["A", "K"],
+    "anchors": [
+      { "id": "A", "x": 25, "y": 42 },
+      { "id": "K", "x": 15, "y": 42 }
+    ]
+  },
+  "runtime": {
+    "defaults": {
+      "profileId": "light_output",
+      "signalName": "brightness",
+      "targetId": "indicator_primary",
+      "valueMin": 0,
+      "valueMax": 100,
+      "defaultValue": 0,
+      "lightColor": "#ff5252",
+      "lowVisual": 0.1,
+      "highVisual": 0.95
+    },
+    "staticProps": {},
+    "propBindings": [
+      { "elementProp": "value", "from": "defaultValue", "transform": "boolean_gt_0.5" },
+      { "elementProp": "brightness", "from": "highVisual", "transform": "direct" },
+      { "elementProp": "color", "from": "lightColor", "transform": "color_name_or_hex" },
+      { "elementProp": "lightColor", "from": "lightColor", "transform": "direct" }
+    ]
+  }
+}

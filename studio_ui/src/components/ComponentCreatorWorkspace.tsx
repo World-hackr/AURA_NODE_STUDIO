@@ -9,10 +9,9 @@ import {
   type ReactNode,
   type WheelEvent as ReactWheelEvent,
 } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, Image as ImageIcon, LocateFixed } from "lucide-react";
 
 import {
-  BEHAVIOR_PRESETS,
   createBehaviorDraftEntry,
   createDefaultBehaviorDraftState,
   getBehaviorPreset,
@@ -23,29 +22,52 @@ import {
   getDefaultPackageState,
   getLibraryItem,
   isResizableLibraryItem,
-  LIBRARY_ITEMS,
+  listComponentLabLibraryItems,
   resizePackageStateForHandle,
   resolvePackageByItemId,
   type ComponentPackageState,
   type PackageDefinition,
+  type ResizeBehavior,
 } from "../data/componentCatalog";
+import {
+  createBehaviorDraftFromRuntimeProfile,
+  createCompiledRuntimeProfile,
+  createDefaultRuntimeProfileState,
+  createRuntimeProfileStateFromBehaviorDraft,
+  getRuntimeProfileDefinition,
+  RUNTIME_PROFILE_DEFINITIONS,
+  type RuntimeProfileState,
+} from "../data/runtimeProfiles";
+import { WokwiPart } from "./WokwiPart";
+import { WOKWI_MODELS, getWokwiModel } from "../wokwi/wokwiModels";
 
 const STAGE_WIDTH = 700;
 const STAGE_HEIGHT = 460;
+const CREATOR_TEXTURE_KEYS = ["texture1", "texture2", "texture3", "texture4"] as const;
+const CREATOR_GRID_STEP_PX = 2;
+const CREATOR_PIN_GRID_STEP_PX = 1;
+const CREATOR_PIN_INPUT_STEP_MM = 0.01;
 const NO_BASE_ID = "__no_base__";
 const BLANK_BOARD_ID = "__blank_board__";
 const DEFAULT_BLANK_BOARD: BlankBoardState = { widthUm: 18000, heightUm: 42000, cornerUm: 1200 };
-const DEFAULT_CREATOR_OVERLAYS = { pins: false, snaps: false, behavior: false, dimensions: true };
+const DEFAULT_CREATOR_OVERLAYS = { pins: false, snaps: false, behavior: false, dimensions: false };
 
 type Point = { x: number; y: number };
 type Rect = { x: number; y: number; width: number; height: number };
 type Viewport = { x: number; y: number; zoom: number };
 type ShapeTool = "select" | "rect" | "ellipse" | "line" | "arc" | "text" | "hole" | "trim" | "split" | "measure";
 type BuiltInLayerId = "body_primary" | "pins_primary" | "label_primary";
-type LayerSelection = { kind: "base"; id: BuiltInLayerId } | { kind: "shape"; id: string } | { kind: "child"; id: string } | null;
+type LayerSelection =
+  | { kind: "base"; id: BuiltInLayerId }
+  | { kind: "shape"; id: string }
+  | { kind: "child"; id: string }
+  | { kind: "svg_group"; id: string }
+  | null;
 type PreviewPin = { id: string; label: string; x: number; y: number };
 type BlankBoardState = { widthUm: number; heightUm: number; cornerUm: number };
 type MeasureAxis = "free" | "horizontal" | "vertical";
+type SvgImportMode = "replace" | "append";
+type SvgNodeSummary = { id: string; name: string; tag: string };
 type BaseBodyForm = "package" | "rect" | "capsule" | "circle";
 type LineConstraintMode = "free" | "horizontal" | "vertical";
 type AspectConstraintMode = "free" | "equal";
@@ -58,6 +80,10 @@ type SketchConstraintState = {
   aspect?: AspectConstraintMode;
   lineRelation?: { mode: LineRelationMode; targetId?: string };
   shapeRelation?: { mode: ShapeRelationMode; targetId?: string };
+};
+type SvgGroupMeta = {
+  svgGroupId?: string;
+  svgGroupName?: string;
 };
 type BaseOverride = { widthUm?: number; heightUm?: number; cornerUm?: number; form?: BaseBodyForm; fill?: string; stroke?: string };
 type PinOverride = { label?: string; dxUm?: number; dyUm?: number };
@@ -100,7 +126,7 @@ type ShapeLayer =
       strokeWidth: number;
       construction?: boolean;
       constraints?: SketchConstraintState;
-    }
+    } & SvgGroupMeta
   | {
       id: string;
       name: string;
@@ -114,7 +140,7 @@ type ShapeLayer =
       strokeWidth: number;
       construction?: boolean;
       constraints?: SketchConstraintState;
-    }
+    } & SvgGroupMeta
   | {
       id: string;
       name: string;
@@ -127,7 +153,7 @@ type ShapeLayer =
       strokeWidth: number;
       construction?: boolean;
       constraints?: SketchConstraintState;
-    }
+    } & SvgGroupMeta
   | {
       id: string;
       name: string;
@@ -142,7 +168,7 @@ type ShapeLayer =
       strokeWidth: number;
       construction?: boolean;
       constraints?: SketchConstraintState;
-    }
+    } & SvgGroupMeta
   | {
       id: string;
       name: string;
@@ -156,7 +182,7 @@ type ShapeLayer =
       fontSize: number;
       construction?: boolean;
       constraints?: SketchConstraintState;
-    }
+    } & SvgGroupMeta
   | {
       id: string;
       name: string;
@@ -169,12 +195,30 @@ type ShapeLayer =
       strokeWidth: number;
       construction?: boolean;
       constraints?: SketchConstraintState;
-    };
+    } & SvgGroupMeta
+  | {
+      id: string;
+      name: string;
+      kind: "svg";
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      sourceWidth: number;
+      sourceHeight: number;
+      markup: string;
+      opacity?: number;
+      construction?: boolean;
+      constraints?: SketchConstraintState;
+    } & SvgGroupMeta;
 
 type PointerState =
   | null
   | { mode: "draw"; tool: Exclude<ShapeTool, "select">; origin: Point; current: Point }
   | { mode: "move-shape"; shapeId: string; origin: Point; initialShape: ShapeLayer }
+  | { mode: "move-shape-selection"; shapeIds: string[]; origin: Point; initialShapes: Record<string, ShapeLayer> }
+  | { mode: "move-svg-group"; groupId: string; origin: Point; initialShapes: Record<string, ShapeLayer> }
+  | { mode: "marquee-select"; origin: Point; current: Point; additive: boolean }
   | { mode: "move-base"; origin: Point; initialOffset: Point }
   | { mode: "move-child"; childId: string; origin: Point; initialAnchor: Point }
   | { mode: "pan-viewport"; origin: Point; initialViewport: Viewport }
@@ -187,6 +231,21 @@ type PointerState =
       initialBlankBoard: BlankBoardState;
       initialPackageState: ComponentPackageState;
     };
+
+type EditorSnapshot = {
+  componentName: string;
+  selectedBaseId: string;
+  blankBoard: BlankBoardState;
+  packageStates: Record<string, ComponentPackageState>;
+  baseOverrides: Record<string, BaseOverride>;
+  baseOffsets: Record<string, Point>;
+  pinOverrides: Record<string, Record<string, PinOverride>>;
+  children: ChildInstance[];
+  shapeLayers: ShapeLayer[];
+  persistentDimensions: PersistentDimension[];
+  runtimeProfile: RuntimeProfileState;
+  draft: BehaviorDraftState;
+};
 
 type BaseLayout = {
   bodyRect: Rect;
@@ -220,6 +279,53 @@ type ComponentDefinitionV1 = {
   persistentDimensions: PersistentDimension[];
   behaviorDraft: BehaviorDraftState;
   compiledBehavior: ReturnType<typeof createBehaviorDraftEntry>;
+  runtimeProfile?: RuntimeProfileState;
+  compiledRuntime?: ReturnType<typeof createCompiledRuntimeProfile>;
+};
+
+type SceneNodePin = {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  owner: string;
+};
+
+type ComponentPackageV1 = {
+  schema: "aura.component_package.v1";
+  metadata: {
+    name: string;
+    slug: string;
+    description?: string;
+    tags?: string[];
+  };
+  source: {
+    kind: "native_authoring";
+    origin: "component_lab";
+    base_kind: ComponentDefinitionBase["kind"];
+  };
+  definition: ComponentDefinitionV1;
+  scene: {
+    file: "scene.svg";
+    width: number;
+    height: number;
+    viewBox: string;
+    bounds: Rect;
+    nodeIds: string[];
+    pins: SceneNodePin[];
+  };
+};
+
+type WokwiCorrectionPart = {
+  notes?: string;
+  pinAnchorOverrides?: Record<string, { x?: number; y?: number }>;
+  pinLabelOverrides?: Record<string, string>;
+};
+
+type WokwiCorrectionsV1 = {
+  schema: "aura.wokwi_corrections.v1";
+  version: 1;
+  parts: Record<string, WokwiCorrectionPart>;
 };
 
 const TOOL_OPTIONS: { id: ShapeTool; label: string }[] = [
@@ -237,9 +343,65 @@ const TOOL_OPTIONS: { id: ShapeTool; label: string }[] = [
 
 const TOOL_GROUPS: { title: string; tools: ShapeTool[] }[] = [
   { title: "Inspect", tools: ["select", "measure"] },
-  { title: "Create", tools: ["rect", "ellipse", "line", "arc", "text", "hole"] },
+  { title: "Sketch", tools: ["rect", "ellipse", "line", "arc", "text", "hole"] },
   { title: "Modify", tools: ["trim", "split"] },
 ];
+
+const SOURCE_REFERENCE_CARDS = [
+  {
+    id: "wokwi-visual",
+    title: "Wokwi Visual",
+    toneClass: "creator-accent-visual",
+    lines: ["Study 2D part drawing and state-driven visuals.", "Useful for LEDs, displays, servo angle, and clean board presentation."],
+  },
+  {
+    id: "kicad-geometry",
+    title: "KiCad Geometry",
+    toneClass: "creator-accent-input",
+    lines: ["Use package dimensions, pitch, pad spacing, and connector layout as physical truth.", "This is the main source for package/body accuracy."],
+  },
+  {
+    id: "kicad-symbols",
+    title: "KiCad Symbols",
+    toneClass: "creator-accent-motion",
+    lines: ["Use logical pin naming and grouped metadata only where it helps the definition.", "This enriches the part, but does not decide the final look."],
+  },
+  {
+    id: "aura-output",
+    title: "AURA Package",
+    toneClass: "creator-accent-snap",
+    lines: ["Normalize imported or corrected sources into one deterministic AURA package.", "Final visuals, repeat rules, and runtime hooks belong here."],
+  },
+] as const;
+
+const WOKWI_SOURCE_IMPORTS = WOKWI_MODELS.map((model) => ({
+  id: model.libraryItemId,
+  title: model.title,
+  tagName: model.wokwi.tagName,
+  pinCount: model.pins.anchors.length,
+}));
+
+function formatResizeBehaviorLabel(mode: ResizeBehavior["mode"]) {
+  switch (mode) {
+    case "dip-step":
+      return "DIP Steps";
+    case "linear-pin-step":
+      return "Linear Growth";
+    case "mapped-pin-step":
+      return "Mapped Sizes";
+    default:
+      return "Fixed";
+  }
+}
+
+function getScaleToFit(
+  targetWidth: number,
+  targetHeight: number,
+  naturalWidth: number,
+  naturalHeight: number,
+) {
+  return Math.min(targetWidth / naturalWidth, targetHeight / naturalHeight);
+}
 
 function CreatorSection({
   title,
@@ -290,8 +452,42 @@ function toJsonReady<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
+function slugifyComponentName(value: string) {
+  return (value.trim() || "custom_component")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "") || "custom_component";
+}
+
+function escapeXml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
+function unionRects(rects: Rect[]): Rect | null {
+  if (rects.length === 0) {
+    return null;
+  }
+
+  const minX = Math.min(...rects.map((rect) => rect.x));
+  const minY = Math.min(...rects.map((rect) => rect.y));
+  const maxX = Math.max(...rects.map((rect) => rect.x + rect.width));
+  const maxY = Math.max(...rects.map((rect) => rect.y + rect.height));
+
+  return {
+    x: minX,
+    y: minY,
+    width: Math.max(1, maxX - minX),
+    height: Math.max(1, maxY - minY),
+  };
+}
+
 function isKnownLibraryItemId(itemId: string) {
-  return LIBRARY_ITEMS.some((item) => item.id === itemId);
+  return listComponentLabLibraryItems().some((item) => item.id === itemId);
 }
 
 function createComponentDefinition(
@@ -305,6 +501,7 @@ function createComponentDefinition(
   children: ChildInstance[],
   shapeLayers: ShapeLayer[],
   persistentDimensions: PersistentDimension[],
+  runtimeProfile: RuntimeProfileState,
   draft: BehaviorDraftState,
 ): ComponentDefinitionV1 {
   const base: ComponentDefinitionBase =
@@ -336,6 +533,8 @@ function createComponentDefinition(
     children: toJsonReady(children),
     shapeLayers: toJsonReady(shapeLayers),
     persistentDimensions: toJsonReady(persistentDimensions),
+    runtimeProfile: toJsonReady(runtimeProfile),
+    compiledRuntime: createCompiledRuntimeProfile(runtimeProfile),
     behaviorDraft: toJsonReady(draft),
     compiledBehavior: createBehaviorDraftEntry(draft),
   };
@@ -422,6 +621,9 @@ function parseComponentDefinition(input: string): ComponentDefinitionV1 {
   const behaviorDraft = isRecord(parsed.behaviorDraft)
     ? ({ ...createDefaultBehaviorDraftState(), ...(parsed.behaviorDraft as Partial<BehaviorDraftState>) })
     : createDefaultBehaviorDraftState();
+  const runtimeProfile = isRecord(parsed.runtimeProfile)
+    ? ({ ...createDefaultRuntimeProfileState(), ...(parsed.runtimeProfile as Partial<RuntimeProfileState>) })
+    : createRuntimeProfileStateFromBehaviorDraft(behaviorDraft);
 
   return {
     schema: "aura.component_definition.v1",
@@ -434,6 +636,36 @@ function parseComponentDefinition(input: string): ComponentDefinitionV1 {
     children,
     shapeLayers,
     persistentDimensions,
+    runtimeProfile,
+    compiledRuntime: createCompiledRuntimeProfile(runtimeProfile),
+    behaviorDraft,
+    compiledBehavior: createBehaviorDraftEntry(behaviorDraft),
+  };
+}
+
+function createRuntimeExampleDefinition({
+  metadata,
+  base,
+  shapeLayers = [],
+  children = [],
+  runtimeProfile,
+}: {
+  metadata: ComponentDefinitionV1["metadata"];
+  base: ComponentDefinitionBase;
+  shapeLayers?: ShapeLayer[];
+  children?: ChildInstance[];
+  runtimeProfile: RuntimeProfileState;
+}): ComponentDefinitionV1 {
+  const behaviorDraft = createBehaviorDraftFromRuntimeProfile(runtimeProfile);
+  return {
+    schema: "aura.component_definition.v1",
+    metadata,
+    base,
+    children,
+    shapeLayers,
+    persistentDimensions: [],
+    runtimeProfile,
+    compiledRuntime: createCompiledRuntimeProfile(runtimeProfile),
     behaviorDraft,
     compiledBehavior: createBehaviorDraftEntry(behaviorDraft),
   };
@@ -633,6 +865,294 @@ const EXAMPLE_COMPONENT_DEFINITIONS: Array<{
       }),
     },
   },
+  {
+    id: "resistor_0603_base",
+    label: "Resistor 0603",
+    description: "KiCad-backed passive example with exact 0603 pad spacing and AURA finish layers.",
+    definition: {
+      schema: "aura.component_definition.v1",
+      metadata: {
+        name: "Resistor 0603 Base",
+        description: "KiCad-backed 0603 resistor base using exact footprint pads and synthesized AURA finish rules.",
+        tags: ["example", "resistor", "0603", "base_component", "kicad_backed"],
+      },
+      base: {
+        kind: "library_item",
+        itemId: "resistor_0603",
+        override: { fill: "#dddddd", stroke: "#111111" },
+      },
+      children: [],
+      shapeLayers: [
+        { id: "pad_1", name: "Pad 1", kind: "rect", x: 105, y: 135, width: 160, height: 190, radius: 40, fill: "#c8c8c8", stroke: "#888888", strokeWidth: 1 },
+        { id: "pad_2", name: "Pad 2", kind: "rect", x: 435, y: 135, width: 160, height: 190, radius: 40, fill: "#c8c8c8", stroke: "#888888", strokeWidth: 1 },
+        { id: "res_body_shell", name: "Resistor Body", kind: "rect", x: 190, y: 147.5, width: 320, height: 165, radius: 16.5, fill: "#dddddd", stroke: "#111111", strokeWidth: 1.3 },
+        { id: "res_body_inset", name: "Body Inset", kind: "rect", x: 228.4, y: 167.3, width: 243.2, height: 125.4, radius: 15, fill: "rgba(255,255,255,0.22)", stroke: "#7c7c7c", strokeWidth: 0.9 },
+        { id: "res_band_primary", name: "Band 1", kind: "rect", x: 305.2, y: 167.3, width: 38.4, height: 125.4, radius: 4, fill: "#161616", stroke: "#161616", strokeWidth: 0 },
+        { id: "res_band_secondary", name: "Band 2", kind: "rect", x: 362.8, y: 167.3, width: 25.6, height: 125.4, radius: 4, fill: "#4b4b4b", stroke: "#4b4b4b", strokeWidth: 0 },
+        { id: "res_silk_1", name: "Silk 1", kind: "line", x1: 302.5, y1: 125.5, x2: 397.5, y2: 125.5, stroke: "#1a1a1a", strokeWidth: 1.6 },
+        { id: "res_silk_2", name: "Silk 2", kind: "line", x1: 302.5, y1: 334.5, x2: 397.5, y2: 334.5, stroke: "#1a1a1a", strokeWidth: 1.6 },
+      ],
+      persistentDimensions: [],
+      behaviorDraft: createDefaultBehaviorDraftState(),
+      compiledBehavior: createBehaviorDraftEntry(createDefaultBehaviorDraftState()),
+    },
+  },
+  {
+    id: "capacitor_0603_base",
+    label: "Capacitor 0603",
+    description: "KiCad-backed ceramic passive example with exact 0603 footprint body and pads.",
+    definition: {
+      schema: "aura.component_definition.v1",
+      metadata: {
+        name: "Capacitor 0603 Base",
+        description: "KiCad-backed 0603 capacitor base using exact footprint pads and synthesized ceramic finish rules.",
+        tags: ["example", "capacitor", "0603", "base_component", "kicad_backed"],
+      },
+      base: {
+        kind: "library_item",
+        itemId: "capacitor_0603",
+        override: { fill: "#f2f2f2", stroke: "#111111" },
+      },
+      children: [],
+      shapeLayers: [
+        { id: "pad_1", name: "Pad 1", kind: "rect", x: 105, y: 135, width: 180, height: 190, radius: 45, fill: "#d4d4d4", stroke: "#8e8e8e", strokeWidth: 1 },
+        { id: "pad_2", name: "Pad 2", kind: "rect", x: 415, y: 135, width: 180, height: 190, radius: 45, fill: "#d4d4d4", stroke: "#8e8e8e", strokeWidth: 1 },
+        { id: "cap_body_shell", name: "Capacitor Body", kind: "rect", x: 190, y: 150, width: 320, height: 160, radius: 12.8, fill: "#fbfbfb", stroke: "#8c8c8c", strokeWidth: 1.2 },
+        { id: "cap_body_glaze", name: "Ceramic Glaze", kind: "rect", x: 238, y: 174, width: 224, height: 112, radius: 13.4, fill: "rgba(255,255,255,0.28)", stroke: "#cfcfcf", strokeWidth: 0.7 },
+        { id: "cap_left_cap", name: "End Cap Left", kind: "rect", x: 215.6, y: 172.4, width: 38.4, height: 115.2, radius: 4, fill: "#dddddd", stroke: "#9a9a9a", strokeWidth: 0.6 },
+        { id: "cap_right_cap", name: "End Cap Right", kind: "rect", x: 446, y: 172.4, width: 38.4, height: 115.2, radius: 4, fill: "#dddddd", stroke: "#9a9a9a", strokeWidth: 0.6 },
+        { id: "cap_silk_1", name: "Silk 1", kind: "line", x1: 321.9, y1: 128, x2: 378.1, y2: 128, stroke: "#1a1a1a", strokeWidth: 1.6 },
+        { id: "cap_silk_2", name: "Silk 2", kind: "line", x1: 321.9, y1: 332, x2: 378.1, y2: 332, stroke: "#1a1a1a", strokeWidth: 1.6 },
+      ],
+      persistentDimensions: [],
+      behaviorDraft: createDefaultBehaviorDraftState(),
+      compiledBehavior: createBehaviorDraftEntry(createDefaultBehaviorDraftState()),
+    },
+  },
+  {
+    id: "soic_16_package_base",
+    label: "SOIC-16 Package",
+    description: "Repeat-ready IC package example for the first structured package-family pass.",
+    definition: {
+      schema: "aura.component_definition.v1",
+      metadata: {
+        name: "SOIC-16 Package Base",
+        description: "Repeat-ready SOIC package base with top label area and family-backed pin count.",
+        tags: ["example", "ic_package", "soic", "base_component"],
+      },
+      base: {
+        kind: "library_item",
+        itemId: "soic_ic",
+        packageState: { pinCount: 16 },
+        override: { fill: "#d8d8d8", stroke: "#111111" },
+      },
+      children: [],
+      shapeLayers: [
+        { id: "soic_label_plate", name: "Top Label Plate", kind: "rect", x: 288, y: 198, width: 124, height: 42, radius: 8, fill: "#f6f6f6", stroke: "#7a7a7a", strokeWidth: 1 },
+        { id: "soic_mark", name: "Top Mark", kind: "text", x: 306, y: 208, width: 96, height: 22, text: "SOIC16", fill: "#111111", fontSize: 16 },
+      ],
+      persistentDimensions: [],
+      behaviorDraft: createDefaultBehaviorDraftState(),
+      compiledBehavior: createBehaviorDraftEntry(createDefaultBehaviorDraftState()),
+    },
+  },
+  {
+    id: "header_1x8_base",
+    label: "Header 1x8",
+    description: "Repeat-ready connector example for the first header family pass.",
+    definition: {
+      schema: "aura.component_definition.v1",
+      metadata: {
+        name: "Header 1x8 Base",
+        description: "Single-column 1x8 header base showing the repeat-ready connector family approach.",
+        tags: ["example", "header", "1x8", "base_component"],
+      },
+      base: {
+        kind: "library_item",
+        itemId: "header_strip",
+        packageState: { pinCount: 8, columnCount: 1 },
+        override: { fill: "#d0d0d0", stroke: "#111111" },
+      },
+      children: [],
+      shapeLayers: [
+        { id: "header_mark_1", name: "Pin 1 Mark", kind: "text", x: 320, y: 154, width: 22, height: 18, text: "1", fill: "#111111", fontSize: 14 },
+        { id: "header_mark_8", name: "Pin 8 Mark", kind: "text", x: 320, y: 316, width: 22, height: 18, text: "8", fill: "#111111", fontSize: 14 },
+      ],
+      persistentDimensions: [],
+      behaviorDraft: createDefaultBehaviorDraftState(),
+      compiledBehavior: createBehaviorDraftEntry(createDefaultBehaviorDraftState()),
+    },
+  },
+  {
+    id: "usb_micro_b_base",
+    label: "USB Micro-B",
+    description: "Board-edge connector example for the first USB family pass.",
+    definition: {
+      schema: "aura.component_definition.v1",
+      metadata: {
+        name: "USB Micro-B Base",
+        description: "USB Micro-B board-edge connector base using the new connector family entry.",
+        tags: ["example", "usb", "micro_b", "base_component"],
+      },
+      base: {
+        kind: "library_item",
+        itemId: "usb_micro_b",
+        override: { fill: "#cfcfcf", stroke: "#111111" },
+      },
+      children: [],
+      shapeLayers: [
+        { id: "usb_label", name: "USB Label", kind: "text", x: 286, y: 258, width: 130, height: 22, text: "MICRO USB", fill: "#111111", fontSize: 14 },
+      ],
+      persistentDimensions: [],
+      behaviorDraft: createDefaultBehaviorDraftState(),
+      compiledBehavior: createBehaviorDraftEntry(createDefaultBehaviorDraftState()),
+    },
+  },
+  {
+    id: "push_button_runtime",
+    label: "Push Button",
+    description: "Behavior-backed tactile input example with press travel and auto-return.",
+    definition: createRuntimeExampleDefinition({
+      metadata: {
+        name: "Push Button Input",
+        description: "Momentary push-button example that exports press travel and release behavior explicitly.",
+        tags: ["example", "runtime_profile", "push_button", "input"],
+      },
+      base: {
+        kind: "library_item",
+        itemId: "button_tact_6mm",
+      },
+      runtimeProfile: {
+        ...createDefaultRuntimeProfileState(),
+        profileId: "push_button",
+        signalName: "button_press",
+        targetId: "handle_primary",
+        valueMin: 0,
+        valueMax: 1,
+        defaultValue: 0,
+        travelAxis: "y",
+        travelMin: 0,
+        travelMax: 2.8,
+        autoReset: true,
+        offLabel: "up",
+        onLabel: "down",
+      },
+    }),
+  },
+  {
+    id: "potentiometer_runtime",
+    label: "Potentiometer",
+    description: "Behavior-backed rotary input example with an explicit editable runtime profile.",
+    definition: createRuntimeExampleDefinition({
+      metadata: {
+        name: "Potentiometer Input",
+        description: "Rotary input example that defines value range, angle sweep, and detent count directly.",
+        tags: ["example", "runtime_profile", "potentiometer", "input"],
+      },
+      base: {
+        kind: "library_item",
+        itemId: "potentiometer_knob",
+      },
+      runtimeProfile: {
+        ...createDefaultRuntimeProfileState(),
+        profileId: "potentiometer",
+        signalName: "pot_value",
+        targetId: "handle_primary",
+        valueMin: 0,
+        valueMax: 1023,
+        defaultValue: 512,
+        angleMin: -135,
+        angleMax: 135,
+        detentCount: 24,
+      },
+    }),
+  },
+  {
+    id: "slide_switch_runtime",
+    label: "Slide Switch",
+    description: "Behavior-backed slide input example with editable travel and state labels.",
+    definition: createRuntimeExampleDefinition({
+      metadata: {
+        name: "Slide Switch Input",
+        description: "Binary slide input example with a deterministic runtime profile and travel range.",
+        tags: ["example", "runtime_profile", "slide_switch", "input"],
+      },
+      base: {
+        kind: "library_item",
+        itemId: "slide_switch_spdt",
+      },
+      runtimeProfile: {
+        ...createDefaultRuntimeProfileState(),
+        profileId: "slide_switch",
+        signalName: "switch_state",
+        targetId: "handle_primary",
+        valueMin: 0,
+        valueMax: 1,
+        defaultValue: 0,
+        travelAxis: "x",
+        travelMin: -18,
+        travelMax: 18,
+        offLabel: "left",
+        onLabel: "right",
+      },
+    }),
+  },
+  {
+    id: "toggle_switch_runtime",
+    label: "Toggle Switch",
+    description: "Behavior-backed toggle input example with explicit off/on naming and lever angles.",
+    definition: createRuntimeExampleDefinition({
+      metadata: {
+        name: "Toggle Switch Input",
+        description: "Latched lever input example that exports a simple two-state runtime profile.",
+        tags: ["example", "runtime_profile", "toggle_switch", "input"],
+      },
+      base: {
+        kind: "library_item",
+        itemId: "toggle_switch_spdt",
+      },
+      runtimeProfile: {
+        ...createDefaultRuntimeProfileState(),
+        profileId: "toggle_switch",
+        signalName: "toggle_state",
+        targetId: "handle_primary",
+        valueMin: 0,
+        valueMax: 1,
+        defaultValue: 1,
+        angleMin: -22,
+        angleMax: 22,
+        offLabel: "off",
+        onLabel: "on",
+      },
+    }),
+  },
+  {
+    id: "servo_runtime",
+    label: "Servo",
+    description: "Behavior-backed actuator example with angle output metadata.",
+    definition: createRuntimeExampleDefinition({
+      metadata: {
+        name: "Servo Output",
+        description: "Servo output example that defines the angle domain directly for later simulation and UI editing.",
+        tags: ["example", "runtime_profile", "servo", "output"],
+      },
+      base: {
+        kind: "library_item",
+        itemId: "servo_micro",
+      },
+      runtimeProfile: {
+        ...createDefaultRuntimeProfileState(),
+        profileId: "servo_angle",
+        signalName: "servo_angle",
+        targetId: "body_primary",
+        valueMin: 0,
+        valueMax: 180,
+        defaultValue: 90,
+        angleMin: 0,
+        angleMax: 180,
+      },
+    }),
+  },
 ];
 
 function constrainMeasurePoint(start: Point, point: Point, axis: MeasureAxis): Point {
@@ -749,6 +1269,18 @@ function getShapeCenter(shape: ShapeLayer): Point {
   };
 }
 
+function getSvgGroupBounds(shapes: ShapeLayer[]): Rect | null {
+  return unionRects(shapes.map(getShapeBounds));
+}
+
+function rectsIntersect(a: Rect, b: Rect) {
+  return a.x <= b.x + b.width && a.x + a.width >= b.x && a.y <= b.y + b.height && a.y + a.height >= b.y;
+}
+
+function isAdditiveSelectionEvent(event: Pick<MouseEvent, "ctrlKey" | "metaKey" | "shiftKey">) {
+  return event.ctrlKey || event.metaKey || event.shiftKey;
+}
+
 function getRectSnapPoints(rect: Rect): Point[] {
   const cx = rect.x + rect.width / 2;
   const cy = rect.y + rect.height / 2;
@@ -852,7 +1384,11 @@ function getShapeSnapPoints(shape: ShapeLayer): Point[] {
   return getRectSnapPoints(getShapeBounds(shape));
 }
 
-function getSnappedPoint(point: Point, candidates: Point[], threshold = 10): Point {
+function getSnappedPoint(point: Point, candidates: Point[], threshold = 10, gridStep = CREATOR_GRID_STEP_PX): Point {
+  const gridPoint = {
+    x: round(Math.round(point.x / gridStep) * gridStep),
+    y: round(Math.round(point.y / gridStep) * gridStep),
+  };
   let best: Point | null = null;
   let bestDistance = threshold;
 
@@ -864,7 +1400,7 @@ function getSnappedPoint(point: Point, candidates: Point[], threshold = 10): Poi
     }
   }
 
-  return best ? { x: round(best.x), y: round(best.y) } : { x: round(point.x), y: round(point.y) };
+  return best ? { x: round(best.x), y: round(best.y) } : gridPoint;
 }
 
 function applyLineRelation(shape: Extract<ShapeLayer, { kind: "line" }>, allShapes: ShapeLayer[]) {
@@ -1007,6 +1543,287 @@ function hasMeaningfulDrawGesture(
     return distance(origin, current) >= 8;
   }
   return dx >= 8 || dy >= 8;
+}
+
+function isSvgGraphicsElementCandidate(element: Element) {
+  const tag = element.tagName.toLowerCase();
+  return tag !== "defs" && tag !== "title" && tag !== "desc" && tag !== "metadata" && tag !== "style" && tag !== "script";
+}
+
+function getExplodableSvgElements(root: ParentNode): Element[] {
+  const directCandidates = Array.from(root.children).filter((element) => isSvgGraphicsElementCandidate(element));
+  if (directCandidates.length === 1 && directCandidates[0]?.tagName.toLowerCase() === "g") {
+    const nestedCandidates = Array.from(directCandidates[0].children).filter((element) => isSvgGraphicsElementCandidate(element));
+    if (nestedCandidates.length > 0) {
+      return nestedCandidates;
+    }
+  }
+  return directCandidates;
+}
+
+function slugifySvgLayerName(input: string) {
+  const normalized = input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return normalized.length > 0 ? normalized : "svg_node";
+}
+
+function ensureUniqueShapeId(baseId: string, usedIds: Set<string>) {
+  if (!usedIds.has(baseId)) {
+    usedIds.add(baseId);
+    return baseId;
+  }
+  let index = 2;
+  while (usedIds.has(`${baseId}_${index}`)) {
+    index += 1;
+  }
+  const next = `${baseId}_${index}`;
+  usedIds.add(next);
+  return next;
+}
+
+function ensureUniqueSvgGroupId(baseId: string, existingGroupIds: Set<string>) {
+  if (!existingGroupIds.has(baseId)) {
+    existingGroupIds.add(baseId);
+    return baseId;
+  }
+  let index = 2;
+  while (existingGroupIds.has(`${baseId}_${index}`)) {
+    index += 1;
+  }
+  const next = `${baseId}_${index}`;
+  existingGroupIds.add(next);
+  return next;
+}
+
+function getShapeGroupName(shape: ShapeLayer) {
+  return shape.svgGroupName ?? shape.name;
+}
+
+function normalizeSvgGroupIds(layers: ShapeLayer[], existingGroupIds: Set<string>) {
+  const remappedIds = new Map<string, string>();
+  return layers.map((shape) => {
+    if (!shape.svgGroupId) {
+      return shape;
+    }
+    let nextGroupId = remappedIds.get(shape.svgGroupId);
+    if (!nextGroupId) {
+      nextGroupId = ensureUniqueSvgGroupId(shape.svgGroupId, existingGroupIds);
+      remappedIds.set(shape.svgGroupId, nextGroupId);
+    }
+    return nextGroupId === shape.svgGroupId ? shape : { ...shape, svgGroupId: nextGroupId };
+  });
+}
+
+function parseSvgFileToShapeLayers(text: string, fileName: string): { componentName: string; layers: ShapeLayer[]; importedCount: number } {
+  if (typeof DOMParser === "undefined" || typeof document === "undefined") {
+    throw new Error("SVG import requires a browser environment.");
+  }
+
+  const parser = new DOMParser();
+  const documentNode = parser.parseFromString(text, "image/svg+xml");
+  const parserError = documentNode.querySelector("parsererror");
+  if (parserError) {
+    throw new Error("SVG parse failed.");
+  }
+
+  const root = documentNode.documentElement;
+  if (!root || root.tagName.toLowerCase() !== "svg") {
+    throw new Error("Imported file is not a valid SVG scene.");
+  }
+
+  const mount = document.createElement("div");
+  mount.style.position = "absolute";
+  mount.style.left = "-100000px";
+  mount.style.top = "-100000px";
+  mount.style.width = "0";
+  mount.style.height = "0";
+  mount.style.opacity = "0";
+  mount.style.pointerEvents = "none";
+  mount.style.overflow = "hidden";
+
+  const mountedSvg = document.importNode(root, true) as unknown as SVGSVGElement;
+  if (!mountedSvg.getAttribute("width")) {
+    mountedSvg.setAttribute("width", "800");
+  }
+  if (!mountedSvg.getAttribute("height")) {
+    mountedSvg.setAttribute("height", "800");
+  }
+  mount.appendChild(mountedSvg);
+  document.body.appendChild(mount);
+
+  try {
+    const baseGroupName = fileName.replace(/\.svg$/i, "").trim() || "Imported SVG";
+    const svgGroupId = slugifySvgLayerName(`${baseGroupName}_group`);
+    const sharedSupportMarkup = Array.from(mountedSvg.children)
+      .filter((element) => {
+        const tag = element.tagName.toLowerCase();
+        return tag === "defs" || tag === "style";
+      })
+      .map((element) => element.outerHTML)
+      .join("");
+
+    const directCandidates = getExplodableSvgElements(mountedSvg);
+    const fallbackCandidates = Array.from(mountedSvg.querySelectorAll("*")).filter((element) => isSvgGraphicsElementCandidate(element));
+    const nodes = (directCandidates.length > 0 ? directCandidates : fallbackCandidates).filter((element) => {
+      const tag = element.tagName.toLowerCase();
+      return tag !== "svg";
+    });
+
+    const usedIds = new Set<string>();
+    const layers: ShapeLayer[] = nodes.flatMap((element, index) => {
+      if (!(element instanceof SVGGraphicsElement)) {
+        return [];
+      }
+
+      let bounds: DOMRect | SVGRect;
+      try {
+        bounds = element.getBBox();
+      } catch {
+        return [];
+      }
+
+      const width = Math.max(1, Number(bounds.width) || 1);
+      const height = Math.max(1, Number(bounds.height) || 1);
+      const x = Number(bounds.x) || 0;
+      const y = Number(bounds.y) || 0;
+      const rawName = element.getAttribute("id") || element.getAttribute("data-name") || `${element.tagName}_${index + 1}`;
+      const id = ensureUniqueShapeId(slugifySvgLayerName(rawName), usedIds);
+      const opacityAttr = element.getAttribute("opacity");
+      const opacity = opacityAttr == null ? 1 : Number(opacityAttr);
+      const markup = `${sharedSupportMarkup}<g transform="translate(${-x} ${-y})">${element.outerHTML}</g>`;
+
+      return [{
+        id,
+        name: rawName,
+        kind: "svg" as const,
+        svgGroupId,
+        svgGroupName: baseGroupName,
+        x,
+        y,
+        width,
+        height,
+        sourceWidth: width,
+        sourceHeight: height,
+        markup,
+        opacity: Number.isFinite(opacity) ? clamp(opacity, 0, 1) : 1,
+        construction: false,
+      }];
+    });
+
+    if (layers.length === 0) {
+      throw new Error("SVG import found no editable graphics nodes.");
+    }
+
+    return {
+      componentName: fileName.replace(/\.svg$/i, "").trim() || "Imported SVG",
+      layers,
+      importedCount: layers.length,
+    };
+  } finally {
+    document.body.removeChild(mount);
+  }
+}
+
+function extractSvgSubLayers(
+  shape: Extract<ShapeLayer, { kind: "svg" }>,
+  existingIds: Set<string>,
+  existingGroupIds: Set<string>,
+): { layers: ShapeLayer[]; nodes: SvgNodeSummary[] } {
+  if (typeof DOMParser === "undefined" || typeof document === "undefined") {
+    throw new Error("SVG node extraction requires a browser environment.");
+  }
+
+  const parser = new DOMParser();
+  const documentNode = parser.parseFromString(`<svg xmlns="http://www.w3.org/2000/svg">${shape.markup}</svg>`, "image/svg+xml");
+  const parserError = documentNode.querySelector("parsererror");
+  if (parserError) {
+    throw new Error("SVG node extraction failed.");
+  }
+
+  const root = documentNode.documentElement;
+  const mount = document.createElement("div");
+  mount.style.position = "absolute";
+  mount.style.left = "-100000px";
+  mount.style.top = "-100000px";
+  mount.style.width = "0";
+  mount.style.height = "0";
+  mount.style.opacity = "0";
+  mount.style.pointerEvents = "none";
+  mount.style.overflow = "hidden";
+
+  const mountedSvg = document.importNode(root, true) as unknown as SVGSVGElement;
+  mountedSvg.setAttribute("width", String(Math.max(1, shape.width)));
+  mountedSvg.setAttribute("height", String(Math.max(1, shape.height)));
+  mount.appendChild(mountedSvg);
+  document.body.appendChild(mount);
+
+  try {
+    const baseGroupName = getShapeGroupName(shape);
+    const svgGroupId = ensureUniqueSvgGroupId(
+      slugifySvgLayerName(`${shape.svgGroupId ?? shape.id}_parts`),
+      existingGroupIds,
+    );
+    const sharedSupportMarkup = Array.from(mountedSvg.children)
+      .filter((element) => {
+        const tag = element.tagName.toLowerCase();
+        return tag === "defs" || tag === "style";
+      })
+      .map((element) => element.outerHTML)
+      .join("");
+
+    const nodes = getExplodableSvgElements(mountedSvg).filter((element) => element.tagName.toLowerCase() !== "svg");
+    const layers: ShapeLayer[] = [];
+    const summaries: SvgNodeSummary[] = [];
+
+    nodes.forEach((element, index) => {
+      if (!(element instanceof SVGGraphicsElement)) {
+        return;
+      }
+
+      let bounds: DOMRect | SVGRect;
+      try {
+        bounds = element.getBBox();
+      } catch {
+        return;
+      }
+
+      const width = Math.max(1, Number(bounds.width) || 1);
+      const height = Math.max(1, Number(bounds.height) || 1);
+      const localX = Number(bounds.x) || 0;
+      const localY = Number(bounds.y) || 0;
+      const rawName = element.getAttribute("id") || element.getAttribute("data-name") || `${shape.name}_${element.tagName}_${index + 1}`;
+      const id = ensureUniqueShapeId(slugifySvgLayerName(rawName), existingIds);
+      summaries.push({ id, name: rawName, tag: element.tagName.toLowerCase() });
+
+      layers.push({
+        id,
+        name: rawName,
+        kind: "svg",
+        svgGroupId,
+        svgGroupName: baseGroupName,
+        x: shape.x + localX,
+        y: shape.y + localY,
+        width,
+        height,
+        sourceWidth: width,
+        sourceHeight: height,
+        markup: `${sharedSupportMarkup}<g transform="translate(${-localX} ${-localY})">${element.outerHTML}</g>`,
+        opacity: shape.opacity ?? 1,
+        construction: shape.construction,
+      });
+    });
+
+    if (layers.length === 0) {
+      throw new Error("No explodable SVG nodes were found in this layer.");
+    }
+
+    return { layers, nodes: summaries };
+  } finally {
+    document.body.removeChild(mount);
+  }
 }
 
 function applyShapeConstraints(shape: ShapeLayer, allShapes: ShapeLayer[] = []): ShapeLayer {
@@ -1205,6 +2022,18 @@ function createGeneratedComponentDetails(packageDef: PackageDefinition | null, b
     if (connectorStyle === "idc-box") {
       addRect("Box Shroud", rect.x + rect.width * 0.08, rect.y + rect.height * 0.08, rect.width * 0.84, rect.height * 0.84, 6, "rgba(255,255,255,0.04)", "#2a2a2a", 1.2);
       addRect("Key Slot", rect.x + rect.width * 0.4, rect.y + rect.height * 0.14, rect.width * 0.2, rect.height * 0.12, 3, "#151515", "#888888", 1);
+      return layers;
+    }
+
+    if (connectorStyle === "usb-shell") {
+      addRect("Shell", rect.x + rect.width * 0.04, rect.y + rect.height * 0.08, rect.width * 0.92, rect.height * 0.78, 5, "rgba(255,255,255,0.08)", "#cfcfcf", 1.2);
+      addRect("Port Opening", rect.x + rect.width * 0.18, rect.y + rect.height * 0.18, rect.width * 0.64, rect.height * 0.22, 3, "#111111", "#666666", 1);
+      addRect("Tongue", rect.x + rect.width * 0.24, rect.y + rect.height * 0.24, rect.width * 0.52, rect.height * 0.08, 2, "#f3f3f3", "#9a9a9a", 0.9);
+      addRect("Tab Left", rect.x + rect.width * 0.04, rect.y + rect.height * 0.42, rect.width * 0.1, rect.height * 0.2, 2, "#a8a8a8", "#d8d8d8", 0.9);
+      addRect("Tab Right", rect.x + rect.width * 0.86, rect.y + rect.height * 0.42, rect.width * 0.1, rect.height * 0.2, 2, "#a8a8a8", "#d8d8d8", 0.9);
+      for (const pin of baseLayout.previewPins) {
+        addLine("Contact", pin.x, rect.y + rect.height * 0.32, pin.x, rect.y + rect.height * 0.66, "#d8d8d8", 1.2);
+      }
       return layers;
     }
   }
@@ -1638,6 +2467,33 @@ function renderShapeLayer(shape: ShapeLayer, selected: boolean, hidden: boolean)
     );
   }
 
+  if (shape.kind === "svg") {
+    const scaleX = shape.width / Math.max(1, shape.sourceWidth);
+    const scaleY = shape.height / Math.max(1, shape.sourceHeight);
+    return (
+      <g>
+        {selected ? (
+          <rect
+            x={shape.x}
+            y={shape.y}
+            width={shape.width}
+            height={shape.height}
+            rx={6}
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth={1.4}
+            strokeDasharray="6 4"
+          />
+        ) : null}
+        <g
+          transform={`translate(${shape.x} ${shape.y}) scale(${scaleX} ${scaleY})`}
+          opacity={shape.opacity ?? 1}
+          dangerouslySetInnerHTML={{ __html: shape.markup }}
+        />
+      </g>
+    );
+  }
+
   return (
     <path
       d={getArcPath(shape)}
@@ -1648,6 +2504,270 @@ function renderShapeLayer(shape: ShapeLayer, selected: boolean, hidden: boolean)
       strokeDasharray={dash}
     />
   );
+}
+
+function renderShapeLayerToSvg(shape: ShapeLayer) {
+  const stroke = "stroke" in shape ? (shape.construction ? "#b8b8b8" : shape.stroke) : "#b8b8b8";
+  const fill = shape.construction ? "none" : "fill" in shape ? shape.fill : "none";
+  const dash = shape.construction ? ' stroke-dasharray="8 5"' : "";
+  const common = `data-aura-shape-kind="${shape.kind}" data-aura-shape-id="${escapeXml(shape.id)}"`;
+
+  if (shape.kind === "rect") {
+    return `<rect ${common} x="${round(shape.x, 3)}" y="${round(shape.y, 3)}" width="${round(shape.width, 3)}" height="${round(shape.height, 3)}" rx="${round(shape.radius, 3)}" fill="${escapeXml(fill)}" stroke="${escapeXml(stroke)}" stroke-width="${round(shape.strokeWidth, 3)}"${dash} />`;
+  }
+
+  if (shape.kind === "ellipse") {
+    return `<ellipse ${common} cx="${round(shape.x + shape.width / 2, 3)}" cy="${round(shape.y + shape.height / 2, 3)}" rx="${round(shape.width / 2, 3)}" ry="${round(shape.height / 2, 3)}" fill="${escapeXml(fill)}" stroke="${escapeXml(stroke)}" stroke-width="${round(shape.strokeWidth, 3)}"${dash} />`;
+  }
+
+  if (shape.kind === "line") {
+    return `<line ${common} x1="${round(shape.x1, 3)}" y1="${round(shape.y1, 3)}" x2="${round(shape.x2, 3)}" y2="${round(shape.y2, 3)}" stroke="${escapeXml(stroke)}" stroke-width="${round(shape.strokeWidth, 3)}" stroke-linecap="round"${dash} />`;
+  }
+
+  if (shape.kind === "text") {
+    return `<g ${common}><text x="${round(shape.x + 4, 3)}" y="${round(shape.y + shape.height * 0.72, 3)}" fill="${escapeXml(shape.construction ? "#b8b8b8" : shape.fill)}" font-family="IBM Plex Mono, monospace" font-size="${round(shape.fontSize, 3)}" letter-spacing="0.08em">${escapeXml(shape.text)}</text></g>`;
+  }
+
+  if (shape.kind === "hole") {
+    const cx = shape.x + shape.width / 2;
+    const cy = shape.y + shape.height / 2;
+    const rx = shape.width / 2;
+    const ry = shape.height / 2;
+    return `<g ${common}><ellipse cx="${round(cx, 3)}" cy="${round(cy, 3)}" rx="${round(rx, 3)}" ry="${round(ry, 3)}" fill="none" stroke="${escapeXml(stroke)}" stroke-width="${round(shape.strokeWidth, 3)}"${dash} /><line x1="${round(cx - rx * 0.45, 3)}" y1="${round(cy, 3)}" x2="${round(cx + rx * 0.45, 3)}" y2="${round(cy, 3)}" stroke="${escapeXml(stroke)}" stroke-width="1"${dash} /><line x1="${round(cx, 3)}" y1="${round(cy - ry * 0.45, 3)}" x2="${round(cx, 3)}" y2="${round(cy + ry * 0.45, 3)}" stroke="${escapeXml(stroke)}" stroke-width="1"${dash} /></g>`;
+  }
+
+  if (shape.kind === "svg") {
+    const scaleX = shape.width / Math.max(1, shape.sourceWidth);
+    const scaleY = shape.height / Math.max(1, shape.sourceHeight);
+    const opacity = shape.opacity != null && shape.opacity < 1 ? ` opacity="${round(shape.opacity, 3)}"` : "";
+    return `<g ${common} transform="translate(${round(shape.x, 3)} ${round(shape.y, 3)}) scale(${round(scaleX, 5)} ${round(scaleY, 5)})"${opacity}>${shape.markup}</g>`;
+  }
+
+  return `<path ${common} d="${escapeXml(getArcPath(shape))}" fill="none" stroke="${escapeXml(stroke)}" stroke-width="${round(shape.strokeWidth, 3)}" stroke-linecap="round"${dash} />`;
+}
+
+function createBaseSceneGroups(
+  componentName: string,
+  selectedPackage: PackageDefinition | null,
+  baseLayout: BaseLayout,
+  baseOverride: BaseOverride | undefined,
+  hasBase: boolean,
+) {
+  if (!hasBase || baseLayout.bodyRect.width <= 0 || baseLayout.bodyRect.height <= 0) {
+    return {
+      bodyLayers: [] as ShapeLayer[],
+      pinLayers: [] as ShapeLayer[],
+      labelLayers: [] as ShapeLayer[],
+    };
+  }
+
+  let bodyLayers: ShapeLayer[] = [];
+  let pinLayers: ShapeLayer[] = [];
+  if (selectedPackage) {
+    const generatedLayers = createEditableBaseLayers(selectedPackage, baseLayout, componentName, baseOverride);
+    bodyLayers = generatedLayers.filter((shape) => !shape.id.startsWith("base_edit_pinlead_") && !shape.id.startsWith("base_edit_pin_"));
+    pinLayers = generatedLayers.filter((shape) => shape.id.startsWith("base_edit_pinlead_") || shape.id.startsWith("base_edit_pin_"));
+  } else {
+    const bodyShape = getBodyPreviewShape(null, baseLayout, baseOverride);
+    bodyLayers = [
+      bodyShape.kind === "circle"
+        ? {
+            id: "base_edit_body",
+            name: `${componentName} Body`,
+            kind: "ellipse" as const,
+            x: bodyShape.cx - bodyShape.r,
+            y: bodyShape.cy - bodyShape.r,
+            width: bodyShape.r * 2,
+            height: bodyShape.r * 2,
+            fill: baseOverride?.fill ?? "#d4d4d4",
+            stroke: baseOverride?.stroke ?? "#111111",
+            strokeWidth: 2,
+            construction: false,
+          }
+        : {
+            id: "base_edit_body",
+            name: `${componentName} Body`,
+            kind: "rect" as const,
+            x: bodyShape.x,
+            y: bodyShape.y,
+            width: bodyShape.width,
+            height: bodyShape.height,
+            radius: bodyShape.rx,
+            fill: baseOverride?.fill ?? "#d4d4d4",
+            stroke: baseOverride?.stroke ?? "#111111",
+            strokeWidth: 2,
+            construction: false,
+          },
+    ];
+  }
+
+  const labelShape = getBuiltInShape("label_primary", baseLayout, selectedPackage, baseOverride);
+  const labelLayers: ShapeLayer[] =
+    labelShape.kind === "rect"
+      ? [
+          {
+            id: "label_primary_bg",
+            name: "Component Label Background",
+            kind: "rect",
+            x: labelShape.x,
+            y: labelShape.y,
+            width: labelShape.width,
+            height: labelShape.height,
+            radius: labelShape.rx,
+            fill: "#101010",
+            stroke: "#5e5e5e",
+            strokeWidth: 1,
+          },
+          {
+            id: "label_primary_text",
+            name: "Component Label Text",
+            kind: "text",
+            x: labelShape.x + 6,
+            y: labelShape.y - 1,
+            width: labelShape.width - 12,
+            height: labelShape.height,
+            text: componentName.trim() || "Custom Component",
+            fill: "#f5f5f5",
+            fontSize: 10,
+          },
+        ]
+      : [];
+
+  return { bodyLayers, pinLayers, labelLayers };
+}
+
+function createComponentSceneArtifact({
+  componentName,
+  definition,
+  selectedPackage,
+  hasBase,
+  baseLayout,
+  baseOverride,
+  children,
+  childAnchorOrigin,
+  shapeLayers,
+}: {
+  componentName: string;
+  definition: ComponentDefinitionV1;
+  selectedPackage: PackageDefinition | null;
+  hasBase: boolean;
+  baseLayout: BaseLayout;
+  baseOverride?: BaseOverride;
+  children: ChildInstance[];
+  childAnchorOrigin: Point;
+  shapeLayers: ShapeLayer[];
+}) {
+  const slug = slugifyComponentName(componentName);
+  const baseGroups = createBaseSceneGroups(componentName, selectedPackage, baseLayout, baseOverride, hasBase);
+  const basePins: SceneNodePin[] = hasBase
+    ? baseLayout.previewPins.map((pin) => ({
+        id: pin.id,
+        label: pin.label,
+        x: pin.x,
+        y: pin.y,
+        owner: "base",
+      }))
+    : [];
+
+  const childGroups = children.map((child) => {
+    const anchor = getChildAnchorPosition(childAnchorOrigin, child);
+    return {
+      child,
+      layers: getRenderedChildLayers(child, anchor),
+      pins: getChildStagePins(childAnchorOrigin, child).map((pin) => ({
+        id: pin.id,
+        label: pin.label,
+        x: pin.x,
+        y: pin.y,
+        owner: child.id,
+      })),
+    };
+  });
+
+  const allPins = [...basePins, ...childGroups.flatMap((group) => group.pins)];
+  const shapeBounds = [
+    ...baseGroups.bodyLayers,
+    ...baseGroups.pinLayers,
+    ...baseGroups.labelLayers,
+    ...shapeLayers,
+    ...childGroups.flatMap((group) => group.layers),
+  ].map(getShapeBounds);
+  const pinBounds = allPins.map((pin) => ({ x: pin.x - 8, y: pin.y - 8, width: 16, height: 16 }));
+  const union = unionRects([...shapeBounds, ...pinBounds]) ?? { x: 0, y: 0, width: STAGE_WIDTH, height: STAGE_HEIGHT };
+  const padding = 24;
+  const bounds = {
+    x: Math.floor(union.x - padding),
+    y: Math.floor(union.y - padding),
+    width: Math.ceil(union.width + padding * 2),
+    height: Math.ceil(union.height + padding * 2),
+  };
+  const nodeIds = [
+    ...(baseGroups.bodyLayers.length > 0 ? ["body_primary"] : []),
+    ...(baseGroups.pinLayers.length > 0 || basePins.length > 0 ? ["pins_primary"] : []),
+    ...(baseGroups.labelLayers.length > 0 ? ["label_primary"] : []),
+    ...children.map((child) => child.id),
+    ...shapeLayers.map((shape) => shape.id),
+  ];
+  const svg = [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${bounds.width}" height="${bounds.height}" viewBox="${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}" data-aura-scene="v1" data-aura-component-name="${escapeXml(componentName.trim() || "Custom Component")}" data-aura-component-slug="${escapeXml(slug)}">`,
+    `  <title>${escapeXml(componentName.trim() || "Custom Component")}</title>`,
+    `  <desc>Deterministic AURA scene export from Component Lab.</desc>`,
+    baseGroups.bodyLayers.length > 0
+      ? `  <g id="body_primary" data-aura-node-id="body_primary" data-aura-node-kind="base-body">\n${baseGroups.bodyLayers.map((shape) => `    ${renderShapeLayerToSvg(shape)}`).join("\n")}\n  </g>`
+      : "",
+    baseGroups.pinLayers.length > 0 || basePins.length > 0
+      ? `  <g id="pins_primary" data-aura-node-id="pins_primary" data-aura-node-kind="base-pins">\n${baseGroups.pinLayers.map((shape) => `    ${renderShapeLayerToSvg(shape)}`).join("\n")}${basePins.length > 0 ? `\n${basePins.map((pin) => `    <circle id="pin_base_${escapeXml(pin.id)}" data-pin-id="${escapeXml(pin.id)}" data-pin-label="${escapeXml(pin.label)}" data-pin-owner="base" cx="${round(pin.x, 3)}" cy="${round(pin.y, 3)}" r="3.4" fill="#ffffff" stroke="#000000" stroke-width="1.2" />`).join("\n")}` : ""}\n  </g>`
+      : "",
+    baseGroups.labelLayers.length > 0
+      ? `  <g id="label_primary" data-aura-node-id="label_primary" data-aura-node-kind="base-label">\n${baseGroups.labelLayers.map((shape) => `    ${renderShapeLayerToSvg(shape)}`).join("\n")}\n  </g>`
+      : "",
+    ...childGroups.map(
+      (group) =>
+        `  <g id="${escapeXml(group.child.id)}" data-aura-node-id="${escapeXml(group.child.id)}" data-aura-node-kind="child" data-aura-child-item="${escapeXml(group.child.itemId)}">\n${group.layers.map((shape) => `    ${renderShapeLayerToSvg(shape)}`).join("\n")}${group.pins.length > 0 ? `\n${group.pins.map((pin) => `    <circle id="pin_${escapeXml(group.child.id)}_${escapeXml(pin.id)}" data-pin-id="${escapeXml(pin.id)}" data-pin-label="${escapeXml(pin.label)}" data-pin-owner="${escapeXml(group.child.id)}" cx="${round(pin.x, 3)}" cy="${round(pin.y, 3)}" r="3.4" fill="#ffffff" stroke="#000000" stroke-width="1.2" />`).join("\n")}` : ""}\n  </g>`,
+    ),
+    ...shapeLayers.map(
+      (shape) =>
+        `  <g id="${escapeXml(shape.id)}" data-aura-node-id="${escapeXml(shape.id)}" data-aura-node-kind="custom-shape">\n    ${renderShapeLayerToSvg(shape)}\n  </g>`,
+    ),
+    `</svg>`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const packageJson: ComponentPackageV1 = {
+    schema: "aura.component_package.v1",
+    metadata: {
+      name: definition.metadata.name,
+      slug,
+      ...(definition.metadata.description ? { description: definition.metadata.description } : {}),
+      ...(definition.metadata.tags && definition.metadata.tags.length > 0 ? { tags: definition.metadata.tags } : {}),
+    },
+    source: {
+      kind: "native_authoring",
+      origin: "component_lab",
+      base_kind: definition.base.kind,
+    },
+    definition: toJsonReady(definition),
+    scene: {
+      file: "scene.svg",
+      width: bounds.width,
+      height: bounds.height,
+      viewBox: `${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`,
+      bounds,
+      nodeIds,
+      pins: allPins.map((pin) => ({
+        ...pin,
+        x: round(pin.x, 3),
+        y: round(pin.y, 3),
+      })),
+    },
+  };
+
+  return {
+    svg,
+    packageJson,
+  };
 }
 
 function shapeToPreviewShape(shape: ShapeLayer): PreviewShape {
@@ -1662,6 +2782,7 @@ function shapeToPreviewShape(shape: ShapeLayer): PreviewShape {
 }
 
 function getPreviewPins(
+  libraryItemId: string | null,
   packageDef: PackageDefinition,
   bodyRect: Rect,
   umPerUnit: number,
@@ -1680,6 +2801,39 @@ function getPreviewPins(
     x: pin.x + (pinOverrides[pin.id]?.dxUm ?? 0) / umPerUnit,
     y: pin.y + (pinOverrides[pin.id]?.dyUm ?? 0) / umPerUnit,
   });
+
+  const wokwiModel = libraryItemId ? getWokwiModel(libraryItemId) : null;
+  if (wokwiModel) {
+    const scale = getScaleToFit(
+      bodyRect.width,
+      bodyRect.height,
+      wokwiModel.wokwi.naturalSizePx.width,
+      wokwiModel.wokwi.naturalSizePx.height,
+    );
+    const scaledWidth = wokwiModel.wokwi.naturalSizePx.width * scale;
+    const scaledHeight = wokwiModel.wokwi.naturalSizePx.height * scale;
+    const offsetX = bodyRect.x + (bodyRect.width - scaledWidth) / 2;
+    const offsetY = bodyRect.y + (bodyRect.height - scaledHeight) / 2;
+
+    return packageDef.pins
+      .map((pin, index) => {
+        const anchor =
+          wokwiModel.pins.anchors.find((candidate) => candidate.id === pin.id) ??
+          wokwiModel.pins.anchors[index];
+        if (!anchor) {
+          return null;
+        }
+
+        return {
+          id: pin.id,
+          label: pin.label,
+          x: offsetX + anchor.x * scale,
+          y: offsetY + anchor.y * scale,
+        } satisfies PreviewPin;
+      })
+      .filter((pin): pin is PreviewPin => pin != null)
+      .map(applyOverride);
+  }
 
   if (packageDef.kind === "dip" || packageDef.kind === "soic") {
     const rowPins = Math.ceil(pins.length / 2);
@@ -1865,6 +3019,7 @@ function getPreviewPins(
 }
 
 function getBaseLayout(
+  libraryItemId: string | null,
   packageDef: PackageDefinition | null,
   blankBoard: BlankBoardState,
   blank: boolean,
@@ -1905,8 +3060,75 @@ function getBaseLayout(
         : blank
           ? Math.max(6, blankBoard.cornerUm * scale)
           : Math.max(10, Math.min(width, height) * 0.1),
-    previewPins: packageDef ? getPreviewPins(packageDef, bodyRect, 1 / scale, pinOverrides) : [],
+    previewPins: packageDef ? getPreviewPins(libraryItemId, packageDef, bodyRect, 1 / scale, pinOverrides) : [],
     umPerUnit: 1 / scale,
+  };
+}
+
+function buildWokwiCorrectionArtifact(
+  libraryItemId: string,
+  packageDef: PackageDefinition | null,
+  baseLayout: BaseLayout,
+  pinOverrides: Record<string, PinOverride>,
+  title: string,
+): WokwiCorrectionsV1 | null {
+  const model = getWokwiModel(libraryItemId);
+  if (!model || !packageDef) {
+    return null;
+  }
+
+  const scale = getScaleToFit(
+    baseLayout.bodyRect.width,
+    baseLayout.bodyRect.height,
+    model.wokwi.naturalSizePx.width,
+    model.wokwi.naturalSizePx.height,
+  );
+  if (!Number.isFinite(scale) || scale <= 0) {
+    return null;
+  }
+
+  const pinAnchorOverrides: Record<string, { x?: number; y?: number }> = {};
+  const pinLabelOverrides: Record<string, string> = {};
+
+  for (const [index, pin] of packageDef.pins.entries()) {
+    const override = pinOverrides[pin.id];
+    if (!override) {
+      continue;
+    }
+
+    const baseAnchor =
+      model.pins.anchors.find((anchor) => anchor.id === pin.id) ??
+      model.pins.anchors[index];
+    if (!baseAnchor) {
+      continue;
+    }
+
+    const nextAnchorX = baseAnchor.x + ((override.dxUm ?? 0) / baseLayout.umPerUnit) / scale;
+    const nextAnchorY = baseAnchor.y + ((override.dyUm ?? 0) / baseLayout.umPerUnit) / scale;
+    const hasAnchorShift = Math.abs(nextAnchorX - baseAnchor.x) > 0.001 || Math.abs(nextAnchorY - baseAnchor.y) > 0.001;
+    if (hasAnchorShift) {
+      pinAnchorOverrides[baseAnchor.id] = {
+        x: round(nextAnchorX, 3),
+        y: round(nextAnchorY, 3),
+      };
+    }
+
+    const nextLabel = override.label?.trim();
+    if (nextLabel && nextLabel !== baseAnchor.id) {
+      pinLabelOverrides[baseAnchor.id] = nextLabel;
+    }
+  }
+
+  return {
+    schema: "aura.wokwi_corrections.v1",
+    version: 1,
+    parts: {
+      [libraryItemId]: {
+        notes: `Exported from Component Lab for ${title}.`,
+        ...(Object.keys(pinAnchorOverrides).length > 0 ? { pinAnchorOverrides } : {}),
+        ...(Object.keys(pinLabelOverrides).length > 0 ? { pinLabelOverrides } : {}),
+      },
+    },
   };
 }
 
@@ -1982,7 +3204,7 @@ function getChildLayout(child: ChildInstance): { packageDef: PackageDefinition; 
   const packageDef = resolvePackageByItemId(child.itemId, child.packageState ?? getDefaultPackageState(child.itemId));
   return {
     packageDef,
-    baseLayout: getBaseLayout(packageDef, { widthUm: 0, heightUm: 0, cornerUm: 0 }, false, child.override, { x: 0, y: 0 }, child.pinOverrides ?? {}),
+    baseLayout: getBaseLayout(child.itemId, packageDef, { widthUm: 0, heightUm: 0, cornerUm: 0 }, false, child.override, { x: 0, y: 0 }, child.pinOverrides ?? {}),
   };
 }
 
@@ -2457,7 +3679,9 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   const svgRef = useRef<SVGSVGElement | null>(null);
   const stagePanelRef = useRef<HTMLDivElement | null>(null);
   const definitionFileInputRef = useRef<HTMLInputElement | null>(null);
-  const [componentName, setComponentName] = useState("Custom Component");
+  const svgFileInputRef = useRef<HTMLInputElement | null>(null);
+  const svgImportModeRef = useRef<SvgImportMode>("replace");
+  const [componentName, setComponentName] = useState("Imported Component");
   const [childQuery, setChildQuery] = useState("");
   const [selectedBaseId, setSelectedBaseId] = useState(NO_BASE_ID);
   const [blankBoard, setBlankBoard] = useState<BlankBoardState>(DEFAULT_BLANK_BOARD);
@@ -2469,9 +3693,11 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   const [childEditSession, setChildEditSession] = useState<ChildEditSession | null>(null);
   const [pendingChildItemId, setPendingChildItemId] = useState<string | null>(null);
   const [shapeTool, setShapeTool] = useState<ShapeTool>("select");
+  const [showSketchTools, setShowSketchTools] = useState(false);
   const [shapeLayers, setShapeLayers] = useState<ShapeLayer[]>([]);
   const [persistentDimensions, setPersistentDimensions] = useState<PersistentDimension[]>([]);
-  const [selectedLayer, setSelectedLayer] = useState<LayerSelection>({ kind: "base", id: "body_primary" });
+  const [selectedLayer, setSelectedLayer] = useState<LayerSelection>(null);
+  const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]);
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   const [selectedChildPinId, setSelectedChildPinId] = useState<string | null>(null);
   const [hiddenLayers, setHiddenLayers] = useState<Record<string, boolean>>({});
@@ -2483,13 +3709,20 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   const [measureStart, setMeasureStart] = useState<Point | null>(null);
   const [measureEnd, setMeasureEnd] = useState<Point | null>(null);
   const [offsetDistance, setOffsetDistance] = useState(12);
+  const [creatorGridVisible, setCreatorGridVisible] = useState(true);
+  const [creatorGridOpacity, setCreatorGridOpacity] = useState(0.4);
+  const [creatorTextureVisible, setCreatorTextureVisible] = useState(false);
+  const [creatorTextureKey, setCreatorTextureKey] = useState<(typeof CREATOR_TEXTURE_KEYS)[number]>("texture2");
+  const [runtimeProfile, setRuntimeProfile] = useState<RuntimeProfileState>(() => createDefaultRuntimeProfileState());
   const [draft, setDraft] = useState<BehaviorDraftState>(() => createDefaultBehaviorDraftState());
   const [leftSections, setLeftSections] = useState({
-    component: true,
+    component: false,
+    sources: true,
+    repeat: false,
     library: true,
     stack: true,
   });
-  const [leftTab, setLeftTab] = useState<"setup" | "library" | "stack">("setup");
+  const [leftTab, setLeftTab] = useState<"setup" | "sources" | "library" | "stack">("sources");
   const [rightSections, setRightSections] = useState({
     selection: true,
     definition: true,
@@ -2498,6 +3731,11 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   const [rightTab, setRightTab] = useState<"edit" | "json" | "behavior">("edit");
   const [definitionText, setDefinitionText] = useState("");
   const [definitionNotice, setDefinitionNotice] = useState<string | null>(null);
+  const historyRef = useRef<string[]>([]);
+  const currentSnapshotRef = useRef<string | null>(null);
+  const restoreHistoryRef = useRef(false);
+  const undoEditorChangeRef = useRef<() => void>(() => {});
+  const [undoDepth, setUndoDepth] = useState(0);
 
   const hasBase = selectedBaseId !== NO_BASE_ID;
   const blankBase = selectedBaseId === BLANK_BOARD_ID;
@@ -2507,26 +3745,156 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   const baseOverride = useMemo(() => baseOverrides[selectedBaseId] ?? {}, [baseOverrides, selectedBaseId]);
   const baseOffset = useMemo(() => baseOffsets[selectedBaseId] ?? { x: 0, y: 0 }, [baseOffsets, selectedBaseId]);
   const selectedPinOverrides = useMemo(() => pinOverrides[selectedBaseId] ?? {}, [pinOverrides, selectedBaseId]);
-  const baseLayout = useMemo(() => getBaseLayout(selectedPackage, blankBoard, blankBase, baseOverride, baseOffset, selectedPinOverrides), [baseOffset, baseOverride, blankBase, blankBoard, selectedPackage, selectedPinOverrides]);
+  const selectedWokwiModel = useMemo(() => (selectedBaseItem?.source === "wokwi" ? getWokwiModel(selectedBaseId) : null), [selectedBaseId, selectedBaseItem]);
+  const showAdvancedSketchTools = showSketchTools || (shapeTool !== "select" && shapeTool !== "measure");
+  const hasSvgLayers = useMemo(() => shapeLayers.some((shape) => shape.kind === "svg"), [shapeLayers]);
+  const hasWorkingSource = hasBase || hasSvgLayers;
+  const baseLayout = useMemo(() => getBaseLayout(selectedBaseId === NO_BASE_ID || selectedBaseId === BLANK_BOARD_ID ? null : selectedBaseId, selectedPackage, blankBoard, blankBase, baseOverride, baseOffset, selectedPinOverrides), [baseOffset, baseOverride, blankBase, blankBoard, selectedBaseId, selectedPackage, selectedPinOverrides]);
+  const wokwiCorrectionArtifact = useMemo(
+    () =>
+      selectedWokwiModel
+        ? buildWokwiCorrectionArtifact(
+            selectedBaseId,
+            selectedPackage,
+            baseLayout,
+            selectedPinOverrides,
+            selectedBaseItem?.title ?? selectedWokwiModel.title,
+          )
+        : null,
+    [baseLayout, selectedBaseId, selectedBaseItem?.title, selectedPackage, selectedPinOverrides, selectedWokwiModel],
+  );
   const selectedShape = useMemo(() => (selectedLayer?.kind === "shape" ? shapeLayers.find((shape) => shape.id === selectedLayer.id) ?? null : null), [selectedLayer, shapeLayers]);
+  const activeSelectedShapeIds = useMemo(() => {
+    const filtered = selectedShapeIds.filter((id) => shapeLayers.some((shape) => shape.id === id));
+    if (selectedLayer?.kind === "shape") {
+      return filtered.length > 1 && filtered.includes(selectedLayer.id)
+        ? filtered
+        : shapeLayers.some((shape) => shape.id === selectedLayer.id)
+          ? [selectedLayer.id]
+          : filtered;
+    }
+    return filtered.length > 0 && selectedLayer == null ? filtered : [];
+  }, [selectedLayer, selectedShapeIds, shapeLayers]);
+  const selectedShapes = useMemo(
+    () => shapeLayers.filter((shape) => activeSelectedShapeIds.includes(shape.id)),
+    [activeSelectedShapeIds, shapeLayers],
+  );
+  const selectedShapeSelectionBounds = useMemo(
+    () => (selectedShapes.length > 1 ? getSvgGroupBounds(selectedShapes) : null),
+    [selectedShapes],
+  );
+  const selectedSvgGroupShapes = useMemo(
+    () => (selectedLayer?.kind === "svg_group" ? shapeLayers.filter((shape) => shape.svgGroupId === selectedLayer.id) : []),
+    [selectedLayer, shapeLayers],
+  );
+  const selectedSvgGroupBounds = useMemo(() => getSvgGroupBounds(selectedSvgGroupShapes), [selectedSvgGroupShapes]);
+  const selectedSvgGroupName = useMemo(
+    () => (selectedSvgGroupShapes[0] ? getShapeGroupName(selectedSvgGroupShapes[0]) : "SVG Group"),
+    [selectedSvgGroupShapes],
+  );
+  const selectedSvgNodeSummaries = useMemo(() => {
+    if (!selectedShape || selectedShape.kind !== "svg") {
+      return [];
+    }
+    try {
+      return extractSvgSubLayers(selectedShape, new Set(), new Set()).nodes;
+    } catch {
+      return [];
+    }
+  }, [selectedShape]);
   const selectedChild = useMemo(() => (selectedLayer?.kind === "child" ? children.find((child) => child.id === selectedLayer.id) ?? null : null), [children, selectedLayer]);
   const selectedShapeDimensions = useMemo(
     () => (selectedShape ? persistentDimensions.filter((dimension) => dimension.shapeId === selectedShape.id) : []),
     [persistentDimensions, selectedShape],
   );
+  const editorSnapshot = useMemo<EditorSnapshot>(
+    () => ({
+      componentName,
+      selectedBaseId,
+      blankBoard,
+      packageStates,
+      baseOverrides,
+      baseOffsets,
+      pinOverrides,
+      children,
+      shapeLayers,
+      persistentDimensions,
+      runtimeProfile,
+      draft,
+    }),
+    [
+      baseOffsets,
+      baseOverrides,
+      blankBoard,
+      children,
+      componentName,
+      draft,
+      packageStates,
+      persistentDimensions,
+      pinOverrides,
+      runtimeProfile,
+      selectedBaseId,
+      shapeLayers,
+    ],
+  );
+  const editorSnapshotString = useMemo(() => JSON.stringify(editorSnapshot), [editorSnapshot]);
   const relationTargetOptions = useMemo(
     () => shapeLayers.filter((shape) => !selectedShape || shape.id !== selectedShape.id),
     [selectedShape, shapeLayers],
   );
+  useEffect(() => {
+    if (currentSnapshotRef.current == null) {
+      currentSnapshotRef.current = editorSnapshotString;
+      return;
+    }
+    if (restoreHistoryRef.current) {
+      currentSnapshotRef.current = editorSnapshotString;
+      restoreHistoryRef.current = false;
+      return;
+    }
+    if (editorSnapshotString === currentSnapshotRef.current) {
+      return;
+    }
+    const previousSnapshot = currentSnapshotRef.current;
+    const timeout = window.setTimeout(() => {
+      historyRef.current = [...historyRef.current.slice(-49), previousSnapshot];
+      currentSnapshotRef.current = editorSnapshotString;
+      setUndoDepth(historyRef.current.length);
+    }, 220);
+    return () => window.clearTimeout(timeout);
+  }, [editorSnapshotString]);
   const selectedPin = useMemo(() => (selectedPinId ? baseLayout.previewPins.find((pin) => pin.id === selectedPinId) ?? null : null), [baseLayout.previewPins, selectedPinId]);
-  const selectedPreset = useMemo(() => getBehaviorPreset(draft.presetId), [draft.presetId]);
+  const selectedRuntimeDefinition = useMemo(
+    () => getRuntimeProfileDefinition(runtimeProfile.profileId),
+    [runtimeProfile.profileId],
+  );
   const compatibleTargets = useMemo(() => getCompatibleBehaviorTargets(draft.presetId), [draft.presetId]);
   const childAnchorOrigin = useMemo(() => getChildAnchorOrigin(baseLayout, hasBase), [baseLayout, hasBase]);
   const selectedChildPins = useMemo(() => (selectedChild ? getChildStagePins(childAnchorOrigin, selectedChild) : []), [childAnchorOrigin, selectedChild]);
   const selectedChildPin = useMemo(() => (selectedChildPinId ? selectedChildPins.find((pin) => pin.id === selectedChildPinId) ?? null : null), [selectedChildPinId, selectedChildPins]);
   const targetShape = useMemo(() => {
+    if (selectedShapeSelectionBounds) {
+      return {
+        kind: "rect" as const,
+        x: selectedShapeSelectionBounds.x,
+        y: selectedShapeSelectionBounds.y,
+        width: selectedShapeSelectionBounds.width,
+        height: selectedShapeSelectionBounds.height,
+        rx: 10,
+      };
+    }
     if (selectedLayer?.kind === "shape" && selectedShape) {
       return shapeToPreviewShape(selectedShape);
+    }
+    if (selectedLayer?.kind === "svg_group" && selectedSvgGroupBounds) {
+      return {
+        kind: "rect" as const,
+        x: selectedSvgGroupBounds.x,
+        y: selectedSvgGroupBounds.y,
+        width: selectedSvgGroupBounds.width,
+        height: selectedSvgGroupBounds.height,
+        rx: 10,
+      };
     }
     if (selectedLayer?.kind === "child" && selectedChild) {
       const shape = getChildBodyShape(selectedChild);
@@ -2544,8 +3912,19 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     }
     const targetId = selectedLayer?.kind === "base" ? selectedLayer.id : draft.targetId;
     return getBuiltInShape((compatibleTargets.find((target) => target.id === targetId)?.id as BuiltInLayerId) ?? "body_primary", baseLayout, selectedPackage, baseOverride);
-  }, [baseLayout, baseOverride, childAnchorOrigin, compatibleTargets, draft.targetId, selectedChild, selectedLayer, selectedPackage, selectedShape]);
+  }, [baseLayout, baseOverride, childAnchorOrigin, compatibleTargets, draft.targetId, selectedChild, selectedLayer, selectedPackage, selectedShape, selectedShapeSelectionBounds, selectedSvgGroupBounds]);
+  const compiledRuntimeEntry = useMemo(() => createCompiledRuntimeProfile(runtimeProfile), [runtimeProfile]);
   const compiledBehaviorEntry = useMemo(() => createBehaviorDraftEntry(draft), [draft]);
+  const updateRuntimeProfile = useCallback(
+    (updater: RuntimeProfileState | ((current: RuntimeProfileState) => RuntimeProfileState)) => {
+      setRuntimeProfile((current) => {
+        const nextProfile = typeof updater === "function" ? updater(current) : updater;
+        setDraft((currentDraft) => createBehaviorDraftFromRuntimeProfile(nextProfile, currentDraft));
+        return nextProfile;
+      });
+    },
+    [],
+  );
   const exportedDefinition = useMemo(
     () =>
       createComponentDefinition(
@@ -2559,6 +3938,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
         children,
         shapeLayers,
         persistentDimensions,
+        runtimeProfile,
         draft,
       ),
     [
@@ -2570,8 +3950,34 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
       draft,
       packageState,
       persistentDimensions,
+      runtimeProfile,
       selectedBaseId,
       selectedPinOverrides,
+      shapeLayers,
+    ],
+  );
+  const sceneArtifact = useMemo(
+    () =>
+      createComponentSceneArtifact({
+        componentName,
+        definition: exportedDefinition,
+        selectedPackage,
+        hasBase,
+        baseLayout,
+        baseOverride,
+        children,
+        childAnchorOrigin,
+        shapeLayers,
+      }),
+    [
+      baseLayout,
+      baseOverride,
+      childAnchorOrigin,
+      children,
+      componentName,
+      exportedDefinition,
+      hasBase,
+      selectedPackage,
       shapeLayers,
     ],
   );
@@ -2580,6 +3986,75 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     setDefinitionText(JSON.stringify(definition, null, 2));
     setDefinitionNotice(message);
   };
+
+  const applyEditorSnapshot = (snapshot: EditorSnapshot) => {
+    restoreHistoryRef.current = true;
+    setComponentName(snapshot.componentName);
+    setSelectedBaseId(snapshot.selectedBaseId);
+    setBlankBoard(snapshot.blankBoard);
+    setPackageStates(snapshot.packageStates);
+    setBaseOverrides(snapshot.baseOverrides);
+    setBaseOffsets(snapshot.baseOffsets);
+    setPinOverrides(snapshot.pinOverrides);
+    setChildren(snapshot.children);
+    setShapeLayers(snapshot.shapeLayers);
+    setPersistentDimensions(snapshot.persistentDimensions);
+    setSelectedLayer(
+      snapshot.shapeLayers[0]
+        ? { kind: "shape", id: snapshot.shapeLayers[0].id }
+        : snapshot.children[0]
+          ? { kind: "child", id: snapshot.children[0].id }
+          : snapshot.selectedBaseId !== NO_BASE_ID
+            ? { kind: "base", id: "body_primary" }
+            : null,
+    );
+    setSelectedShapeIds(snapshot.shapeLayers[0] ? [snapshot.shapeLayers[0].id] : []);
+    setSelectedPinId(null);
+    setSelectedChildPinId(null);
+    setRuntimeProfile(snapshot.runtimeProfile);
+    setDraft(snapshot.draft);
+    setPendingChildItemId(null);
+    setChildEditSession(null);
+    setPointerState(null);
+    setMeasureStart(null);
+    setMeasureEnd(null);
+    setDefinitionNotice("Undid the last Component Lab change.");
+  };
+
+  useEffect(() => {
+    undoEditorChangeRef.current = () => {
+      const previousSnapshot = historyRef.current.pop();
+      if (!previousSnapshot) {
+        return;
+      }
+      setUndoDepth(historyRef.current.length);
+      applyEditorSnapshot(JSON.parse(previousSnapshot) as EditorSnapshot);
+    };
+  });
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "z" || event.shiftKey) {
+        return;
+      }
+      const activeElement = document.activeElement as HTMLElement | null;
+      if (
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.isContentEditable)
+      ) {
+        return;
+      }
+      if (historyRef.current.length === 0) {
+        return;
+      }
+      event.preventDefault();
+      undoEditorChangeRef.current();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const applyDefinition = (definition: ComponentDefinitionV1) => {
     setComponentName(definition.metadata.name);
@@ -2598,7 +4073,10 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     setMeasureStart(null);
     setMeasureEnd(null);
     setOffsetDistance(12);
-    setDraft({ ...createDefaultBehaviorDraftState(), ...toJsonReady(definition.behaviorDraft) });
+    const nextRuntimeProfile = definition.runtimeProfile
+      ? { ...createDefaultRuntimeProfileState(), ...toJsonReady(definition.runtimeProfile) }
+      : createRuntimeProfileStateFromBehaviorDraft(definition.behaviorDraft);
+    updateRuntimeProfile(nextRuntimeProfile);
 
     if (definition.base.kind === "none") {
       setSelectedBaseId(NO_BASE_ID);
@@ -2664,9 +4142,87 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     }
   };
 
+  const copySceneSvgText = async () => {
+    try {
+      await navigator.clipboard.writeText(sceneArtifact.svg);
+      setDefinitionNotice("Scene SVG copied.");
+    } catch {
+      setDefinitionNotice("Clipboard unavailable for scene SVG.");
+    }
+  };
+
   const exportDefinitionFile = () => {
-    const fileName = `${(componentName.trim() || "custom_component").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "custom_component"}.component.json`;
+    const fileName = `${slugifyComponentName(componentName)}.component.json`;
     const blob = new Blob([JSON.stringify(exportedDefinition, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setDefinitionNotice(`Exported ${fileName}.`);
+  };
+
+  const exportSceneFile = () => {
+    const fileName = `${slugifyComponentName(componentName)}.scene.svg`;
+    const blob = new Blob([sceneArtifact.svg], {
+      type: "image/svg+xml",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setDefinitionNotice(`Exported ${fileName}.`);
+  };
+
+  const exportComponentPackageFiles = () => {
+    const packageBlob = new Blob([JSON.stringify(sceneArtifact.packageJson, null, 2)], {
+      type: "application/json",
+    });
+    const packageUrl = URL.createObjectURL(packageBlob);
+    const packageAnchor = document.createElement("a");
+    packageAnchor.href = packageUrl;
+    packageAnchor.download = "component.json";
+    packageAnchor.click();
+    URL.revokeObjectURL(packageUrl);
+
+    const sceneBlob = new Blob([sceneArtifact.svg], {
+      type: "image/svg+xml",
+    });
+    const sceneUrl = URL.createObjectURL(sceneBlob);
+    const sceneAnchor = document.createElement("a");
+    sceneAnchor.href = sceneUrl;
+    sceneAnchor.download = "scene.svg";
+    sceneAnchor.click();
+    URL.revokeObjectURL(sceneUrl);
+
+    setDefinitionNotice("Exported component package files: component.json + scene.svg.");
+  };
+
+  const copyWokwiCorrectionText = async () => {
+    if (!wokwiCorrectionArtifact || !selectedBaseItem) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(wokwiCorrectionArtifact, null, 2));
+      setDefinitionNotice(`Copied Wokwi correction JSON for ${selectedBaseItem.title}.`);
+    } catch {
+      setDefinitionNotice("Clipboard unavailable for Wokwi correction JSON.");
+    }
+  };
+
+  const exportWokwiCorrectionFile = () => {
+    if (!wokwiCorrectionArtifact || !selectedBaseItem) {
+      return;
+    }
+
+    const fileName = `${selectedBaseItem.id}.wokwi.correction.json`;
+    const blob = new Blob([JSON.stringify(wokwiCorrectionArtifact, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -2693,6 +4249,76 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
       setDefinitionNotice(`Imported ${file.name}.`);
     } catch (error) {
       setDefinitionNotice(error instanceof Error ? error.message : "Definition file import failed.");
+    }
+  };
+
+  const triggerSvgImport = (mode: SvgImportMode) => {
+    svgImportModeRef.current = mode;
+    svgFileInputRef.current?.click();
+  };
+
+  const handleSvgFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const imported = parseSvgFileToShapeLayers(text, file.name);
+      const mode = svgImportModeRef.current;
+      let selectedImportedGroupId = imported.layers[0]?.svgGroupId ?? null;
+      let firstImportedLayerId = imported.layers[0]?.id ?? null;
+
+      if (mode === "replace") {
+        const normalizedLayers = normalizeSvgGroupIds(imported.layers, new Set<string>());
+        selectedImportedGroupId = normalizedLayers[0]?.svgGroupId ?? null;
+        firstImportedLayerId = normalizedLayers[0]?.id ?? null;
+        setSelectedBaseId(NO_BASE_ID);
+        setChildren([]);
+        setChildEditSession(null);
+        setPendingChildItemId(null);
+        setHiddenLayers({});
+        setPersistentDimensions([]);
+        setPinOverrides({});
+        setPackageStates({});
+        setBaseOverrides({});
+        setBaseOffsets({});
+        setShapeLayers(normalizedLayers);
+        setComponentName(imported.componentName);
+        setRuntimeProfile(createDefaultRuntimeProfileState());
+        setDraft(createDefaultBehaviorDraftState());
+      } else {
+        const existingIds = new Set(shapeLayers.map((shape) => shape.id));
+        const existingGroupIds = new Set(shapeLayers.flatMap((shape) => (shape.svgGroupId ? [shape.svgGroupId] : [])));
+        const nextLayers = normalizeSvgGroupIds(imported.layers, existingGroupIds).map((shape) => {
+          const nextId = ensureUniqueShapeId(shape.id, existingIds);
+          return { ...shape, id: nextId, name: nextId === shape.id ? shape.name : `${shape.name} Copy` };
+        });
+        selectedImportedGroupId = nextLayers[0]?.svgGroupId ?? null;
+        firstImportedLayerId = nextLayers[0]?.id ?? null;
+        setShapeLayers((current) => [...current, ...nextLayers]);
+      }
+
+      if (selectedImportedGroupId) {
+        setSelectedLayer({ kind: "svg_group", id: selectedImportedGroupId });
+      } else if (firstImportedLayerId) {
+        setSelectedLayer({ kind: "shape", id: firstImportedLayerId });
+      }
+      setSelectedPinId(null);
+      setSelectedChildPinId(null);
+      setLeftTab("sources");
+      setRightTab("edit");
+      setShapeTool("select");
+      setShowSketchTools(false);
+      setDefinitionNotice(
+        mode === "replace"
+          ? `Imported ${file.name} as ${imported.importedCount} editable SVG layer${imported.importedCount === 1 ? "" : "s"}.`
+          : `Appended ${imported.importedCount} SVG layer${imported.importedCount === 1 ? "" : "s"} from ${file.name}.`,
+      );
+    } catch (error) {
+      setDefinitionNotice(error instanceof Error ? error.message : "SVG import failed.");
     }
   };
 
@@ -2764,10 +4390,14 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     return best;
   };
 
-  const getSnappedStagePoint = (event: ReactPointerEvent<SVGSVGElement>, excludePin?: { owner: "base" | "child"; childId?: string; pinId: string }) => {
+  const getSnappedStagePoint = (
+    event: ReactPointerEvent<SVGSVGElement>,
+    excludePin?: { owner: "base" | "child"; childId?: string; pinId: string },
+    gridStep = CREATOR_GRID_STEP_PX,
+  ) => {
     const point = getStagePoint(event, svgRef.current, viewport);
     if (!excludePin) {
-      return getSnappedPoint(point, snapCandidates);
+      return getSnappedPoint(point, snapCandidates, 10, gridStep);
     }
 
     const candidates = [
@@ -2788,7 +4418,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     for (const shape of shapeLayers) {
       candidates.push(...getShapeSnapPoints(shape));
     }
-    return getSnappedPoint(point, candidates);
+    return getSnappedPoint(point, candidates, 10, gridStep);
   };
 
   const resetViewport = () => setViewport({ x: 0, y: 0, zoom: 1 });
@@ -2823,7 +4453,8 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
 
   const childOptions = useMemo(() => {
     const lowered = childQuery.trim().toLowerCase();
-    return LIBRARY_ITEMS.filter((item) => item.id !== selectedBaseId)
+    return listComponentLabLibraryItems()
+      .filter((item) => item.id !== selectedBaseId)
       .filter((item) => !lowered || item.title.toLowerCase().includes(lowered) || item.seriesLabel.toLowerCase().includes(lowered) || item.package.packageKey.toLowerCase().includes(lowered));
   }, [childQuery, selectedBaseId]);
 
@@ -2890,14 +4521,47 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     });
   }
 
+  const svgGroups = Array.from(
+    shapeLayers.reduce((map, shape) => {
+      if (!shape.svgGroupId) {
+        return map;
+      }
+      if (!map.has(shape.svgGroupId)) {
+        map.set(shape.svgGroupId, {
+          id: shape.svgGroupId,
+          name: getShapeGroupName(shape),
+          count: 1,
+        });
+      } else {
+        map.get(shape.svgGroupId)!.count += 1;
+      }
+      return map;
+    }, new Map<string, { id: string; name: string; count: number }>()),
+  );
+
+  for (const [, group] of svgGroups) {
+    stackItems.push({
+      key: `svg-group:${group.id}`,
+      label: group.name,
+      meta: `${group.count} svg nodes`,
+      active: selectedLayer?.kind === "svg_group" && selectedLayer.id === group.id,
+      onSelect: () => {
+        setSelectedLayer({ kind: "svg_group", id: group.id });
+        setSelectedPinId(null);
+        setSelectedChildPinId(null);
+      },
+    });
+  }
+
   for (const shape of shapeLayers) {
     stackItems.push({
       key: `shape:${shape.id}`,
       label: shape.name,
       meta: `${shape.kind}${shape.construction ? " | construction" : ""}`,
-      active: selectedLayer?.kind === "shape" && selectedLayer.id === shape.id,
+      active: activeSelectedShapeIds.includes(shape.id),
       onSelect: () => {
         setSelectedLayer({ kind: "shape", id: shape.id });
+        setSelectedShapeIds([shape.id]);
         setSelectedPinId(null);
         setSelectedChildPinId(null);
       },
@@ -2929,7 +4593,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     }
 
     if (nextBaseId === BLANK_BOARD_ID) {
-      const nextLayout = getBaseLayout(null, blankBoard, true, baseOverrides[nextBaseId] ?? {}, baseOffsets[nextBaseId] ?? { x: 0, y: 0 }, {});
+      const nextLayout = getBaseLayout(null, null, blankBoard, true, baseOverrides[nextBaseId] ?? {}, baseOffsets[nextBaseId] ?? { x: 0, y: 0 }, {});
       const nextOrigin = getChildAnchorOrigin(nextLayout, true);
       setChildren((current) =>
         current.map((child) => {
@@ -2949,11 +4613,12 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     }
 
     const nextPackageState = packageStates[nextBaseId] ?? getDefaultPackageState(nextBaseId);
+    const nextBaseItem = getLibraryItem(nextBaseId);
     const nextPackage = resolvePackageByItemId(nextBaseId, nextPackageState);
     const nextOverride = baseOverrides[nextBaseId] ?? {};
     const nextOffset = baseOffsets[nextBaseId] ?? { x: 0, y: 0 };
     const nextPinOverrides = pinOverrides[nextBaseId] ?? {};
-    const nextLayout = getBaseLayout(nextPackage, blankBoard, false, nextOverride, nextOffset, nextPinOverrides);
+    const nextLayout = getBaseLayout(nextBaseId, nextPackage, blankBoard, false, nextOverride, nextOffset, nextPinOverrides);
     const nextOrigin = getChildAnchorOrigin(nextLayout, true);
 
     setChildren((current) =>
@@ -2970,9 +4635,40 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     );
     setShapeLayers((current) => [
       ...current.filter((shape) => !shape.id.startsWith("generated_")),
-      ...createGeneratedComponentDetails(nextPackage, nextLayout),
+      ...(nextBaseItem.source === "wokwi" ? [] : createGeneratedComponentDetails(nextPackage, nextLayout)),
     ]);
     setSelectedLayer({ kind: "base", id: "body_primary" });
+  };
+
+  const loadWokwiSourceIntoEditor = (libraryItemId: string) => {
+    loadBaseSelection(libraryItemId);
+    setLeftTab("sources");
+    setRightTab("edit");
+    setShowSketchTools(false);
+    setSelectedLayer({ kind: "base", id: "pins_primary" });
+    setSelectedPinId(getWokwiModel(libraryItemId)?.pins.anchors[0]?.id ?? null);
+    setSelectedChildPinId(null);
+    setDefinitionNotice(`Loaded ${getLibraryItem(libraryItemId).title} from Wokwi sources. Drag or edit pins, then export a correction file.`);
+  };
+
+  const clearCurrentSource = () => {
+    setSelectedBaseId(NO_BASE_ID);
+    setChildren([]);
+    setShapeLayers([]);
+    setPersistentDimensions([]);
+    setHiddenLayers({});
+    setSelectedLayer(null);
+    setSelectedPinId(null);
+    setSelectedChildPinId(null);
+    setPendingChildItemId(null);
+    setChildEditSession(null);
+    setShowSketchTools(false);
+    setShapeTool("select");
+    setComponentName("Imported Component");
+    setRuntimeProfile(createDefaultRuntimeProfileState());
+    setDraft(createDefaultBehaviorDraftState());
+    setDefinitionText("");
+    setDefinitionNotice("Cleared the current source and stage.");
   };
 
   const handleStagePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
@@ -3069,13 +4765,23 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
     }
     if (shapeTool !== "select") {
       setSelectedLayer(null);
+      setSelectedShapeIds([]);
       setSelectedPinId(null);
       setSelectedChildPinId(null);
       setPointerState({ mode: "draw", tool: shapeTool, origin: point, current: point });
       setActiveSnapPoint(point);
       return;
     }
-    setSelectedLayer(null);
+    setPointerState({
+      mode: "marquee-select",
+      origin: point,
+      current: point,
+      additive: isAdditiveSelectionEvent(event.nativeEvent),
+    });
+    if (!isAdditiveSelectionEvent(event.nativeEvent)) {
+      setSelectedLayer(null);
+      setSelectedShapeIds([]);
+    }
     setSelectedPinId(null);
     setSelectedChildPinId(null);
     setActiveSnapPoint(point);
@@ -3084,7 +4790,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   const handleStagePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
     const point =
       pointerState?.mode === "move-pin"
-        ? getSnappedStagePoint(event, { owner: pointerState.owner, childId: pointerState.childId, pinId: pointerState.pinId })
+        ? getSnappedStagePoint(event, { owner: pointerState.owner, childId: pointerState.childId, pinId: pointerState.pinId }, CREATOR_PIN_GRID_STEP_PX)
         : getSnappedStagePoint(event);
     setActiveSnapPoint(point);
     if (!pointerState) {
@@ -3094,11 +4800,37 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
       setPointerState({ ...pointerState, current: point });
       return;
     }
+    if (pointerState.mode === "marquee-select") {
+      setPointerState({ ...pointerState, current: point });
+      return;
+    }
     if (pointerState.mode === "move-shape") {
       const dx = point.x - pointerState.origin.x;
       const dy = point.y - pointerState.origin.y;
       commitShapeLayerUpdate((current) =>
         current.map((shape) => (shape.id === pointerState.shapeId ? moveShape(pointerState.initialShape, dx, dy, current) : shape)),
+      );
+      return;
+    }
+    if (pointerState.mode === "move-shape-selection") {
+      const dx = point.x - pointerState.origin.x;
+      const dy = point.y - pointerState.origin.y;
+      commitShapeLayerUpdate((current) =>
+        current.map((shape) => {
+          const initialShape = pointerState.initialShapes[shape.id];
+          return initialShape ? moveShape(initialShape, dx, dy, current) : shape;
+        }),
+      );
+      return;
+    }
+    if (pointerState.mode === "move-svg-group") {
+      const dx = point.x - pointerState.origin.x;
+      const dy = point.y - pointerState.origin.y;
+      commitShapeLayerUpdate((current) =>
+        current.map((shape) => {
+          const initialShape = pointerState.initialShapes[shape.id];
+          return initialShape ? moveShape(initialShape, dx, dy, current) : shape;
+        }),
       );
       return;
     }
@@ -3219,6 +4951,20 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   };
 
   const handleStagePointerUp = () => {
+    if (pointerState?.mode === "marquee-select") {
+      const rect = normalizeRect(pointerState.origin, pointerState.current);
+      const hitShapes = shapeLayers.filter((shape) => rectsIntersect(getShapeBounds(shape), rect)).map((shape) => shape.id);
+      if (rect.width >= 4 || rect.height >= 4) {
+        const nextIds = pointerState.additive
+          ? Array.from(new Set([...activeSelectedShapeIds, ...hitShapes]))
+          : hitShapes;
+        setSelectedShapeIds(nextIds);
+        setSelectedLayer(nextIds[0] ? { kind: "shape", id: nextIds[0] } : null);
+      } else if (!pointerState.additive) {
+        setSelectedShapeIds([]);
+        setSelectedLayer(null);
+      }
+    }
     if (pointerState?.mode === "draw") {
       const canCommit = hasMeaningfulDrawGesture(pointerState.tool, pointerState.origin, pointerState.current);
       const nextShape = canCommit
@@ -3237,12 +4983,85 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   const pinsHidden = !hasBase || (hiddenLayers["base:pins_primary"] ?? false) || (!overlayState.pins && !(selectedLayer?.kind === "base" && selectedLayer.id === "pins_primary"));
   const labelHidden = !hasBase || (hiddenLayers["base:label_primary"] ?? false);
   const selectedBaseResizable = hasBase && selectedLayer?.kind === "base" && selectedLayer.id === "body_primary";
-  const selectionLabel = selectedLayer == null ? "Nothing selected" : selectedLayer.kind === "shape" ? selectedShape?.name ?? "Shape" : selectedLayer.kind === "child" ? selectedChildPin ? `Pin ${selectedChildPin.label}` : selectedChild?.title ?? "Child Component" : selectedLayer.id === "body_primary" ? "Body" : selectedLayer.id === "pins_primary" ? selectedPin ? `Pin ${selectedPin.label}` : "Pins / Pads" : "Marking";
+  const selectedBaseSupportsGrowth = selectedBaseItem != null && isResizableLibraryItem(selectedBaseId);
+  const selectedChildSupportsGrowth = selectedChild != null && isResizableLibraryItem(selectedChild.itemId);
+  const selectionLabel =
+    selectedLayer == null
+      ? "Nothing selected"
+      : activeSelectedShapeIds.length > 1
+        ? `${activeSelectedShapeIds.length} Layers`
+      : selectedLayer.kind === "svg_group"
+        ? selectedSvgGroupName
+        : selectedLayer.kind === "shape"
+          ? selectedShape?.name ?? "Shape"
+          : selectedLayer.kind === "child"
+            ? selectedChildPin
+              ? `Pin ${selectedChildPin.label}`
+              : selectedChild?.title ?? "Child Component"
+            : selectedLayer.id === "body_primary"
+              ? "Body"
+              : selectedLayer.id === "pins_primary"
+                ? selectedPin
+                  ? `Pin ${selectedPin.label}`
+                  : "Pins / Pads"
+                : "Marking";
   const selectedChildPinOverride = selectedChild && selectedChildPinId ? selectedChild.pinOverrides?.[selectedChildPinId] ?? {} : {};
   const selectedShapeDimensionSummary = selectedShape ? getShapeDimensionSummary(selectedShape, baseLayout.umPerUnit) : null;
   const liveMeasureEnd = shapeTool === "measure" && measureStart && !measureEnd && activeSnapPoint ? constrainMeasurePoint(measureStart, activeSnapPoint, measureAxis) : null;
   const resolvedMeasureEnd = measureEnd ?? liveMeasureEnd;
   const measureSummary = measureStart && resolvedMeasureEnd ? getMeasureSummary(measureStart, resolvedMeasureEnd, baseLayout.umPerUnit) : null;
+  const creatorFineGridStepPx = 10;
+  const creatorMajorGridStepPx = 40;
+  const showCreatorFineGrid = creatorFineGridStepPx * viewport.zoom > 5;
+  const creatorGridOverlayStyle = useMemo(() => {
+    const layers: string[] = [];
+
+    if (creatorGridVisible) {
+      if (showCreatorFineGrid) {
+        layers.push(
+          "linear-gradient(to right, rgba(255,255,255,0.16) 1px, transparent 1px)",
+          "linear-gradient(to bottom, rgba(255,255,255,0.16) 1px, transparent 1px)",
+        );
+      }
+      layers.push(
+        "linear-gradient(to right, rgba(255,255,255,0.28) 1px, transparent 1px)",
+        "linear-gradient(to bottom, rgba(255,255,255,0.28) 1px, transparent 1px)",
+      );
+    }
+
+    return {
+      backgroundImage: layers.join(", "),
+      backgroundSize: [
+        ...(showCreatorFineGrid && creatorGridVisible
+          ? [
+              `${creatorFineGridStepPx * viewport.zoom}px ${creatorFineGridStepPx * viewport.zoom}px`,
+              `${creatorFineGridStepPx * viewport.zoom}px ${creatorFineGridStepPx * viewport.zoom}px`,
+            ]
+          : []),
+        ...(creatorGridVisible
+          ? [
+              `${creatorMajorGridStepPx * viewport.zoom}px ${creatorMajorGridStepPx * viewport.zoom}px`,
+              `${creatorMajorGridStepPx * viewport.zoom}px ${creatorMajorGridStepPx * viewport.zoom}px`,
+            ]
+          : []),
+      ].join(", "),
+      backgroundPosition: [
+        ...(showCreatorFineGrid && creatorGridVisible
+          ? [
+              `${viewport.x}px ${viewport.y}px`,
+              `${viewport.x}px ${viewport.y}px`,
+            ]
+          : []),
+        ...(creatorGridVisible
+          ? [
+              `${viewport.x}px ${viewport.y}px`,
+              `${viewport.x}px ${viewport.y}px`,
+            ]
+          : []),
+      ].join(", "),
+      opacity: creatorGridVisible ? creatorGridOpacity : 0,
+    };
+  }, [creatorGridOpacity, creatorGridVisible, creatorMajorGridStepPx, creatorFineGridStepPx, showCreatorFineGrid, viewport.x, viewport.y, viewport.zoom]);
   const activeChildEditLayers = childEditSession ? shapeLayers.filter((shape) => childEditSession.layerIds.includes(shape.id)) : [];
   const activeChildEditLabel = childEditSession?.snapshot.title ?? "Child Component";
 
@@ -3312,19 +5131,233 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
   };
 
   return (
-    <div className="creator-shell h-full min-h-0">
+    <div className="editor-workspace">
+      <input
+        ref={svgFileInputRef}
+        type="file"
+        accept=".svg,image/svg+xml"
+        onChange={handleSvgFileSelected}
+        className="hidden"
+      />
+      <div className="workspace-banner">
+        <div className="workspace-banner-main">
+          <div className="min-w-0">
+            <p className="editor-eyebrow">AURA Node Studio</p>
+            <div className="workspace-title-row">
+              <h1 className="workspace-title">Component Lab</h1>
+            </div>
+          </div>
+
+          <div className="workspace-meta-strip">
+            <span>{shapeLayers.length} detail layers</span>
+            <span>{children.length} child parts</span>
+            <span>{persistentDimensions.length} locked dims</span>
+            <span>{shapeTool}</span>
+            {selectedWokwiModel ? <span className="workspace-meta-pill-clean">vendor source</span> : null}
+            {selectedBaseSupportsGrowth ? <span className="workspace-meta-pill-warn">repeat ready</span> : null}
+          </div>
+        </div>
+
+        <div className="workspace-banner-center">
+          <div className="workspace-toolbar-main workspace-toolbar-creator">
+            <div className="canvas-toolgroup creator-banner-toolgroup">
+              <button
+                type="button"
+                onClick={() => undoEditorChangeRef.current()}
+                disabled={undoDepth === 0}
+                className={`canvas-text-button ${undoDepth === 0 ? "opacity-40" : ""}`}
+                title="Undo last Component Lab change (Ctrl/Cmd+Z)"
+              >
+                Undo
+              </button>
+              <div className="canvas-sep" />
+              <div className="flex items-center px-2.5">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={Math.round(creatorGridOpacity * 100)}
+                  onChange={(event) => setCreatorGridOpacity(Number(event.target.value) / 100)}
+                  className="canvas-slider"
+                  title="Grid opacity"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreatorGridVisible((current) => !current)}
+                className={`canvas-icon-button ${creatorGridVisible ? "canvas-control-active" : ""}`}
+                title="Toggle grid visibility"
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </button>
+              <div className="canvas-sep" />
+              <button
+                type="button"
+                onClick={resetViewport}
+                className="canvas-icon-button"
+                title="Reset creator view"
+              >
+                <LocateFixed className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="canvas-toolgroup creator-banner-toolgroup">
+              <button
+                type="button"
+                onClick={() => setCreatorTextureVisible((current) => !current)}
+                className={`canvas-icon-button ${creatorTextureVisible ? "canvas-control-active" : ""}`}
+                title="Toggle texture"
+              >
+                <ImageIcon className="h-4 w-4" />
+              </button>
+              {creatorTextureVisible ? (
+                <>
+                  <div className="canvas-sep" />
+                  {CREATOR_TEXTURE_KEYS.map((key, index) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        setCreatorTextureVisible(true);
+                        setCreatorTextureKey(key);
+                      }}
+                      className={`canvas-text-button ${creatorTextureKey === key ? "canvas-control-active" : ""}`}
+                      title={`Use texture ${index + 1}`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                </>
+              ) : null}
+            </div>
+
+            <div className="canvas-toolgroup creator-banner-toolgroup">
+              {TOOL_GROUPS[0].tools.map((toolId) => {
+                const tool = TOOL_OPTIONS.find((entry) => entry.id === toolId);
+                if (!tool) {
+                  return null;
+                }
+                return (
+                  <button
+                    key={tool.id}
+                    type="button"
+                    onClick={() => setShapeTool(tool.id)}
+                    className={`canvas-text-button ${shapeTool === tool.id ? "canvas-control-active" : ""}`}
+                  >
+                    {tool.label}
+                  </button>
+                );
+              })}
+              <div className="canvas-sep" />
+              <button
+                type="button"
+                onClick={() => setShowSketchTools((current) => !current)}
+                className={`canvas-text-button ${showAdvancedSketchTools ? "canvas-control-active" : ""}`}
+                title="Show or hide scratch drawing tools"
+              >
+                Sketch
+              </button>
+            </div>
+
+            {showAdvancedSketchTools ? TOOL_GROUPS.slice(1).map((group) => (
+              <div key={group.title} className="canvas-toolgroup creator-banner-toolgroup">
+                {group.tools.map((toolId) => {
+                  const tool = TOOL_OPTIONS.find((entry) => entry.id === toolId);
+                  if (!tool) {
+                    return null;
+                  }
+                  return (
+                    <button
+                      key={tool.id}
+                      type="button"
+                      onClick={() => setShapeTool(tool.id)}
+                      className={`canvas-text-button ${shapeTool === tool.id ? "canvas-control-active" : ""}`}
+                    >
+                      {tool.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )) : null}
+
+            {shapeTool === "measure" ? (
+              <div className="canvas-toolgroup creator-banner-toolgroup">
+                {(["free", "horizontal", "vertical"] as const).map((axis) => (
+                  <button
+                    key={axis}
+                    type="button"
+                    onClick={() => setMeasureAxis(axis)}
+                    className={`canvas-text-button ${measureAxis === axis ? "canvas-control-active" : ""}`}
+                  >
+                    {axis === "free" ? "Free" : axis === "horizontal" ? "Hor" : "Ver"}
+                  </button>
+                ))}
+                <div className="canvas-sep" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMeasureStart(null);
+                    setMeasureEnd(null);
+                  }}
+                  className="canvas-text-button"
+                >
+                  Clear
+                </button>
+                {measureSummary ? (
+                  <>
+                    <div className="canvas-sep" />
+                    <span className="canvas-status">
+                      <span>DX {formatMm(Math.abs(measureSummary.dxUm))}</span>
+                      <span>DY {formatMm(Math.abs(measureSummary.dyUm))}</span>
+                      <span>D {formatMm(measureSummary.distanceUm)}</span>
+                    </span>
+                  </>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="canvas-toolgroup creator-banner-toolgroup">
+              {[
+                { key: "pins", label: "Pins" },
+                { key: "snaps", label: "Snap" },
+                { key: "behavior", label: "Motion" },
+                { key: "dimensions", label: "Dims" },
+              ].map((overlay) => (
+                <button
+                  key={overlay.key}
+                  type="button"
+                  onClick={() =>
+                    setOverlayState((current) => ({
+                      ...current,
+                      [overlay.key]: !current[overlay.key as keyof typeof current],
+                    }))
+                  }
+                  className={`canvas-text-button ${overlayState[overlay.key as keyof typeof overlayState] ? "canvas-control-active" : ""}`}
+                  title={`Toggle ${overlay.label.toLowerCase()} overlay`}
+                >
+                  {overlay.label}
+                </button>
+              ))}
+            </div>
+
+          </div>
+        </div>
+
+        <div className="workspace-banner-side">
+          <div className="workspace-banner-switch">{modeSwitch}</div>
+        </div>
+      </div>
+
+      <div className="creator-shell h-full min-h-0">
       <aside className="studio-rail studio-rail-authoring creator-rail">
         <div className="studio-rail-header border-b border-white px-3 py-3">
           <div className="studio-rail-head-inner">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="editor-eyebrow">Component Lab</p>
-                <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-white">Build Reusable Parts</h2>
-              </div>
-              {modeSwitch ? <div className="shrink-0">{modeSwitch}</div> : null}
+            <div className="min-w-0">
+              <p className="editor-eyebrow">Component Lab</p>
+              <h2 className="mt-1.5 truncate font-sans text-[0.95rem] font-black uppercase tracking-[0.16em] text-white">Import And Correct Parts</h2>
             </div>
             <div className="studio-compact-status mt-3">
-              <span className="studio-compact-status-chip">{shapeLayers.length} layers</span>
+              <span className="studio-compact-status-chip">{shapeLayers.length} details</span>
               <span className="studio-compact-status-chip">{children.length} child parts</span>
               <span className="studio-compact-status-chip">{persistentDimensions.length} dims</span>
             </div>
@@ -3333,17 +5366,24 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
         <div className="studio-rail-tabbar">
           <button
             type="button"
+            onClick={() => setLeftTab("sources")}
+            className={`studio-rail-tab ${leftTab === "sources" ? "studio-rail-tab-active" : ""}`}
+          >
+            Import
+          </button>
+          <button
+            type="button"
             onClick={() => setLeftTab("setup")}
             className={`studio-rail-tab ${leftTab === "setup" ? "studio-rail-tab-active" : ""}`}
           >
-            Setup
+            Inspect
           </button>
           <button
             type="button"
             onClick={() => setLeftTab("library")}
             className={`studio-rail-tab ${leftTab === "library" ? "studio-rail-tab-active" : ""}`}
           >
-            Library
+            Parts
           </button>
           <button
             type="button"
@@ -3357,13 +5397,16 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
           <div className="studio-rail-body-inner space-y-3">
             {leftTab === "setup" ? (
             <CreatorSection
-              title="Component"
+              title="Base Package"
               count={selectedBaseId === NO_BASE_ID ? "none" : 1}
               open={leftSections.component}
               onToggle={() => setLeftSections((current) => ({ ...current, component: !current.component }))}
             >
+              <div className="rounded-xl border border-white/12 bg-black/30 px-3 py-3 text-[11px] leading-5 text-aura-muted">
+                Import a real source first when possible. Use these package starts when you need to normalize a part, build a board shell, or continue from a clean AURA base.
+              </div>
               <div>
-                <label className="editor-label">Component Name</label>
+                <label className="editor-label">Saved Name</label>
                 <input value={componentName} onChange={(event) => setComponentName(event.target.value)} className="editor-input" />
               </div>
               <div className="space-y-1.5">
@@ -3379,16 +5422,248 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
             </CreatorSection>
             ) : null}
 
+            {leftTab === "setup" ? (
+            <CreatorSection
+              title="Package Growth"
+              count={selectedBaseSupportsGrowth && selectedBaseItem ? formatResizeBehaviorLabel(selectedBaseItem.resizeBehavior.mode) : "fixed"}
+              open={leftSections.repeat}
+              onToggle={() => setLeftSections((current) => ({ ...current, repeat: !current.repeat }))}
+            >
+              {selectedBaseItem ? (
+                <>
+                  <div className="studio-inline-note space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-white">{selectedBaseItem.title}</span>
+                      <span className="creator-stack-meta">{formatResizeBehaviorLabel(selectedBaseItem.resizeBehavior.mode)}</span>
+                    </div>
+                    <p className="studio-muted-note">
+                      {selectedBaseSupportsGrowth
+                        ? "This package can expand by rule. Normalize one family and change count, width, or columns instead of making duplicate variants."
+                        : "This package is fixed-size. Correct it with child parts and detail layers, not growth controls."}
+                    </p>
+                  </div>
+                  {selectedBaseSupportsGrowth ? (
+                    <div className="space-y-2">
+                      <div>
+                        <label className="editor-label">Starting Pin Count</label>
+                        <input
+                          type="number"
+                          value={packageState.pinCount ?? selectedPackage?.pins.length ?? selectedBaseItem.package.pins.length}
+                          onChange={(event) =>
+                            setPackageStates((current) => ({
+                              ...current,
+                              [selectedBaseId]: { ...packageState, pinCount: Number(event.target.value) },
+                            }))
+                          }
+                          className="editor-input"
+                        />
+                      </div>
+                      {selectedBaseItem.resizeBehavior.allowWide ? (
+                        <div>
+                          <label className="editor-label">Width Mode</label>
+                          <div className="creator-choice-grid creator-choice-grid-tight">
+                            {(["narrow", "wide"] as const).map((mode) => (
+                              <button
+                                key={mode}
+                                type="button"
+                                onClick={() =>
+                                  setPackageStates((current) => ({
+                                    ...current,
+                                    [selectedBaseId]: { ...packageState, widthMode: mode },
+                                  }))
+                                }
+                                className={`creator-choice-button ${(packageState.widthMode ?? "narrow") === mode ? "creator-choice-button-active" : ""}`}
+                              >
+                                {mode}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                      {selectedBaseItem.package.kind === "header" ? (
+                        <div>
+                          <label className="editor-label">Columns</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={packageState.columnCount ?? 1}
+                            onChange={(event) =>
+                              setPackageStates((current) => ({
+                                ...current,
+                                [selectedBaseId]: { ...packageState, columnCount: Math.max(1, Number(event.target.value) || 1) },
+                              }))
+                            }
+                            className="editor-input"
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <div className="studio-muted-note">Choose a base package first. Repeat controls matter most for IC families and headers.</div>
+              )}
+            </CreatorSection>
+            ) : null}
+
+            {leftTab === "sources" ? (
+            <CreatorSection
+              title="Import Sources"
+              count={SOURCE_REFERENCE_CARDS.length}
+              open={leftSections.sources}
+              onToggle={() => setLeftSections((current) => ({ ...current, sources: !current.sources }))}
+            >
+              <div className="space-y-2 rounded-xl border border-white/12 bg-black/30 p-3">
+                <div className="editor-label !mb-1">Workflow</div>
+                <div className="studio-muted-note">1. Load a real source. 2. Correct pins and labels. 3. Review runtime only after geometry is stable. 4. Export an AURA package or vendor correction.</div>
+                <div className="flex flex-wrap gap-2">
+                  <span className={`studio-pill ${hasWorkingSource ? "studio-pill-clean" : "opacity-70"}`}>{hasWorkingSource ? "source loaded" : "pick source"}</span>
+                  <span className={`studio-pill ${selectedLayer?.kind === "base" && selectedLayer.id === "pins_primary" ? "studio-pill-accent" : "opacity-70"}`}>{selectedLayer?.kind === "base" && selectedLayer.id === "pins_primary" ? "pin correction" : "check pins"}</span>
+                  <span className={`studio-pill ${rightTab === "behavior" ? "studio-pill-warn" : "opacity-70"}`}>{rightTab === "behavior" ? "runtime review" : "runtime later"}</span>
+                  <span className={`studio-pill ${hasWorkingSource ? "studio-pill-clean" : "opacity-70"}`}>{hasWorkingSource ? "package ready" : "export later"}</span>
+                </div>
+              </div>
+              <div className="space-y-2 rounded-xl border border-white/12 bg-black/30 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="editor-label !mb-1">Current Source</div>
+                    <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-white">
+                      {selectedBaseItem ? selectedBaseItem.title : hasSvgLayers ? componentName : "No source loaded"}
+                    </div>
+                  </div>
+                  <span className={`studio-pill ${selectedWokwiModel ? "studio-pill-accent" : hasSvgLayers ? "studio-pill-accent" : blankBase ? "studio-pill-warn" : selectedBaseItem ? "studio-pill-clean" : "studio-pill-danger"}`}>
+                    {selectedWokwiModel ? "wokwi" : hasSvgLayers ? "svg" : blankBase ? "blank" : selectedBaseItem ? "library" : "empty"}
+                  </span>
+                </div>
+                <div className="studio-muted-note">
+                  {selectedWokwiModel
+                    ? "Vendor-backed source is active. Correct pins first, then export correction or package files."
+                    : hasSvgLayers
+                      ? "An imported SVG scene is active. Edit layer geometry, raw SVG nodes, and ordering, then export the cleaned package."
+                    : selectedBaseItem
+                      ? "A library package is active. Use this when you need a clean AURA starting point instead of a vendor import."
+                      : "Nothing is loaded yet. Start from Wokwi imports below or move to Inspect for a clean package base."}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => triggerSvgImport("replace")}
+                    className="editor-action-button editor-action-button-accent"
+                  >
+                    Import SVG
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRightTab("edit");
+                      setSelectedLayer(
+                        selectedWokwiModel
+                          ? { kind: "base", id: "pins_primary" }
+                          : hasSvgLayers && shapeLayers.length > 0
+                            ? { kind: "shape", id: shapeLayers[0].id }
+                            : { kind: "base", id: "body_primary" },
+                      );
+                    }}
+                    className="editor-action-button editor-action-button-accent"
+                    disabled={!hasWorkingSource}
+                  >
+                    Go To Correction
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRightTab("json")}
+                    className="editor-action-button editor-action-button-success"
+                    disabled={!hasWorkingSource}
+                  >
+                    Open Package
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearCurrentSource}
+                    className="editor-action-button editor-action-button-danger"
+                    disabled={!hasWorkingSource}
+                  >
+                    Clear Source
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {SOURCE_REFERENCE_CARDS.map((card) => (
+                  <div key={card.id} className="creator-source-card">
+                    <div className="flex items-center gap-2">
+                      <span className={`creator-source-dot ${card.toneClass}`} />
+                      <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-white">{card.title}</div>
+                    </div>
+                    <div className="mt-2 space-y-1">
+                      {card.lines.map((line) => (
+                        <div key={line} className="studio-muted-note">{line}</div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-2 rounded-xl border border-white/12 bg-black/30 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="editor-label !mb-1">Wokwi Imports</div>
+                    <div className="studio-muted-note">Load a real vendor-backed part onto the stage, correct pins and naming, then export AURA-owned corrections or package files.</div>
+                  </div>
+                  <span className="studio-pill studio-pill-accent">{WOKWI_SOURCE_IMPORTS.length}</span>
+                </div>
+                <div className="rounded-xl border border-dashed border-white/12 px-3 py-2 text-[10px] leading-4 text-aura-muted">
+                  If you already have an SVG part from anywhere else, use <span className="font-mono text-white">Import SVG</span> above. Imported SVG nodes become editable layers on the stage.
+                </div>
+                <div className="max-h-[12rem] space-y-1.5 overflow-y-auto pr-1">
+                  {WOKWI_SOURCE_IMPORTS.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => loadWokwiSourceIntoEditor(item.id)}
+                      className={`creator-list-row w-full ${selectedBaseId === item.id ? "creator-list-row-active" : ""}`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="font-mono text-[11px] uppercase tracking-[0.12em]">{item.title}</div>
+                          <div className="creator-stack-meta">{item.tagName}</div>
+                        </div>
+                        <span className="creator-stack-meta">{item.pinCount} pins</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {selectedWokwiModel && wokwiCorrectionArtifact ? (
+                <div className="space-y-2 rounded-xl border border-white/12 bg-black/30 p-3">
+                  <div className="editor-label !mb-1">Correction Output</div>
+                  <div className="studio-muted-note">
+                    Stage edits compile into a deterministic correction file for this Wokwi part. Treat this as the bridge from vendor source to AURA-owned cleanup.
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={copyWokwiCorrectionText} className="editor-action-button editor-action-button-accent">
+                      Copy Correction
+                    </button>
+                    <button type="button" onClick={exportWokwiCorrectionFile} className="editor-action-button editor-action-button-success">
+                      Export Correction
+                    </button>
+                  </div>
+                  <pre className="creator-json-preview whitespace-pre-wrap break-all">
+                    {JSON.stringify(wokwiCorrectionArtifact, null, 2)}
+                  </pre>
+                </div>
+              ) : null}
+            </CreatorSection>
+            ) : null}
+
             {leftTab === "library" ? (
             <CreatorSection
-              title="Library"
+              title="Add Child Parts"
               count={pendingChildItemId ? "armed" : childOptions.length}
               open={leftSections.library}
               onToggle={() => setLeftSections((current) => ({ ...current, library: !current.library }))}
             >
               <div>
-                <label className="editor-label">Search Parts</label>
-                <input value={childQuery} onChange={(event) => setChildQuery(event.target.value)} className="editor-input" placeholder="Search reusable parts" />
+                <label className="editor-label">Search Child Parts</label>
+                <input value={childQuery} onChange={(event) => setChildQuery(event.target.value)} className="editor-input" placeholder="Search reusable child parts" />
               </div>
               <div className="max-h-[12rem] space-y-1.5 overflow-y-auto pr-1">
                 {childOptions.slice(0, 18).map((item) => (
@@ -3413,7 +5688,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
 
             {leftTab === "stack" ? (
             <CreatorSection
-              title="Stack"
+              title="Stage Stack"
               count={stackItems.length}
               open={leftSections.stack}
               onToggle={() => setLeftSections((current) => ({ ...current, stack: !current.stack }))}
@@ -3431,7 +5706,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   ) : null}
                 </div>
               ))}
-              {stackItems.length === 0 ? <div className="studio-muted-note">Place a base part or draw a shape to start building the stack.</div> : null}
+              {stackItems.length === 0 ? <div className="studio-muted-note">Import a source, place a base part, or add a child part to start building the stack.</div> : null}
             </CreatorSection>
             ) : null}
           </div>
@@ -3448,100 +5723,54 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
             <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
               <span className="creator-preset-chip">{selectedBaseId === NO_BASE_ID ? "EMPTY" : selectedPackage?.packageKey ?? "BLANK-BOARD"}</span>
               {hasBase ? <span className="creator-preset-chip">{formatMm(baseLayout.bodyWidthUm)} x {formatMm(baseLayout.bodyHeightUm)}</span> : null}
+              {selectedBaseSupportsGrowth ? <span className="creator-preset-chip">REPEAT READY</span> : null}
             </div>
-          </div>
-
-          <div className="creator-stage-toolbar">
-            {TOOL_GROUPS.map((group) => (
-              <div key={group.title} className="creator-toolbar-group">
-                <span className="canvas-toolgroup-label">{group.title}</span>
-                {group.tools.map((toolId) => {
-                  const tool = TOOL_OPTIONS.find((entry) => entry.id === toolId);
-                  if (!tool) {
-                    return null;
-                  }
-                  return (
-                    <button key={tool.id} type="button" onClick={() => setShapeTool(tool.id)} className={`creator-choice-button ${shapeTool === tool.id ? "creator-choice-button-active" : ""}`}>
-                      {tool.label}
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-            <div className="creator-toolbar-group">
-              <span className="canvas-toolgroup-label">View</span>
-              <button type="button" onClick={resetViewport} className="creator-choice-button">Reset View</button>
-            </div>
-          </div>
-
-          {shapeTool === "measure" ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {(["free", "horizontal", "vertical"] as const).map((axis) => (
-                <button
-                  key={axis}
-                  type="button"
-                  onClick={() => setMeasureAxis(axis)}
-                  className={`canvas-text-button ${measureAxis === axis ? "canvas-control-active" : ""}`}
-                >
-                  {axis === "free" ? "Free" : axis === "horizontal" ? "Hor" : "Ver"}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  setMeasureStart(null);
-                  setMeasureEnd(null);
-                }}
-                className="canvas-text-button"
-              >
-                Clear
-              </button>
-              {measureSummary ? (
-                <span className="canvas-status">
-                  <span>DX {formatMm(Math.abs(measureSummary.dxUm))}</span>
-                  <span>DY {formatMm(Math.abs(measureSummary.dyUm))}</span>
-                  <span>D {formatMm(measureSummary.distanceUm)}</span>
-                </span>
-              ) : null}
-            </div>
-          ) : null}
-
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {[
-              { key: "pins", label: "Pins" },
-              { key: "snaps", label: "Snap" },
-              { key: "behavior", label: "Behavior" },
-              { key: "dimensions", label: "Dims" },
-            ].map((overlay) => (
-              <button key={overlay.key} type="button" onClick={() => setOverlayState((current) => ({ ...current, [overlay.key]: !current[overlay.key as keyof typeof current] }))} className={`canvas-text-button ${overlayState[overlay.key as keyof typeof overlayState] ? "canvas-control-active" : ""}`}>{overlay.label}</button>
-            ))}
           </div>
 
           <div ref={stagePanelRef} className="creator-preview-card">
+            {creatorTextureVisible ? (
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  backgroundImage: `url(/textures/${creatorTextureKey}.jpg)`,
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "cover",
+                  opacity: 0.38,
+                }}
+              />
+            ) : null}
+            {creatorGridVisible ? (
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={creatorGridOverlayStyle}
+              />
+            ) : null}
             <svg ref={svgRef} viewBox={`0 0 ${STAGE_WIDTH} ${STAGE_HEIGHT}`} className="h-full w-full" onPointerDown={handleStagePointerDown} onPointerMove={handleStagePointerMove} onPointerUp={handleStagePointerUp} onWheel={handleStageWheel}>
               <defs>
-                <pattern id="creator-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                </pattern>
                 <filter id="creator-soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
                   <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.32" />
                 </filter>
               </defs>
               <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.zoom})`}>
-              <rect width={STAGE_WIDTH} height={STAGE_HEIGHT} fill="url(#creator-grid)" />
-              {!hasBase && shapeLayers.length === 0 ? (
-                <g pointerEvents="none">
-                  <rect x={STAGE_WIDTH / 2 - 140} y={STAGE_HEIGHT / 2 - 34} width={280} height={68} rx={14} fill="rgba(0,0,0,0.72)" stroke="rgba(255,255,255,0.14)" strokeWidth={1} />
-                  <text x={STAGE_WIDTH / 2} y={STAGE_HEIGHT / 2 - 6} textAnchor="middle" fill="#ffffff" fontFamily="IBM Plex Mono, monospace" fontSize="12" letterSpacing="0.12em">
-                    EMPTY CREATOR STAGE
-                  </text>
-                  <text x={STAGE_WIDTH / 2} y={STAGE_HEIGHT / 2 + 14} textAnchor="middle" fill="rgba(255,255,255,0.62)" fontFamily="IBM Plex Mono, monospace" fontSize="10">
-                    Place a real part or draw directly to start editing.
-                  </text>
-                </g>
-              ) : null}
 
-              {hasBase ? renderBasePackage(selectedPackage, baseLayout, componentName, selectedLayer, bodyHidden, pinsHidden, labelHidden, baseOverride) : null}
+              {hasBase && selectedWokwiModel ? (
+                <>
+                  {!bodyHidden ? (
+                    <WokwiPart
+                      componentId={`creator:${selectedBaseId}`}
+                      libraryItemId={selectedBaseId}
+                      runtimeProfile={runtimeProfile}
+                      x={baseLayout.bodyRect.x}
+                      y={baseLayout.bodyRect.y}
+                      width={baseLayout.bodyRect.width}
+                      height={baseLayout.bodyRect.height}
+                      rotationDeg={0}
+                    />
+                  ) : null}
+                  {renderBasePackage(selectedPackage, baseLayout, componentName, selectedLayer, true, true, labelHidden, baseOverride)}
+                </>
+              ) : hasBase ? renderBasePackage(selectedPackage, baseLayout, componentName, selectedLayer, bodyHidden, pinsHidden, labelHidden, baseOverride) : null}
               {children.map((child) => {
                 const anchor = getChildAnchorPosition(childAnchorOrigin, child);
                 const selected = selectedLayer?.kind === "child" && selectedLayer.id === child.id;
@@ -3673,8 +5902,73 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                 </g>
               ) : null}
               {shapeLayers.map((shape) => (
-                <g key={shape.id} onPointerDown={(event) => { if (shapeTool !== "select") return; event.stopPropagation(); setSelectedLayer({ kind: "shape", id: shape.id }); setSelectedPinId(null); setSelectedChildPinId(null); setPointerState({ mode: "move-shape", shapeId: shape.id, origin: getStagePoint(event as unknown as ReactPointerEvent<SVGSVGElement>, svgRef.current, viewport), initialShape: shape }); }}>
-                  {renderShapeLayer(shape, selectedLayer?.kind === "shape" && selectedLayer.id === shape.id, hiddenLayers[shape.id] ?? false)}
+                <g
+                  key={shape.id}
+                  onPointerDown={(event) => {
+                    if (shapeTool !== "select") return;
+                    event.stopPropagation();
+                    const additive = isAdditiveSelectionEvent(event.nativeEvent);
+                    const isAlreadySelected = activeSelectedShapeIds.includes(shape.id);
+                    if (additive) {
+                      const nextIds = isAlreadySelected
+                        ? activeSelectedShapeIds.filter((id) => id !== shape.id)
+                        : [...activeSelectedShapeIds, shape.id];
+                      setSelectedShapeIds(nextIds);
+                      setSelectedLayer(nextIds[0] ? { kind: "shape", id: isAlreadySelected ? nextIds[0] : shape.id } : null);
+                      setSelectedPinId(null);
+                      setSelectedChildPinId(null);
+                      return;
+                    }
+                    setSelectedLayer({ kind: "shape", id: shape.id });
+                    setSelectedShapeIds((current) => (current.length > 1 && current.includes(shape.id) ? current : [shape.id]));
+                    setSelectedPinId(null);
+                    setSelectedChildPinId(null);
+                    if (shape.svgGroupId && selectedLayer?.kind === "svg_group" && selectedLayer.id === shape.svgGroupId) {
+                      const initialShapes = Object.fromEntries(
+                        shapeLayers
+                          .filter((candidate) => candidate.svgGroupId === shape.svgGroupId)
+                          .map((candidate) => [candidate.id, candidate]),
+                      );
+                      setPointerState({
+                        mode: "move-svg-group",
+                        groupId: shape.svgGroupId,
+                        origin: getStagePoint(event as unknown as ReactPointerEvent<SVGSVGElement>, svgRef.current, viewport),
+                        initialShapes,
+                      });
+                      return;
+                    }
+                    if (activeSelectedShapeIds.length > 1 && activeSelectedShapeIds.includes(shape.id)) {
+                      const initialShapes = Object.fromEntries(
+                        shapeLayers
+                          .filter((candidate) => activeSelectedShapeIds.includes(candidate.id))
+                          .map((candidate) => [candidate.id, candidate]),
+                      );
+                      setPointerState({
+                        mode: "move-shape-selection",
+                        shapeIds: activeSelectedShapeIds,
+                        origin: getStagePoint(event as unknown as ReactPointerEvent<SVGSVGElement>, svgRef.current, viewport),
+                        initialShapes,
+                      });
+                      return;
+                    }
+                    setPointerState({ mode: "move-shape", shapeId: shape.id, origin: getStagePoint(event as unknown as ReactPointerEvent<SVGSVGElement>, svgRef.current, viewport), initialShape: shape });
+                  }}
+                  onDoubleClick={(event) => {
+                    if (!shape.svgGroupId) {
+                      return;
+                    }
+                    event.stopPropagation();
+                    setSelectedLayer({ kind: "svg_group", id: shape.svgGroupId });
+                    setSelectedPinId(null);
+                    setSelectedChildPinId(null);
+                  }}
+                >
+                  {renderShapeLayer(
+                    shape,
+                    activeSelectedShapeIds.includes(shape.id) ||
+                      (selectedLayer?.kind === "svg_group" && selectedLayer.id === shape.svgGroupId),
+                    hiddenLayers[shape.id] ?? false,
+                  )}
                 </g>
               ))}
               {draftShape ? renderShapeLayer(draftShape, true, false) : null}
@@ -3700,7 +5994,59 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                 );
               })() : null}
               {overlayState.behavior ? renderBehaviorPreview(draft, targetShape) : null}
-              {selectedLayer ? <g pointerEvents="none">{renderPreviewShape(selectedLayer.kind === "shape" && selectedShape ? shapeToPreviewShape(selectedShape) : getBuiltInShape(selectedLayer.id as BuiltInLayerId, baseLayout, selectedPackage, baseOverride), "none", 1, "#ffffff", 2, "6 5")}</g> : null}
+              {selectedLayer ? (
+                <g pointerEvents="none">
+                  {selectedShapeSelectionBounds
+                    ? renderPreviewShape(
+                        {
+                          kind: "rect",
+                          x: selectedShapeSelectionBounds.x,
+                          y: selectedShapeSelectionBounds.y,
+                          width: selectedShapeSelectionBounds.width,
+                          height: selectedShapeSelectionBounds.height,
+                          rx: 10,
+                        },
+                        "none",
+                        1,
+                        "#ffffff",
+                        2,
+                        "6 5",
+                      )
+                    : selectedLayer.kind === "shape" && selectedShape
+                    ? renderPreviewShape(shapeToPreviewShape(selectedShape), "none", 1, "#ffffff", 2, "6 5")
+                    : selectedLayer.kind === "svg_group" && selectedSvgGroupBounds
+                      ? renderPreviewShape(
+                          {
+                            kind: "rect",
+                            x: selectedSvgGroupBounds.x,
+                            y: selectedSvgGroupBounds.y,
+                            width: selectedSvgGroupBounds.width,
+                            height: selectedSvgGroupBounds.height,
+                            rx: 10,
+                          },
+                          "none",
+                          1,
+                          "#ffffff",
+                          2,
+                          "6 5",
+                        )
+                      : selectedLayer.kind === "base"
+                        ? renderPreviewShape(getBuiltInShape(selectedLayer.id as BuiltInLayerId, baseLayout, selectedPackage, baseOverride), "none", 1, "#ffffff", 2, "6 5")
+                        : null}
+                </g>
+              ) : null}
+              {pointerState?.mode === "marquee-select" ? (
+                <g pointerEvents="none">
+                  {(() => {
+                    const rect = normalizeRect(pointerState.origin, pointerState.current);
+                    return (
+                      <>
+                        <rect x={rect.x} y={rect.y} width={rect.width} height={rect.height} fill="rgba(255,255,255,0.06)" stroke="#ffffff" strokeWidth={1.4} strokeDasharray="7 6" />
+                      </>
+                    );
+                  })()}
+                </g>
+              ) : null}
               {overlayState.dimensions
                 ? persistentDimensions.map((dimension, index) => {
                     const shape = shapeLayers.find((candidate) => candidate.id === dimension.shapeId);
@@ -3736,7 +6082,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   ) : null}
                 </g>
               ) : null}
-              {selectedLayer?.kind === "shape" && selectedShape && shapeTool === "select" ? getShapeResizeHandles(selectedShape).map((handle) => <circle key={handle.id} cx={handle.x} cy={handle.y} r={5.6} fill="#ffffff" stroke="#000000" strokeWidth={1.6} onPointerDown={(event) => { event.stopPropagation(); setPointerState({ mode: "resize-shape", shapeId: selectedShape.id, handle: handle.id, initialShape: selectedShape }); }} />) : null}
+              {selectedLayer?.kind === "shape" && selectedShape && activeSelectedShapeIds.length <= 1 && shapeTool === "select" ? getShapeResizeHandles(selectedShape).map((handle) => <circle key={handle.id} cx={handle.x} cy={handle.y} r={5.6} fill="#ffffff" stroke="#000000" strokeWidth={1.6} onPointerDown={(event) => { event.stopPropagation(); setPointerState({ mode: "resize-shape", shapeId: selectedShape.id, handle: handle.id, initialShape: selectedShape }); }} />) : null}
               {selectedLayer?.kind === "base" && selectedLayer.id === "pins_primary" && shapeTool === "select" && !pinsHidden ? (
                 <g>
                   {baseLayout.previewPins.map((pin) => {
@@ -3816,21 +6162,21 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                 onClick={() => setRightTab("edit")}
                 className={`studio-rail-tab ${rightTab === "edit" ? "studio-rail-tab-active" : ""}`}
               >
-                Edit
+                Correct
               </button>
               <button
                 type="button"
                 onClick={() => setRightTab("json")}
                 className={`studio-rail-tab ${rightTab === "json" ? "studio-rail-tab-active" : ""}`}
               >
-                JSON
+                Package
               </button>
               <button
                 type="button"
                 onClick={() => setRightTab("behavior")}
                 className={`studio-rail-tab ${rightTab === "behavior" ? "studio-rail-tab-active" : ""}`}
               >
-                Behavior
+                Runtime
               </button>
             </div>
           </div>
@@ -3839,7 +6185,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
           <div className="studio-rail-body-inner space-y-3">
             {rightTab === "edit" ? (
             <CreatorSection
-              title="Selection"
+              title="Correction"
               count={selectedLayer?.kind ?? "none"}
               open={rightSections.selection}
               onToggle={() => setRightSections((current) => ({ ...current, selection: !current.selection }))}
@@ -3870,6 +6216,11 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                     <div className="studio-stat-card"><div className="editor-label !mb-1">Width</div><div className="font-mono text-[12px] text-white">{formatMm(baseLayout.bodyWidthUm)}</div></div>
                     <div className="studio-stat-card"><div className="editor-label !mb-1">Height</div><div className="font-mono text-[12px] text-white">{formatMm(baseLayout.bodyHeightUm)}</div></div>
                   </div>
+                  {selectedWokwiModel ? (
+                    <div className="rounded-xl border border-white/12 px-3 py-3 text-[11px] leading-5 text-aura-muted">
+                      This base is rendered from a real Wokwi source. Width and height still control fitting, but cleanup should happen mainly through pin correction, naming, and runtime mapping rather than manual restyling.
+                    </div>
+                  ) : null}
                   <div className="studio-stat-grid">
                     <div>
                       <label className="editor-label">Body Width</label>
@@ -3971,7 +6322,41 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                     </div>
                   ) : null}
                   {selectedBaseItem != null && isResizableLibraryItem(selectedBaseId) ? (
-                    <div><label className="editor-label">Pin Count</label><input type="number" value={packageState.pinCount ?? selectedPackage?.pins.length ?? 0} onChange={(event) => setPackageStates((current) => ({ ...current, [selectedBaseId]: { ...packageState, pinCount: Number(event.target.value) } }))} className="editor-input" /></div>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="editor-label">Pin Count</label>
+                        <input type="number" value={packageState.pinCount ?? selectedPackage?.pins.length ?? 0} onChange={(event) => setPackageStates((current) => ({ ...current, [selectedBaseId]: { ...packageState, pinCount: Number(event.target.value) } }))} className="editor-input" />
+                      </div>
+                      {selectedBaseItem.resizeBehavior.allowWide ? (
+                        <div>
+                          <label className="editor-label">Width Mode</label>
+                          <div className="creator-choice-grid creator-choice-grid-tight">
+                            {(["narrow", "wide"] as const).map((mode) => (
+                              <button
+                                key={mode}
+                                type="button"
+                                onClick={() => setPackageStates((current) => ({ ...current, [selectedBaseId]: { ...packageState, widthMode: mode } }))}
+                                className={`creator-choice-button ${(packageState.widthMode ?? "narrow") === mode ? "creator-choice-button-active" : ""}`}
+                              >
+                                {mode}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                      {selectedBaseItem.package.kind === "header" ? (
+                        <div>
+                          <label className="editor-label">Columns</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={packageState.columnCount ?? 1}
+                            onChange={(event) => setPackageStates((current) => ({ ...current, [selectedBaseId]: { ...packageState, columnCount: Math.max(1, Number(event.target.value) || 1) } }))}
+                            className="editor-input"
+                          />
+                        </div>
+                      ) : null}
+                    </div>
                   ) : null}
                   <div className="grid grid-cols-2 gap-2">
                     <button type="button" onClick={resetViewport} className="editor-action-button">Reset View</button>
@@ -4006,6 +6391,14 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   <div className="rounded-xl border border-white/12 px-3 py-3 text-[11px] leading-5 text-aura-muted">
                     Drag pin handles on the stage to reposition them, or edit labels and offsets here for exact package cleanup.
                   </div>
+                  <div className="rounded-xl border border-white/12 px-3 py-2 text-[10px] leading-4 text-aura-muted">
+                    Creator pins now snap to a fine stage grid while dragging. Numeric offsets use <span className="font-mono text-white">0.01 mm</span> steps for arrow-key adjustment.
+                  </div>
+                  {selectedWokwiModel && wokwiCorrectionArtifact ? (
+                    <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/8 px-3 py-3 text-[11px] leading-5 text-emerald-100">
+                      Wokwi source loaded. These pin edits can be exported as a deterministic correction file instead of staying editor-only.
+                    </div>
+                  ) : null}
                   <div className="space-y-2">
                     {baseLayout.previewPins.map((pin) => {
                       const override = selectedPinOverrides[pin.id] ?? {};
@@ -4050,6 +6443,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                                 <label className="editor-label">Offset X</label>
                                 <input
                                   type="number"
+                                  step={CREATOR_PIN_INPUT_STEP_MM}
                                   value={Number(((override.dxUm ?? 0) / 1000).toFixed(2))}
                                   onChange={(event) =>
                                     setPinOverrides((current) => ({
@@ -4070,6 +6464,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                                 <label className="editor-label">Offset Y</label>
                                 <input
                                   type="number"
+                                  step={CREATOR_PIN_INPUT_STEP_MM}
                                   value={Number(((override.dyUm ?? 0) / 1000).toFixed(2))}
                                   onChange={(event) =>
                                     setPinOverrides((current) => ({
@@ -4164,29 +6559,83 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                       />
                     </div>
                   </div>
-                  {isResizableLibraryItem(selectedChild.itemId) ? (
-                    <div>
-                      <label className="editor-label">Pin Count</label>
-                      <input
-                        type="number"
-                        value={selectedChild.packageState.pinCount ?? getDefaultPackageState(selectedChild.itemId).pinCount ?? 0}
-                        onChange={(event) =>
-                          setChildren((current) =>
-                            current.map((child) =>
-                              child.id === selectedChild.id
-                                ? {
-                                    ...child,
-                                    packageState: {
-                                      ...child.packageState,
-                                      pinCount: Number(event.target.value),
-                                    },
-                                  }
-                                : child,
-                            ),
-                          )
-                        }
-                        className="editor-input"
-                      />
+                  {selectedChildSupportsGrowth ? (
+                    <div className="space-y-2">
+                      <div className="studio-inline-note space-y-1">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-white">Repeatable Child</span>
+                          <span className="creator-stack-meta">{formatResizeBehaviorLabel(getLibraryItem(selectedChild.itemId).resizeBehavior.mode)}</span>
+                        </div>
+                        <div className="studio-muted-note">This child can expand by package rules instead of being copied into separate variants.</div>
+                      </div>
+                      <div>
+                        <label className="editor-label">Pin Count</label>
+                        <input
+                          type="number"
+                          value={selectedChild.packageState.pinCount ?? getDefaultPackageState(selectedChild.itemId).pinCount ?? 0}
+                          onChange={(event) =>
+                            setChildren((current) =>
+                              current.map((child) =>
+                                child.id === selectedChild.id
+                                  ? {
+                                      ...child,
+                                      packageState: {
+                                        ...child.packageState,
+                                        pinCount: Number(event.target.value),
+                                      },
+                                    }
+                                  : child,
+                              ),
+                            )
+                          }
+                          className="editor-input"
+                        />
+                      </div>
+                      {getLibraryItem(selectedChild.itemId).resizeBehavior.allowWide ? (
+                        <div>
+                          <label className="editor-label">Width Mode</label>
+                          <div className="creator-choice-grid creator-choice-grid-tight">
+                            {(["narrow", "wide"] as const).map((mode) => (
+                              <button
+                                key={mode}
+                                type="button"
+                                onClick={() =>
+                                  setChildren((current) =>
+                                    current.map((child) =>
+                                      child.id === selectedChild.id
+                                        ? { ...child, packageState: { ...child.packageState, widthMode: mode } }
+                                        : child,
+                                    ),
+                                  )
+                                }
+                                className={`creator-choice-button ${(selectedChild.packageState.widthMode ?? "narrow") === mode ? "creator-choice-button-active" : ""}`}
+                              >
+                                {mode}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                      {getLibraryItem(selectedChild.itemId).package.kind === "header" ? (
+                        <div>
+                          <label className="editor-label">Columns</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={selectedChild.packageState.columnCount ?? 1}
+                            onChange={(event) =>
+                              setChildren((current) =>
+                                current.map((child) =>
+                                  child.id === selectedChild.id
+                                    ? { ...child, packageState: { ...child.packageState, columnCount: Math.max(1, Number(event.target.value) || 1) } }
+                                    : child,
+                                ),
+                              )
+                            }
+                            className="editor-input"
+                          />
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                   <div className="studio-stat-grid">
@@ -4311,6 +6760,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                               <label className="editor-label">Pin X</label>
                               <input
                                 type="number"
+                                step={CREATOR_PIN_INPUT_STEP_MM}
                                 value={Number(((selectedChildPinOverride.dxUm ?? 0) / 1000).toFixed(2))}
                                 onChange={(event) =>
                                   setChildren((current) =>
@@ -4337,6 +6787,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                               <label className="editor-label">Pin Y</label>
                               <input
                                 type="number"
+                                step={CREATOR_PIN_INPUT_STEP_MM}
                                 value={Number(((selectedChildPinOverride.dyUm ?? 0) / 1000).toFixed(2))}
                                 onChange={(event) =>
                                   setChildren((current) =>
@@ -4430,7 +6881,105 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   </button>
                 </>
               ) : null}
-              {selectedLayer?.kind === "shape" && selectedShape ? (
+              {selectedLayer?.kind === "svg_group" && selectedSvgGroupBounds ? (
+                <>
+                  <div>
+                    <label className="editor-label">Part Name</label>
+                    <input
+                      value={selectedSvgGroupName}
+                      onChange={(event) =>
+                        commitShapeLayerUpdate((current) =>
+                          current.map((shape) =>
+                            shape.svgGroupId === selectedLayer.id
+                              ? { ...shape, svgGroupName: event.target.value }
+                              : shape,
+                          ),
+                        )
+                      }
+                      className="editor-input"
+                    />
+                  </div>
+                  <div className="studio-stat-grid">
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">Group</div><div className="font-mono text-[12px] text-white">{selectedSvgGroupName}</div></div>
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">Nodes</div><div className="font-mono text-[12px] text-white">{selectedSvgGroupShapes.length}</div></div>
+                  </div>
+                  <div className="rounded-xl border border-white/12 px-3 py-3 text-[11px] leading-5 text-aura-muted">
+                    Double-click any member of an imported SVG part to select the whole group again. Drag now moves the whole part instead of tearing the nodes apart.
+                  </div>
+                  <div className="studio-stat-grid">
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">Width</div><div className="font-mono text-[12px] text-white">{formatMm(selectedSvgGroupBounds.width * baseLayout.umPerUnit)}</div></div>
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">Height</div><div className="font-mono text-[12px] text-white">{formatMm(selectedSvgGroupBounds.height * baseLayout.umPerUnit)}</div></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const firstShape = selectedSvgGroupShapes[0];
+                        if (!firstShape) {
+                          return;
+                        }
+                        setSelectedLayer({ kind: "shape", id: firstShape.id });
+                      }}
+                      className="editor-action-button editor-action-button-accent"
+                    >
+                      Edit Parts
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        commitShapeLayerUpdate((current) =>
+                          current.map((shape) =>
+                            shape.svgGroupId === selectedLayer.id
+                              ? { ...shape, svgGroupId: undefined, svgGroupName: undefined }
+                              : shape,
+                          ),
+                        )
+                      }
+                      className="editor-action-button"
+                    >
+                      Ungroup
+                    </button>
+                  </div>
+                </>
+              ) : null}
+              {selectedShapes.length > 1 && selectedShapeSelectionBounds ? (
+                <>
+                  <div className="studio-stat-grid">
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">Selected</div><div className="font-mono text-[12px] text-white">{selectedShapes.length} layers</div></div>
+                    <div className="studio-stat-card"><div className="editor-label !mb-1">Bounds</div><div className="font-mono text-[12px] text-white">{formatMm(selectedShapeSelectionBounds.width * baseLayout.umPerUnit)} x {formatMm(selectedShapeSelectionBounds.height * baseLayout.umPerUnit)}</div></div>
+                  </div>
+                  <div className="rounded-xl border border-white/12 px-3 py-3 text-[11px] leading-5 text-aura-muted">
+                    Hold <span className="font-mono text-white">Ctrl</span> or <span className="font-mono text-white">Cmd</span> to add/remove layers. Drag a selected member to move the full selection. Drag on empty stage to marquee-select.
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const firstShape = selectedShapes[0];
+                        if (!firstShape) {
+                          return;
+                        }
+                        setSelectedLayer({ kind: "shape", id: firstShape.id });
+                        setSelectedShapeIds([firstShape.id]);
+                      }}
+                      className="editor-action-button editor-action-button-accent"
+                    >
+                      Edit First Layer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedShapeIds([]);
+                        setSelectedLayer(null);
+                      }}
+                      className="editor-action-button"
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                </>
+              ) : null}
+              {selectedLayer?.kind === "shape" && selectedShape && selectedShapes.length <= 1 ? (
                 <>
                   <div><label className="editor-label">Layer Name</label><input value={selectedShape.name} onChange={(event) => updateSelectedShape((shape) => ({ ...shape, name: event.target.value }))} className="editor-input" /></div>
                   {selectedShapeDimensionSummary ? (
@@ -4794,6 +7343,163 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                     {"stroke" in selectedShape ? <div><label className="editor-label">Stroke</label><input type="color" value={selectedShape.stroke} onChange={(event) => updateSelectedShape((shape) => ("stroke" in shape ? { ...shape, stroke: event.target.value } : shape))} className="editor-color-input" /></div> : null}
                   </div>
                   {"strokeWidth" in selectedShape ? <div><label className="editor-label">Stroke Width</label><input type="range" min="1" max="8" step="0.2" value={selectedShape.strokeWidth} onChange={(event) => updateSelectedShape((shape) => ("strokeWidth" in shape ? { ...shape, strokeWidth: Number(event.target.value) } : shape))} className="editor-slider" /></div> : null}
+                  {selectedShape.kind === "svg" ? (
+                    <>
+                      <div className="studio-stat-card">
+                        <div className="editor-label !mb-1">SVG Nodes</div>
+                        <div className="font-mono text-[12px] text-white">{selectedSvgNodeSummaries.length}</div>
+                        <p className="mt-2 text-[11px] leading-5 text-aura-muted">
+                          This imported SVG layer can be split into independent editable SVG sublayers when you need deeper control.
+                        </p>
+                      </div>
+                      {selectedSvgNodeSummaries.length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="editor-label !mb-0">Node List</div>
+                          <div className="max-h-[10rem] space-y-1.5 overflow-y-auto pr-1">
+                            {selectedSvgNodeSummaries.map((node) => (
+                              <div key={node.id} className="creator-list-row">
+                                <div className="flex items-center justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-white">{node.name}</div>
+                                    <div className="creator-stack-meta">{node.tag}</div>
+                                  </div>
+                                  <span className="creator-stack-meta">{node.id}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                      <div className="grid grid-cols-2 gap-2">
+                        {selectedShape.svgGroupId ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!selectedShape.svgGroupId) {
+                                return;
+                              }
+                              setSelectedLayer({ kind: "svg_group", id: selectedShape.svgGroupId });
+                              setSelectedPinId(null);
+                              setSelectedChildPinId(null);
+                              setDefinitionNotice(`Selected whole part ${getShapeGroupName(selectedShape)}.`);
+                            }}
+                            className="editor-action-button editor-action-button-accent"
+                          >
+                            Select Whole Part
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedShape.kind !== "svg") {
+                              return;
+                            }
+                            try {
+                              const result = extractSvgSubLayers(
+                                selectedShape,
+                                new Set(shapeLayers.map((shape) => shape.id)),
+                                new Set(shapeLayers.flatMap((shape) => (shape.svgGroupId ? [shape.svgGroupId] : []))),
+                              );
+                              setPersistentDimensions((current) => current.filter((dimension) => dimension.shapeId !== selectedShape.id));
+                              commitShapeLayerUpdate((current) => [
+                                ...current.filter((shape) => shape.id !== selectedShape.id),
+                                ...result.layers,
+                              ]);
+                              if (result.layers[0]?.svgGroupId) {
+                                setSelectedLayer({ kind: "svg_group", id: result.layers[0].svgGroupId });
+                              } else {
+                                setSelectedLayer({ kind: "shape", id: result.layers[0]?.id ?? selectedShape.id });
+                              }
+                              setDefinitionNotice(`Exploded ${selectedShape.name} into ${result.layers.length} SVG sublayers.`);
+                            } catch (error) {
+                              setDefinitionNotice(error instanceof Error ? error.message : "SVG explode failed.");
+                            }
+                          }}
+                          className="editor-action-button editor-action-button-accent"
+                        >
+                          Explode To Nodes
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedShape.kind !== "svg") {
+                              return;
+                            }
+                            try {
+                              navigator.clipboard.writeText(selectedShape.markup);
+                              setDefinitionNotice(`Copied raw SVG markup for ${selectedShape.name}.`);
+                            } catch {
+                              setDefinitionNotice("Clipboard unavailable for raw SVG markup.");
+                            }
+                          }}
+                          className="editor-action-button"
+                        >
+                          Copy Markup
+                        </button>
+                      </div>
+                      <div>
+                        <label className="editor-label">Opacity</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={selectedShape.opacity ?? 1}
+                          onChange={(event) =>
+                            updateSelectedShape((shape) => (shape.kind === "svg" ? { ...shape, opacity: Number(event.target.value) } : shape))
+                          }
+                          className="editor-slider"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateSelectedShape((shape) =>
+                              shape.kind === "svg"
+                                ? {
+                                    ...shape,
+                                    width: shape.sourceWidth,
+                                    height: shape.sourceHeight,
+                                  }
+                                : shape,
+                            )
+                          }
+                          className="editor-action-button"
+                        >
+                          Reset Size
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateSelectedShape((shape) =>
+                              shape.kind === "svg"
+                                ? {
+                                    ...shape,
+                                    sourceWidth: Math.max(1, shape.width),
+                                    sourceHeight: Math.max(1, shape.height),
+                                  }
+                                : shape,
+                            )
+                          }
+                          className="editor-action-button"
+                        >
+                          Rebase Scale
+                        </button>
+                      </div>
+                      <div>
+                        <label className="editor-label">Raw SVG Markup</label>
+                        <textarea
+                          value={selectedShape.markup}
+                          onChange={(event) =>
+                            updateSelectedShape((shape) => (shape.kind === "svg" ? { ...shape, markup: event.target.value } : shape))
+                          }
+                          spellCheck={false}
+                          className="creator-json-preview h-[12rem] w-full resize-y bg-black outline-none"
+                        />
+                      </div>
+                    </>
+                  ) : null}
                   <div>
                     <label className="editor-label">Construction</label>
                     <div className="editor-segmented">
@@ -4838,7 +7544,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                       </div>
                     </>
                   ) : null}
-                  {(selectedShape.kind === "hole" || selectedShape.kind === "ellipse" || selectedShape.kind === "arc" || selectedShape.kind === "rect" || selectedShape.kind === "line" || selectedShape.kind === "text") ? (
+                  {(selectedShape.kind === "hole" || selectedShape.kind === "ellipse" || selectedShape.kind === "arc" || selectedShape.kind === "rect" || selectedShape.kind === "line" || selectedShape.kind === "text" || selectedShape.kind === "svg") ? (
                     <>
                       <div>
                         <label className="editor-label">Offset Copy</label>
@@ -4925,13 +7631,13 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   </button>
                 </>
               ) : null}
-              {selectedLayer == null ? <div className="rounded-xl border border-dashed border-white/20 px-3 py-3 text-[10px] leading-4 text-aura-muted">Select the body, pins, a marking, child part, or a custom drawn shape to edit it.</div> : null}
+              {selectedLayer == null ? <div className="rounded-xl border border-dashed border-white/20 px-3 py-3 text-[10px] leading-4 text-aura-muted">Select a base, pin group, child part, or sketch layer to inspect and correct it.</div> : null}
             </CreatorSection>
             ) : null}
 
             {rightTab === "json" ? (
             <CreatorSection
-              title="Definition JSON"
+              title="Package Data"
               count="v1"
               open={rightSections.definition}
               onToggle={() => setRightSections((current) => ({ ...current, definition: !current.definition }))}
@@ -4947,7 +7653,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                 <button
                   type="button"
                   onClick={() => loadDefinitionIntoEditor(exportedDefinition, "Loaded current component definition.")}
-                  className="editor-action-button"
+                  className="editor-action-button editor-action-button-accent"
                 >
                   Load Current
                 </button>
@@ -4963,14 +7669,42 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                   onClick={exportDefinitionFile}
                   className="editor-action-button editor-action-button-success"
                 >
-                  Export File
+                  Export Definition
+                </button>
+                <button
+                  type="button"
+                  onClick={copySceneSvgText}
+                  className="editor-action-button editor-action-button-accent"
+                >
+                  Copy SVG
+                </button>
+                <button
+                  type="button"
+                  onClick={exportSceneFile}
+                  className="editor-action-button editor-action-button-accent"
+                >
+                  Export Scene
+                </button>
+                <button
+                  type="button"
+                  onClick={exportComponentPackageFiles}
+                  className="editor-action-button editor-action-button-success"
+                >
+                  Export Package
                 </button>
                 <button
                   type="button"
                   onClick={() => definitionFileInputRef.current?.click()}
-                  className="editor-action-button"
+                  className="editor-action-button editor-action-button-accent"
                 >
                   Import File
+                </button>
+                <button
+                  type="button"
+                  onClick={() => triggerSvgImport("append")}
+                  className="editor-action-button editor-action-button-accent"
+                >
+                  Add SVG
                 </button>
                 <button
                   type="button"
@@ -5005,6 +7739,9 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                 <div className="rounded-xl border border-dashed border-white/12 px-3 py-2 text-[10px] leading-4 text-aura-muted">
                   Built-in examples mirror the repo-backed starter files under <span className="font-mono text-white">shared/component_definitions_v1/examples</span>.
                 </div>
+                <div className="rounded-xl border border-white/12 px-3 py-2 text-[10px] leading-4 text-aura-muted">
+                  Normal flow is: import or choose a base, correct pins and runtime, then export the paired files <span className="font-mono text-white">component.json</span> and <span className="font-mono text-white">scene.svg</span> that match the current AURA package contract.
+                </div>
               </div>
               <textarea
                 value={definitionText}
@@ -5012,6 +7749,10 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
                 spellCheck={false}
                 className="creator-json-preview h-[22rem] w-full resize-y bg-black outline-none"
               />
+              <div className="space-y-2">
+                <div className="editor-label !mb-0">Package Summary</div>
+                <pre className="creator-json-preview whitespace-pre-wrap break-all">{JSON.stringify(sceneArtifact.packageJson.scene, null, 2)}</pre>
+              </div>
               {definitionNotice ? (
                 <div className="rounded-xl border border-white/12 px-3 py-2 text-[11px] leading-5 text-aura-muted">
                   {definitionNotice}
@@ -5022,34 +7763,377 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
 
             {rightTab === "behavior" ? (
             <CreatorSection
-              title="Behavior"
-              count={selectedPreset.short}
+              title="Runtime Mapping"
+              count={selectedRuntimeDefinition.short}
               open={rightSections.behaviors}
               onToggle={() => setRightSections((current) => ({ ...current, behaviors: !current.behaviors }))}
             >
               <div className="creator-choice-grid">
-                {BEHAVIOR_PRESETS.map((preset) => (
-                  <button key={preset.id} type="button" onClick={() => { const nextTarget = getCompatibleBehaviorTargets(preset.id)[0]; setDraft((current) => ({ ...current, presetId: preset.id, targetId: nextTarget?.id ?? current.targetId, property: preset.defaultProperty })); }} className={`creator-choice-button ${draft.presetId === preset.id ? "creator-choice-button-active" : ""}`}>{preset.label}</button>
+                {RUNTIME_PROFILE_DEFINITIONS.map((profile) => (
+                  <button
+                    key={profile.id}
+                    type="button"
+                    onClick={() =>
+                      updateRuntimeProfile((current) => ({
+                        ...current,
+                        profileId: profile.id,
+                        targetId: profile.defaultTargetId,
+                        signalName:
+                          profile.id === "light_output"
+                            ? "brightness"
+                            : profile.id === "push_button"
+                              ? "press"
+                            : profile.id === "potentiometer"
+                              ? "value"
+                            : profile.id === "servo_angle"
+                              ? "angle"
+                            : profile.id === "none"
+                                ? "value"
+                                : "state",
+                      }))
+                    }
+                    className={`creator-choice-button ${runtimeProfile.profileId === profile.id ? "creator-choice-button-active" : ""}`}
+                    title={profile.description}
+                  >
+                    {profile.label}
+                  </button>
                 ))}
+              </div>
+              <div className="studio-stat-card">
+                <div className="editor-label !mb-1">Current Runtime</div>
+                <div className="font-mono text-[12px] text-white">{selectedRuntimeDefinition.label}</div>
+                <p className="mt-2 text-[11px] leading-5 text-aura-muted">{selectedRuntimeDefinition.description}</p>
               </div>
               <div className="studio-stat-card">
                 <div className="editor-label !mb-1">Target Layer</div>
                 <div className="font-mono text-[12px] text-white">{selectionLabel}</div>
-                <p className="mt-2 text-[11px] leading-5 text-aura-muted">Apply behavior after the geometry is correct. The selected visible layer becomes the target.</p>
+                <p className="mt-2 text-[11px] leading-5 text-aura-muted">
+                  Runtime should describe the real editable state of the part. Source cleanup and pin truth still come first.
+                </p>
               </div>
-              <div><label className="editor-label">Signal Name</label><input value={draft.property} onChange={(event) => setDraft((current) => ({ ...current, property: event.target.value }))} className="editor-input" /></div>
-              {selectedPreset.id === "light_emitter" ? (
+              <div>
+                <label className="editor-label">Signal Name</label>
+                <input
+                  value={runtimeProfile.signalName}
+                  onChange={(event) =>
+                    updateRuntimeProfile((current) => ({ ...current, signalName: event.target.value }))
+                  }
+                  className="editor-input"
+                />
+              </div>
+              <div>
+                <label className="editor-label">Runtime Target</label>
+                <div className="editor-segmented flex-wrap">
+                  {compatibleTargets.map((target) => (
+                    <button
+                      key={target.id}
+                      type="button"
+                      onClick={() => updateRuntimeProfile((current) => ({ ...current, targetId: target.id }))}
+                      className={`editor-segment-button ${runtimeProfile.targetId === target.id ? "editor-segment-button-active" : ""}`}
+                    >
+                      {target.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {runtimeProfile.profileId === "light_output" ? (
                 <>
-                  <div><label className="editor-label">Light Color</label><input type="color" value={draft.baseColor} onChange={(event) => setDraft((current) => ({ ...current, baseColor: event.target.value }))} className="editor-color-input" /></div>
+                  <div>
+                    <label className="editor-label">Light Color</label>
+                    <input
+                      type="color"
+                      value={runtimeProfile.lightColor}
+                      onChange={(event) =>
+                        updateRuntimeProfile((current) => ({ ...current, lightColor: event.target.value }))
+                      }
+                      className="editor-color-input"
+                    />
+                  </div>
                   <div className="studio-stat-grid">
-                    <div><label className="editor-label">Dim Level</label><input type="range" min="0" max="1" step="0.01" value={draft.opacityMin} onChange={(event) => setDraft((current) => ({ ...current, opacityMin: Number(event.target.value) }))} className="editor-slider" /></div>
-                    <div><label className="editor-label">Bright Level</label><input type="range" min="0" max="1" step="0.01" value={draft.opacityMax} onChange={(event) => setDraft((current) => ({ ...current, opacityMax: Number(event.target.value) }))} className="editor-slider" /></div>
+                    <div>
+                      <label className="editor-label">Dim Level</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={runtimeProfile.lowVisual}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, lowVisual: Number(event.target.value) }))
+                        }
+                        className="editor-slider"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Bright Level</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={runtimeProfile.highVisual}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, highVisual: Number(event.target.value) }))
+                        }
+                        className="editor-slider"
+                      />
+                    </div>
                   </div>
                 </>
               ) : null}
-              {(selectedPreset.id === "translate_actor" || selectedPreset.id === "linear_slider") ? <div><label className="editor-label">Axis</label><div className="editor-segmented">{(["x", "y"] as const).map((axis) => <button key={axis} type="button" onClick={() => setDraft((current) => ({ ...current, axis }))} className={`editor-segment-button ${draft.axis === axis ? "editor-segment-button-active" : ""}`}>{axis}</button>)}</div></div> : null}
+              {runtimeProfile.profileId === "potentiometer" || runtimeProfile.profileId === "servo_angle" ? (
+                <>
+                  <div className="studio-stat-grid">
+                    <div>
+                      <label className="editor-label">Min Value</label>
+                      <input
+                        type="number"
+                        value={runtimeProfile.valueMin}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, valueMin: Number(event.target.value) }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Max Value</label>
+                      <input
+                        type="number"
+                        value={runtimeProfile.valueMax}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, valueMax: Number(event.target.value) }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Default</label>
+                      <input
+                        type="number"
+                        value={runtimeProfile.defaultValue}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, defaultValue: Number(event.target.value) }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                  </div>
+                  <div className="studio-stat-grid">
+                    <div>
+                      <label className="editor-label">Angle Min</label>
+                      <input
+                        type="number"
+                        value={runtimeProfile.angleMin}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, angleMin: Number(event.target.value) }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Angle Max</label>
+                      <input
+                        type="number"
+                        value={runtimeProfile.angleMax}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, angleMax: Number(event.target.value) }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    {runtimeProfile.profileId === "potentiometer" ? (
+                      <div>
+                        <label className="editor-label">Detents</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={runtimeProfile.detentCount}
+                          onChange={(event) =>
+                            updateRuntimeProfile((current) => ({ ...current, detentCount: Number(event.target.value) }))
+                          }
+                          className="editor-input"
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                </>
+              ) : null}
+              {runtimeProfile.profileId === "slide_switch" || runtimeProfile.profileId === "push_button" ? (
+                <>
+                  <div>
+                    <label className="editor-label">Axis</label>
+                    <div className="editor-segmented">
+                      {(["x", "y"] as const).map((axis) => (
+                        <button
+                          key={axis}
+                          type="button"
+                          onClick={() => updateRuntimeProfile((current) => ({ ...current, travelAxis: axis }))}
+                          className={`editor-segment-button ${runtimeProfile.travelAxis === axis ? "editor-segment-button-active" : ""}`}
+                        >
+                          {axis}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="studio-stat-grid">
+                    <div>
+                      <label className="editor-label">Travel Min</label>
+                      <input
+                        type="number"
+                        value={runtimeProfile.travelMin}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, travelMin: Number(event.target.value) }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Travel Max</label>
+                      <input
+                        type="number"
+                        value={runtimeProfile.travelMax}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, travelMax: Number(event.target.value) }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Default State</label>
+                      <div className="editor-segmented">
+                        {[0, 1].map((value) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => updateRuntimeProfile((current) => ({ ...current, defaultValue: value }))}
+                            className={`editor-segment-button ${runtimeProfile.defaultValue === value ? "editor-segment-button-active" : ""}`}
+                          >
+                            {value === 0 ? runtimeProfile.offLabel : runtimeProfile.onLabel}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="studio-stat-grid">
+                    <div>
+                      <label className="editor-label">
+                        {runtimeProfile.profileId === "push_button" ? "Idle Label" : "Off Label"}
+                      </label>
+                      <input
+                        value={runtimeProfile.offLabel}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, offLabel: event.target.value }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">
+                        {runtimeProfile.profileId === "push_button" ? "Pressed Label" : "On Label"}
+                      </label>
+                      <input
+                        value={runtimeProfile.onLabel}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, onLabel: event.target.value }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">
+                        {runtimeProfile.profileId === "push_button" ? "Release" : "Return"}
+                      </label>
+                      <div className="editor-segmented">
+                        <button
+                          type="button"
+                          onClick={() => updateRuntimeProfile((current) => ({ ...current, autoReset: false }))}
+                          className={`editor-segment-button ${runtimeProfile.autoReset ? "" : "editor-segment-button-active"}`}
+                        >
+                          Latched
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateRuntimeProfile((current) => ({ ...current, autoReset: true }))}
+                          className={`editor-segment-button ${runtimeProfile.autoReset ? "editor-segment-button-active" : ""}`}
+                        >
+                          Spring
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : null}
+              {runtimeProfile.profileId === "toggle_switch" ? (
+                <>
+                  <div className="studio-stat-grid">
+                    <div>
+                      <label className="editor-label">Off Label</label>
+                      <input
+                        value={runtimeProfile.offLabel}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, offLabel: event.target.value }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">On Label</label>
+                      <input
+                        value={runtimeProfile.onLabel}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, onLabel: event.target.value }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Default State</label>
+                      <div className="editor-segmented">
+                        {[0, 1].map((value) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => updateRuntimeProfile((current) => ({ ...current, defaultValue: value }))}
+                            className={`editor-segment-button ${runtimeProfile.defaultValue === value ? "editor-segment-button-active" : ""}`}
+                          >
+                            {value === 0 ? runtimeProfile.offLabel : runtimeProfile.onLabel}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="studio-stat-grid">
+                    <div>
+                      <label className="editor-label">Angle Min</label>
+                      <input
+                        type="number"
+                        value={runtimeProfile.angleMin}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, angleMin: Number(event.target.value) }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="editor-label">Angle Max</label>
+                      <input
+                        type="number"
+                        value={runtimeProfile.angleMax}
+                        onChange={(event) =>
+                          updateRuntimeProfile((current) => ({ ...current, angleMax: Number(event.target.value) }))
+                        }
+                        className="editor-input"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : null}
               <div>
-                <div className="editor-label">Compiled Behavior</div>
+                <div className="editor-label">Compiled Runtime</div>
+                <pre className="creator-json-preview whitespace-pre-wrap break-all">{JSON.stringify(compiledRuntimeEntry, null, 2)}</pre>
+              </div>
+              <div>
+                <div className="editor-label">Derived Visual Hook</div>
                 <pre className="creator-json-preview whitespace-pre-wrap break-all">{JSON.stringify(compiledBehaviorEntry, null, 2)}</pre>
               </div>
             </CreatorSection>
@@ -5057,6 +8141,7 @@ export function ComponentCreatorWorkspace({ modeSwitch }: { modeSwitch?: ReactNo
           </div>
         </div>
       </aside>
+      </div>
     </div>
   );
 }

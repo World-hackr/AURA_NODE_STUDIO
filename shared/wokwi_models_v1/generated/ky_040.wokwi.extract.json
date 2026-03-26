@@ -1,0 +1,62 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "ky_040",
+  "tagName": "wokwi-ky-040",
+  "className": "KY040Element",
+  "sourceFile": "ky-040-element.ts",
+  "metrics": {
+    "width": "30.815mm",
+    "height": "18.63mm",
+    "viewBox": "0 0 116 70.4"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 5,
+    "pins": [
+      {
+        "name": "CLK",
+        "x": 116,
+        "y": 7.9,
+        "number": 1
+      },
+      {
+        "name": "DT",
+        "x": 116,
+        "y": 17.4,
+        "number": 2
+      },
+      {
+        "name": "SW",
+        "x": 116,
+        "y": 27,
+        "number": 3
+      },
+      {
+        "name": "VCC",
+        "x": 116,
+        "y": 36.3,
+        "number": 4
+      },
+      {
+        "name": "GND",
+        "x": 116,
+        "y": 45.5,
+        "number": 5
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "angle",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "stepSize",
+      "defaultRaw": "18"
+    },
+    {
+      "name": "pressed",
+      "defaultRaw": "false"
+    }
+  ]
+}

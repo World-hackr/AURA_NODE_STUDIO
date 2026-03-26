@@ -1,0 +1,95 @@
+{
+  "schema": "aura.component_definition.v1",
+  "metadata": {
+    "name": "Toggle Switch Input",
+    "description": "Behavior-ready toggle switch example with explicit off and on labels.",
+    "tags": ["example", "runtime_profile", "toggle_switch", "input"]
+  },
+  "base": {
+    "kind": "library_item",
+    "itemId": "toggle_switch_spdt"
+  },
+  "children": [],
+  "shapeLayers": [],
+  "persistentDimensions": [],
+  "runtimeProfile": {
+    "profileId": "toggle_switch",
+    "signalName": "toggle_state",
+    "targetId": "handle_primary",
+    "valueMin": 0,
+    "valueMax": 1,
+    "defaultValue": 1,
+    "angleMin": -22,
+    "angleMax": 22,
+    "travelAxis": "x",
+    "travelMin": -14,
+    "travelMax": 14,
+    "lowVisual": 0.1,
+    "highVisual": 0.95,
+    "detentCount": 12,
+    "autoReset": false,
+    "offLabel": "off",
+    "onLabel": "on",
+    "lightColor": "#ff5a5a"
+  },
+  "compiledRuntime": {
+    "kind": "input",
+    "entry": {
+      "type": "toggle_switch",
+      "signal": "toggle_state",
+      "target": "handle_primary",
+      "states": ["off", "on"],
+      "defaultState": 1,
+      "angleRange": [-22, 22]
+    }
+  },
+  "behaviorDraft": {
+    "presetId": "snap_rotation",
+    "targetId": "handle_primary",
+    "property": "toggle_state",
+    "valueMin": 0,
+    "valueMax": 1,
+    "angleMin": -22,
+    "angleMax": 22,
+    "axis": "x",
+    "distanceMin": -12,
+    "distanceMax": 12,
+    "originX": 0,
+    "originY": 0,
+    "glowX": 0,
+    "glowY": 0,
+    "glowRadius": 18,
+    "glowBlur": 12,
+    "glowColor": "#ff5a5a",
+    "baseColor": "#ff5a5a",
+    "opacityMin": 0.08,
+    "opacityMax": 0.94,
+    "blinkPeriodMs": 420,
+    "blinkDutyCycle": 50,
+    "pressDepth": 2.4,
+    "detentCount": 2,
+    "autoReset": false,
+    "lightTargetSourceMode": "existingTarget",
+    "helperShapeKind": "circle",
+    "helperX": 0,
+    "helperY": 0,
+    "helperWidth": 56,
+    "helperHeight": 56,
+    "helperRadius": 14,
+    "glowEnabled": true
+  },
+  "compiledBehavior": {
+    "kind": "interactive",
+    "entry": {
+      "id": "handle_primary_snap_rotation",
+      "type": "angle_to_value",
+      "target": "handle_primary",
+      "property": "toggle_state",
+      "match": "exact",
+      "range": [0, 1],
+      "angleRange": [-22, 22],
+      "detents": 2,
+      "transformOrigin": [0, 0]
+    }
+  }
+}

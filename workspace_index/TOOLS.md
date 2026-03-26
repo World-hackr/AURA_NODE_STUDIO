@@ -10,6 +10,8 @@ Current important entries:
   Standalone on-device diagnostics firmware for TFT, joystick, touch IRQ, and nRF24 checks
 - `board_data/`
   Local browser-oriented board and serial inspection helper
+- `component_import/`
+  Local KiCad/Wokwi/AURA extraction and generation helpers for vendor-backed examples and the first package-scene extractor
 - `windows/`
   Windows-specific scripts such as serial/board inspection helpers
 - `README.md`

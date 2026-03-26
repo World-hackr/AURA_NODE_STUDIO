@@ -1,0 +1,52 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "gas_sensor",
+  "tagName": "wokwi-gas-sensor",
+  "className": "GasSensorElement",
+  "sourceFile": "gas-sensor-element.ts",
+  "metrics": {
+    "width": "36.232mm",
+    "height": "16.617mm",
+    "viewBox": "0 0 137 59.5"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 4,
+    "pins": [
+      {
+        "name": "AOUT",
+        "x": 137,
+        "y": 16.5,
+        "number": 1
+      },
+      {
+        "name": "DOUT",
+        "x": 137,
+        "y": 26.4,
+        "number": 2
+      },
+      {
+        "name": "GND",
+        "x": 137,
+        "y": 36.5,
+        "number": 3
+      },
+      {
+        "name": "VCC",
+        "x": 137,
+        "y": 46.2,
+        "number": 4
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "ledPower",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "ledD0",
+      "defaultRaw": "false"
+    }
+  ]
+}

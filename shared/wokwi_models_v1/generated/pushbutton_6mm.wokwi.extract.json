@@ -1,0 +1,57 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "pushbutton_6mm",
+  "tagName": "wokwi-pushbutton-6mm",
+  "className": "Pushbutton6mmElement",
+  "sourceFile": "pushbutton-6mm-element.ts",
+  "metrics": {
+    "width": "7.4129977mm",
+    "height": "6mm",
+    "viewBox": "-3 0 7.4954476 6"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 4,
+    "pins": [
+      {
+        "name": "1.l",
+        "x": 0,
+        "y": 2.2
+      },
+      {
+        "name": "2.l",
+        "x": 0,
+        "y": 21
+      },
+      {
+        "name": "1.r",
+        "x": 28,
+        "y": 2.2
+      },
+      {
+        "name": "2.r",
+        "x": 28,
+        "y": 21
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "color",
+      "defaultRaw": "'red'"
+    },
+    {
+      "name": "pressed",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "label",
+      "defaultRaw": "''"
+    },
+    {
+      "name": "xray",
+      "decorator": "{ type: Boolean, attribute: 'xray' }",
+      "defaultRaw": "false"
+    }
+  ]
+}

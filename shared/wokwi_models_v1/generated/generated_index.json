@@ -1,0 +1,357 @@
+{
+  "schema": "aura.wokwi_source_extract_index.v1",
+  "generatedFrom": "vendor_reference/wokwi-elements/src/*.ts",
+  "componentCount": 50,
+  "components": [
+    {
+      "id": "7segment",
+      "tagName": "wokwi-7segment",
+      "sourceFile": "7segment-element.ts",
+      "pinCount": 0,
+      "path": "generated/7segment.wokwi.extract.json"
+    },
+    {
+      "id": "analog_joystick",
+      "tagName": "wokwi-analog-joystick",
+      "sourceFile": "analog-joystick-element.ts",
+      "pinCount": 5,
+      "path": "generated/analog_joystick.wokwi.extract.json"
+    },
+    {
+      "id": "arduino_mega",
+      "tagName": "wokwi-arduino-mega",
+      "sourceFile": "arduino-mega-element.ts",
+      "pinCount": 85,
+      "path": "generated/arduino_mega.wokwi.extract.json"
+    },
+    {
+      "id": "arduino_nano",
+      "tagName": "wokwi-arduino-nano",
+      "sourceFile": "arduino-nano-element.ts",
+      "pinCount": 36,
+      "path": "generated/arduino_nano.wokwi.extract.json"
+    },
+    {
+      "id": "arduino_uno",
+      "tagName": "wokwi-arduino-uno",
+      "sourceFile": "arduino-uno-element.ts",
+      "pinCount": 31,
+      "path": "generated/arduino_uno.wokwi.extract.json"
+    },
+    {
+      "id": "biaxial_stepper",
+      "tagName": "wokwi-biaxial-stepper",
+      "sourceFile": "biaxial-stepper-element.ts",
+      "pinCount": 0,
+      "path": "generated/biaxial_stepper.wokwi.extract.json"
+    },
+    {
+      "id": "big_sound_sensor",
+      "tagName": "wokwi-big-sound-sensor",
+      "sourceFile": "big-sound-sensor-element.ts",
+      "pinCount": 4,
+      "path": "generated/big_sound_sensor.wokwi.extract.json"
+    },
+    {
+      "id": "buzzer",
+      "tagName": "wokwi-buzzer",
+      "sourceFile": "buzzer-element.ts",
+      "pinCount": 2,
+      "path": "generated/buzzer.wokwi.extract.json"
+    },
+    {
+      "id": "dht22",
+      "tagName": "wokwi-dht22",
+      "sourceFile": "dht22-element.ts",
+      "pinCount": 4,
+      "path": "generated/dht22.wokwi.extract.json"
+    },
+    {
+      "id": "dip_switch_8",
+      "tagName": "wokwi-dip-switch-8",
+      "sourceFile": "dip-switch-8-element.ts",
+      "pinCount": 16,
+      "path": "generated/dip_switch_8.wokwi.extract.json"
+    },
+    {
+      "id": "ds1307",
+      "tagName": "wokwi-ds1307",
+      "sourceFile": "ds1307-element.ts",
+      "pinCount": 5,
+      "path": "generated/ds1307.wokwi.extract.json"
+    },
+    {
+      "id": "esp32_devkit_v1",
+      "tagName": "wokwi-esp32-devkit-v1",
+      "sourceFile": "esp32-devkit-v1-element.ts",
+      "pinCount": 30,
+      "path": "generated/esp32_devkit_v1.wokwi.extract.json"
+    },
+    {
+      "id": "flame_sensor",
+      "tagName": "wokwi-flame-sensor",
+      "sourceFile": "flame-sensor-element.ts",
+      "pinCount": 4,
+      "path": "generated/flame_sensor.wokwi.extract.json"
+    },
+    {
+      "id": "franzininho",
+      "tagName": "wokwi-franzininho",
+      "sourceFile": "franzininho-element.ts",
+      "pinCount": 11,
+      "path": "generated/franzininho.wokwi.extract.json"
+    },
+    {
+      "id": "gas_sensor",
+      "tagName": "wokwi-gas-sensor",
+      "sourceFile": "gas-sensor-element.ts",
+      "pinCount": 4,
+      "path": "generated/gas_sensor.wokwi.extract.json"
+    },
+    {
+      "id": "hc_sr04",
+      "tagName": "wokwi-hc-sr04",
+      "sourceFile": "hc-sr04-element.ts",
+      "pinCount": 4,
+      "path": "generated/hc_sr04.wokwi.extract.json"
+    },
+    {
+      "id": "heart_beat_sensor",
+      "tagName": "wokwi-heart-beat-sensor",
+      "sourceFile": "heart-beat-sensor-element.ts",
+      "pinCount": 3,
+      "path": "generated/heart_beat_sensor.wokwi.extract.json"
+    },
+    {
+      "id": "hx711",
+      "tagName": "wokwi-hx711",
+      "sourceFile": "hx711-element.ts",
+      "pinCount": 4,
+      "path": "generated/hx711.wokwi.extract.json"
+    },
+    {
+      "id": "ili9341",
+      "tagName": "wokwi-ili9341",
+      "sourceFile": "ili9341-element.ts",
+      "pinCount": 9,
+      "path": "generated/ili9341.wokwi.extract.json"
+    },
+    {
+      "id": "ir_receiver",
+      "tagName": "wokwi-ir-receiver",
+      "sourceFile": "ir-receiver-element.ts",
+      "pinCount": 3,
+      "path": "generated/ir_receiver.wokwi.extract.json"
+    },
+    {
+      "id": "ir_remote",
+      "tagName": "wokwi-ir-remote",
+      "sourceFile": "ir-remote-element.ts",
+      "pinCount": 0,
+      "path": "generated/ir_remote.wokwi.extract.json"
+    },
+    {
+      "id": "ks2e_m_dc5",
+      "tagName": "wokwi-ks2e-m-dc5",
+      "sourceFile": "ks2e-m-dc5-element.ts",
+      "pinCount": 8,
+      "path": "generated/ks2e_m_dc5.wokwi.extract.json"
+    },
+    {
+      "id": "ky_040",
+      "tagName": "wokwi-ky-040",
+      "sourceFile": "ky-040-element.ts",
+      "pinCount": 5,
+      "path": "generated/ky_040.wokwi.extract.json"
+    },
+    {
+      "id": "lcd1602",
+      "tagName": "wokwi-lcd1602",
+      "sourceFile": "lcd1602-element.ts",
+      "pinCount": 4,
+      "path": "generated/lcd1602.wokwi.extract.json"
+    },
+    {
+      "id": "lcd2004",
+      "tagName": "wokwi-lcd2004",
+      "sourceFile": "lcd2004-element.ts",
+      "pinCount": 0,
+      "path": "generated/lcd2004.wokwi.extract.json"
+    },
+    {
+      "id": "led_bar_graph",
+      "tagName": "wokwi-led-bar-graph",
+      "sourceFile": "led-bar-graph-element.ts",
+      "pinCount": 20,
+      "path": "generated/led_bar_graph.wokwi.extract.json"
+    },
+    {
+      "id": "led",
+      "tagName": "wokwi-led",
+      "sourceFile": "led-element.ts",
+      "pinCount": 2,
+      "path": "generated/led.wokwi.extract.json"
+    },
+    {
+      "id": "led_ring",
+      "tagName": "wokwi-led-ring",
+      "sourceFile": "led-ring-element.ts",
+      "pinCount": 0,
+      "path": "generated/led_ring.wokwi.extract.json"
+    },
+    {
+      "id": "membrane_keypad",
+      "tagName": "wokwi-membrane-keypad",
+      "sourceFile": "membrane-keypad-element.ts",
+      "pinCount": 7,
+      "path": "generated/membrane_keypad.wokwi.extract.json"
+    },
+    {
+      "id": "microsd_card",
+      "tagName": "wokwi-microsd-card",
+      "sourceFile": "microsd-card-element.ts",
+      "pinCount": 7,
+      "path": "generated/microsd_card.wokwi.extract.json"
+    },
+    {
+      "id": "mpu6050",
+      "tagName": "wokwi-mpu6050",
+      "sourceFile": "mpu6050-element.ts",
+      "pinCount": 8,
+      "path": "generated/mpu6050.wokwi.extract.json"
+    },
+    {
+      "id": "nano_rp2040_connect",
+      "tagName": "wokwi-nano-rp2040-connect",
+      "sourceFile": "nano-rp2040-connect-element.ts",
+      "pinCount": 30,
+      "path": "generated/nano_rp2040_connect.wokwi.extract.json"
+    },
+    {
+      "id": "neopixel",
+      "tagName": "wokwi-neopixel",
+      "sourceFile": "neopixel-element.ts",
+      "pinCount": 4,
+      "path": "generated/neopixel.wokwi.extract.json"
+    },
+    {
+      "id": "neopixel_matrix",
+      "tagName": "wokwi-neopixel-matrix",
+      "sourceFile": "neopixel-matrix-element.ts",
+      "pinCount": 0,
+      "path": "generated/neopixel_matrix.wokwi.extract.json"
+    },
+    {
+      "id": "ntc_temperature_sensor",
+      "tagName": "wokwi-ntc-temperature-sensor",
+      "sourceFile": "ntc-temperature-sensor-element.ts",
+      "pinCount": 3,
+      "path": "generated/ntc_temperature_sensor.wokwi.extract.json"
+    },
+    {
+      "id": "photoresistor_sensor",
+      "tagName": "wokwi-photoresistor-sensor",
+      "sourceFile": "photoresistor-sensor-element.ts",
+      "pinCount": 4,
+      "path": "generated/photoresistor_sensor.wokwi.extract.json"
+    },
+    {
+      "id": "pir_motion_sensor",
+      "tagName": "wokwi-pir-motion-sensor",
+      "sourceFile": "pir-motion-sensor-element.ts",
+      "pinCount": 3,
+      "path": "generated/pir_motion_sensor.wokwi.extract.json"
+    },
+    {
+      "id": "potentiometer",
+      "tagName": "wokwi-potentiometer",
+      "sourceFile": "potentiometer-element.ts",
+      "pinCount": 3,
+      "path": "generated/potentiometer.wokwi.extract.json"
+    },
+    {
+      "id": "pushbutton_6mm",
+      "tagName": "wokwi-pushbutton-6mm",
+      "sourceFile": "pushbutton-6mm-element.ts",
+      "pinCount": 4,
+      "path": "generated/pushbutton_6mm.wokwi.extract.json"
+    },
+    {
+      "id": "pushbutton",
+      "tagName": "wokwi-pushbutton",
+      "sourceFile": "pushbutton-element.ts",
+      "pinCount": 4,
+      "path": "generated/pushbutton.wokwi.extract.json"
+    },
+    {
+      "id": "resistor",
+      "tagName": "wokwi-resistor",
+      "sourceFile": "resistor-element.ts",
+      "pinCount": 2,
+      "path": "generated/resistor.wokwi.extract.json"
+    },
+    {
+      "id": "rgb_led",
+      "tagName": "wokwi-rgb-led",
+      "sourceFile": "rgb-led-element.ts",
+      "pinCount": 4,
+      "path": "generated/rgb_led.wokwi.extract.json"
+    },
+    {
+      "id": "rotary_dialer",
+      "tagName": "wokwi-rotary-dialer",
+      "sourceFile": "rotary-dialer-element.ts",
+      "pinCount": 3,
+      "path": "generated/rotary_dialer.wokwi.extract.json"
+    },
+    {
+      "id": "servo",
+      "tagName": "wokwi-servo",
+      "sourceFile": "servo-element.ts",
+      "pinCount": 3,
+      "path": "generated/servo.wokwi.extract.json"
+    },
+    {
+      "id": "slide_potentiometer",
+      "tagName": "wokwi-slide-potentiometer",
+      "sourceFile": "slide-potentiometer-element.ts",
+      "pinCount": 3,
+      "path": "generated/slide_potentiometer.wokwi.extract.json"
+    },
+    {
+      "id": "slide_switch",
+      "tagName": "wokwi-slide-switch",
+      "sourceFile": "slide-switch-element.ts",
+      "pinCount": 3,
+      "path": "generated/slide_switch.wokwi.extract.json"
+    },
+    {
+      "id": "small_sound_sensor",
+      "tagName": "wokwi-small-sound-sensor",
+      "sourceFile": "small-sound-sensor-element.ts",
+      "pinCount": 4,
+      "path": "generated/small_sound_sensor.wokwi.extract.json"
+    },
+    {
+      "id": "ssd1306",
+      "tagName": "wokwi-ssd1306",
+      "sourceFile": "ssd1306-element.ts",
+      "pinCount": 8,
+      "path": "generated/ssd1306.wokwi.extract.json"
+    },
+    {
+      "id": "stepper_motor",
+      "tagName": "wokwi-stepper-motor",
+      "sourceFile": "stepper-motor-element.ts",
+      "pinCount": 0,
+      "path": "generated/stepper_motor.wokwi.extract.json"
+    },
+    {
+      "id": "tilt_switch",
+      "tagName": "wokwi-tilt-switch",
+      "sourceFile": "tilt-switch-element.ts",
+      "pinCount": 3,
+      "path": "generated/tilt_switch.wokwi.extract.json"
+    }
+  ]
+}

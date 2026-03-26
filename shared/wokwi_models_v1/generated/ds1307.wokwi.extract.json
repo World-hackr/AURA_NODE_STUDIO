@@ -1,0 +1,49 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "ds1307",
+  "tagName": "wokwi-ds1307",
+  "className": "Ds1307Element",
+  "sourceFile": "ds1307-element.ts",
+  "metrics": {
+    "width": "25.8mm",
+    "height": "22.212mm",
+    "viewBox": "0 0 25.8 22.212"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 5,
+    "pins": [
+      {
+        "name": "GND",
+        "x": 9.5,
+        "y": 15,
+        "number": 1
+      },
+      {
+        "name": "5V",
+        "x": 9.5,
+        "y": 25,
+        "number": 2
+      },
+      {
+        "name": "SDA",
+        "x": 9.5,
+        "y": 34.5,
+        "number": 3
+      },
+      {
+        "name": "SCL",
+        "x": 9.5,
+        "y": 44,
+        "number": 4
+      },
+      {
+        "name": "SQW",
+        "x": 9.5,
+        "y": 54,
+        "number": 5
+      }
+    ]
+  },
+  "properties": []
+}

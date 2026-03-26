@@ -1,0 +1,153 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "led_bar_graph",
+  "tagName": "wokwi-led-bar-graph",
+  "className": "LedBarGraphElement",
+  "sourceFile": "led-bar-graph-element.ts",
+  "metrics": {
+    "width": "10.1mm",
+    "height": "25.5mm",
+    "viewBox": "0 0 10.1 25.5"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 20,
+    "pins": [
+      {
+        "name": "A1",
+        "xExpression": "anodeX",
+        "yExpression": "1.27 * mm",
+        "number": 1
+      },
+      {
+        "name": "A2",
+        "xExpression": "anodeX",
+        "yExpression": "3.81 * mm",
+        "number": 2
+      },
+      {
+        "name": "A3",
+        "xExpression": "anodeX",
+        "yExpression": "6.35 * mm",
+        "number": 3
+      },
+      {
+        "name": "A4",
+        "xExpression": "anodeX",
+        "yExpression": "8.89 * mm",
+        "number": 4
+      },
+      {
+        "name": "A5",
+        "xExpression": "anodeX",
+        "yExpression": "11.43 * mm",
+        "number": 5
+      },
+      {
+        "name": "A6",
+        "xExpression": "anodeX",
+        "yExpression": "13.97 * mm",
+        "number": 6
+      },
+      {
+        "name": "A7",
+        "xExpression": "anodeX",
+        "yExpression": "16.51 * mm",
+        "number": 7
+      },
+      {
+        "name": "A8",
+        "xExpression": "anodeX",
+        "yExpression": "19.05 * mm",
+        "number": 8
+      },
+      {
+        "name": "A9",
+        "xExpression": "anodeX",
+        "yExpression": "21.59 * mm",
+        "number": 9
+      },
+      {
+        "name": "A10",
+        "xExpression": "anodeX",
+        "yExpression": "24.13 * mm",
+        "number": 10
+      },
+      {
+        "name": "C1",
+        "xExpression": "cathodeX",
+        "yExpression": "1.27 * mm",
+        "number": 20
+      },
+      {
+        "name": "C2",
+        "xExpression": "cathodeX",
+        "yExpression": "3.81 * mm",
+        "number": 19
+      },
+      {
+        "name": "C3",
+        "xExpression": "cathodeX",
+        "yExpression": "6.35 * mm",
+        "number": 18
+      },
+      {
+        "name": "C4",
+        "xExpression": "cathodeX",
+        "yExpression": "8.89 * mm",
+        "number": 17
+      },
+      {
+        "name": "C5",
+        "xExpression": "cathodeX",
+        "yExpression": "11.43 * mm",
+        "number": 16
+      },
+      {
+        "name": "C6",
+        "xExpression": "cathodeX",
+        "yExpression": "13.97 * mm",
+        "number": 15
+      },
+      {
+        "name": "C7",
+        "xExpression": "cathodeX",
+        "yExpression": "16.51 * mm",
+        "number": 14
+      },
+      {
+        "name": "C8",
+        "xExpression": "cathodeX",
+        "yExpression": "19.05 * mm",
+        "number": 13
+      },
+      {
+        "name": "C9",
+        "xExpression": "cathodeX",
+        "yExpression": "21.59 * mm",
+        "number": 12
+      },
+      {
+        "name": "C10",
+        "xExpression": "cathodeX",
+        "yExpression": "24.13 * mm",
+        "number": 11
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "color",
+      "defaultRaw": "'red'"
+    },
+    {
+      "name": "offColor",
+      "defaultRaw": "'#444'"
+    },
+    {
+      "name": "values",
+      "decorator": "{ type: Array }",
+      "defaultRaw": "[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]"
+    }
+  ]
+}

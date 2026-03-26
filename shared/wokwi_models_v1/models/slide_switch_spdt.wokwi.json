@@ -1,0 +1,41 @@
+{
+  "schema": "aura.wokwi_part.v1",
+  "libraryItemId": "slide_switch_spdt",
+  "title": "Slide Switch",
+  "wokwi": {
+    "tagName": "wokwi-slide-switch",
+    "modulePath": "vendor_reference/wokwi-elements/dist/esm/slide-switch-element.js",
+    "naturalSizePx": {
+      "width": 32.13,
+      "height": 34.88
+    },
+    "allowOuterRotation": true
+  },
+  "pins": {
+    "labels": ["1", "2", "3"],
+    "anchors": [
+      { "id": "1", "x": 6.5, "y": 34 },
+      { "id": "2", "x": 16, "y": 34 },
+      { "id": "3", "x": 25.5, "y": 34 }
+    ]
+  },
+  "runtime": {
+    "defaults": {
+      "profileId": "slide_switch",
+      "signalName": "state",
+      "targetId": "handle_primary",
+      "valueMin": 0,
+      "valueMax": 1,
+      "defaultValue": 0,
+      "travelAxis": "x",
+      "travelMin": -18,
+      "travelMax": 18,
+      "offLabel": "left",
+      "onLabel": "right"
+    },
+    "staticProps": {},
+    "propBindings": [
+      { "elementProp": "value", "from": "defaultValue", "transform": "binary_0_1" }
+    ]
+  }
+}

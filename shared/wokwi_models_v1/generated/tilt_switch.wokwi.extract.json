@@ -1,0 +1,37 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "tilt_switch",
+  "tagName": "wokwi-tilt-switch",
+  "className": "TiltSwitchElement",
+  "sourceFile": "tilt-switch-element.ts",
+  "metrics": {
+    "width": "23.4mm",
+    "height": "14.7mm",
+    "viewBox": "0 0 88.4 55.6"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 3,
+    "pins": [
+      {
+        "name": "GND",
+        "x": 88,
+        "y": 18,
+        "number": 1
+      },
+      {
+        "name": "VCC",
+        "x": 88,
+        "y": 27.8,
+        "number": 2
+      },
+      {
+        "name": "OUT",
+        "x": 88,
+        "y": 37.5,
+        "number": 3
+      }
+    ]
+  },
+  "properties": []
+}

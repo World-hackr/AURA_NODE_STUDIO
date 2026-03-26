@@ -1,0 +1,14 @@
+{
+  "schema": "aura.behavior_profile.v1",
+  "id": "toggle_switch",
+  "family": "input",
+  "targetId": "handle_primary",
+  "signalName": "state",
+  "valueMin": 0,
+  "valueMax": 1,
+  "defaultValue": 0,
+  "angleMin": -22,
+  "angleMax": 22,
+  "offLabel": "off",
+  "onLabel": "on"
+}

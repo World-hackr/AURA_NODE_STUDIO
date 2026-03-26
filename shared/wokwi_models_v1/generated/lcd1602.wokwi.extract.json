@@ -1,0 +1,89 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "lcd1602",
+  "tagName": "wokwi-lcd1602",
+  "className": "LCD1602Element",
+  "sourceFile": "lcd1602-element.ts",
+  "metrics": {
+    "width": "2.95",
+    "height": "5.55",
+    "viewBox": "${viewBox}"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 4,
+    "pins": [
+      {
+        "name": "GND",
+        "x": 4,
+        "y": 32,
+        "number": 1
+      },
+      {
+        "name": "VCC",
+        "x": 4,
+        "y": 41.5,
+        "number": 2
+      },
+      {
+        "name": "SDA",
+        "x": 4,
+        "y": 51,
+        "number": 3
+      },
+      {
+        "name": "SCL",
+        "x": 4,
+        "y": 60.5,
+        "number": 4
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "color",
+      "defaultRaw": "'black'"
+    },
+    {
+      "name": "background",
+      "defaultRaw": "'green'"
+    },
+    {
+      "name": "characters",
+      "decorator": "{ type: Array }",
+      "defaultRaw": "new Uint8Array(32)"
+    },
+    {
+      "name": "font",
+      "defaultRaw": "fontA00"
+    },
+    {
+      "name": "cursor",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "blink",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "cursorX",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "cursorY",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "backlight",
+      "defaultRaw": "true"
+    },
+    {
+      "name": "pins",
+      "defaultRaw": "'full'"
+    },
+    {
+      "name": "screenOnly",
+      "defaultRaw": "false"
+    }
+  ]
+}

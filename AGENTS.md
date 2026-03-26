@@ -43,7 +43,7 @@ Read the workspace as three product surfaces plus shared support layers:
 - `AURA Host`
   The first normal-user proof point. This is the hardware-first ESP32 host interface.
 - `AURA Studio`
-  The advanced browser tool for deterministic circuit editing and component authoring.
+  The advanced browser tool for deterministic circuit editing and component import/correction.
 - `AURA Phone`
   The future companion surface for deeper search and workflow support.
 - `shared/` and `docs/`
@@ -52,7 +52,7 @@ Read the workspace as three product surfaces plus shared support layers:
 Current practical priority:
 
 1. `AURA Host`
-2. `AURA Studio` as the deterministic authoring environment
+2. `AURA Studio` as the deterministic import/correction environment
 3. `AURA Phone` later
 
 ## Workspace Map
@@ -70,6 +70,8 @@ Use these root folders as the source of truth:
   Machine-readable contracts and reusable component-definition artifacts.
 - `docs/`
   Product/system docs, workflow docs, authoring rules, and workspace audits.
+- `vendor_reference/`
+  Offline Wokwi and KiCad reference repos, plus cached public example-project references.
 - `phone_ui/`
   Reserved but currently light.
 - `AURA _report/`
@@ -82,6 +84,7 @@ Use these root guide files when orienting yourself:
 - `workspace_index/TOOLS.md`
 - `workspace_index/DOCS_AND_SHARED.md`
 - `workspace_index/LOCAL_STATE_AND_ARCHIVE.md`
+- `workspace_index/VENDOR_REFERENCES.md`
 
 ## Current Design Direction
 
@@ -91,7 +94,7 @@ The current product/design direction is:
 - deterministic
 - restrained and readable
 - black-first visual language with semantic color used sparingly
-- component-first authoring instead of tool-first speculation
+- component-first import/correction instead of tool-first speculation
 
 For `AURA Studio`, the current UI direction is:
 
@@ -104,13 +107,19 @@ For `AURA Studio`, the current UI direction is:
   - success/apply/export
   - selected/accent states when genuinely useful
 
+The current component/render direction is now slightly more specific:
+
+- use Wokwi directly where vendor parts already solve the visual/runtime problem well
+- keep native AURA parts deterministic and editable
+- converge both imported and native parts into one AURA-owned package model
+
 ## Current Component Strategy
 
 The current system direction for parts and boards is:
 
 - build real visual components first
 - use those real targets to drive tool design
-- do not design complex authoring systems in abstraction before real component work exposes the repeated needs
+- do not design complex import/correction systems in abstraction before real component work exposes the repeated needs
 
 The current component model is intentionally layered:
 
@@ -130,11 +139,11 @@ Important rule:
 
 The visual standard for future component work is:
 
-- primarily black, white, and grayscale
+- primarily restrained 2D rendering with deterministic structure
 - detail through silhouette, line weight, spacing, markings, pads, pins, labels, and layering
 - no fake 3D rendering
 - subtle 2D highlight/shadow bands are acceptable if they remain flat
-- restrained color may be used only where it improves meaning, such as LED lenses, board substrate hints, polarity, warnings, or action semantics
+- restrained color may be used where it improves meaning or preserves a strong imported vendor look, such as LED lenses, board substrate hints, polarity, warnings, or action semantics
 
 Critical rule:
 
@@ -156,8 +165,30 @@ Useful KiCad inputs include:
 Planned direction:
 
 - parse external package/board reference data into AURA definitions
+- parse or normalize imported scene/runtime structures into AURA-owned component packages
 - keep AURA's own schema and renderer as the final product source of truth
 - preserve post-import editing inside `AURA Studio`
+
+## Component Package Direction
+
+The current package direction is:
+
+- reusable parts should converge toward:
+  - `component.json`
+  - `scene.svg`
+- native AURA parts keep JSON as canonical semantic truth
+- imported Wokwi parts are normalized into the same package model
+- a shared extractor/normalizer should work across both Wokwi imports and AURA-exported scenes
+
+Do not frame future work as:
+
+- Wokwi parts using one behavior system
+- native AURA parts using another
+
+The target is one runtime/binding model with different backends:
+
+- vendor element props for imported Wokwi parts
+- named scene nodes for native AURA parts
 
 ## Continuity Rule
 
@@ -217,12 +248,16 @@ When orienting a fresh session, these files currently matter most:
 - `WORKSPACE_GUIDE.md`
 - `workspace_index/README.md`
 - `docs/NORMAL_USER_PRODUCT_MODEL_2026-03-24.md`
+- `docs/AURA_COMPONENT_PACKAGE_V1.md`
 - `docs/COMPONENT_DEFINITION_V1.md`
 - `docs/COMPONENT_LAB_AUTHORING_RULES.md`
+- `docs/COMPONENT_TEMPLATE_SYSTEM_V1.md`
+- `docs/VENDOR_REFERENCE_STRATEGY.md`
 - `docs/DATA_CONTRACTS_V1.md`
 - `host_remote/README.md`
 - `host_remote/START_HERE_UPLOAD.md`
 - `local_tools/README.md`
+- `vendor_reference/README.md`
 - `studio_ui/README.md`
 - `shared/README.md`
 - `AI_CONTINUITY_LOG.md`
@@ -236,12 +271,17 @@ As of the current workspace state:
 - `host_remote/tests/display_st7789_smoke/` exists for isolated TFT bring-up
 - `studio_ui/` has had a major user-first layout cleanup for both circuit editing and component lab
 - `shared/component_definitions_v1/` and `shared/contracts_v1/` hold the current machine-readable foundation
+- `shared/component_packages_v1/` is reserved for the paired `component.json + scene.svg` package direction
+- `shared/component_packages_v1/` now holds the starter package template/index for the paired `component.json + scene.svg` direction
+- `shared/component_templates_v1/` holds the first machine-readable package-template layer
+- `shared/wokwi_models_v1/` holds the current Wokwi import bridge for tag names, sizing, pins, and runtime bindings
+- `vendor_reference/` holds offline Wokwi/KiCad sources and cached Wokwi public-project references
 
 ## Next Recommended Direction
 
 The current recommended next phase is:
 
-1. build or import accurate real component/package references
-2. use those to create AURA-quality component definitions
-3. let repeated authoring pain points drive the next generation of tools
-4. keep the root structure, workspace guides, and continuity log updated as the system grows
+1. normalize imported Wokwi/KiCad reference data into AURA-owned package artifacts
+2. validate and refine native AURA package export/import around that same model
+3. let repeated import/correction pain points drive the next generation of tools
+4. keep the root structure, workspace guides, package contract, and continuity log updated as the system grows

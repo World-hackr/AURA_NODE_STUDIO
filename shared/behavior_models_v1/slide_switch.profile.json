@@ -1,0 +1,16 @@
+{
+  "schema": "aura.behavior_profile.v1",
+  "id": "slide_switch",
+  "family": "input",
+  "targetId": "handle_primary",
+  "signalName": "state",
+  "valueMin": 0,
+  "valueMax": 1,
+  "defaultValue": 0,
+  "travelAxis": "x",
+  "travelMin": -18,
+  "travelMax": 18,
+  "offLabel": "left",
+  "onLabel": "right",
+  "autoReset": false
+}

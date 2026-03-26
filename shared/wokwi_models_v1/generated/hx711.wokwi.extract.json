@@ -1,0 +1,47 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "hx711",
+  "tagName": "wokwi-hx711",
+  "className": "HX711Element",
+  "sourceFile": "hx711-element.ts",
+  "metrics": {
+    "width": "3",
+    "height": "33",
+    "viewBox": "0 0 ${width} ${height}"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 4,
+    "pins": [
+      {
+        "name": "VCC",
+        "x": 7,
+        "y": 55,
+        "number": 1
+      },
+      {
+        "name": "DT",
+        "x": 7,
+        "y": 36.3,
+        "number": 2
+      },
+      {
+        "name": "SCK",
+        "x": 7,
+        "y": 46.2,
+        "number": 3
+      },
+      {
+        "name": "GND",
+        "x": 7,
+        "y": 26.5,
+        "number": 4
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "type"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "biaxial_stepper",
+  "tagName": "wokwi-biaxial-stepper",
+  "className": "BiaxialStepperElement",
+  "sourceFile": "biaxial-stepper-element.ts",
+  "metrics": {
+    "width": "56mm",
+    "height": "67.5mm",
+    "viewBox": "0 0 212 255"
+  },
+  "pinInfo": {
+    "status": "unparsed",
+    "count": 0,
+    "pins": []
+  },
+  "properties": [
+    {
+      "name": "outerHandLength",
+      "defaultRaw": "30"
+    },
+    {
+      "name": "outerHandAngle",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "outerHandColor",
+      "defaultRaw": "'gold'"
+    },
+    {
+      "name": "outerHandShape",
+      "defaultRaw": "'plain'"
+    },
+    {
+      "name": "innerHandLength",
+      "defaultRaw": "30"
+    },
+    {
+      "name": "innerHandAngle",
+      "decorator": "{ type: Number }",
+      "defaultRaw": "0"
+    },
+    {
+      "name": "innerHandColor",
+      "defaultRaw": "'silver'"
+    },
+    {
+      "name": "innerHandShape",
+      "defaultRaw": "'plain'"
+    }
+  ]
+}

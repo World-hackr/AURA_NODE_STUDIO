@@ -1,0 +1,13 @@
+{
+  "schema": "aura.behavior_profile.v1",
+  "id": "light_output",
+  "family": "display",
+  "targetId": "indicator_primary",
+  "signalName": "brightness",
+  "valueMin": 0,
+  "valueMax": 100,
+  "defaultValue": 0,
+  "lightColor": "#ff5a5a",
+  "lowVisual": 0.1,
+  "highVisual": 0.95
+}

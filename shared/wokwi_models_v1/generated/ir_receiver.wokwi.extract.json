@@ -1,0 +1,37 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "ir_receiver",
+  "tagName": "wokwi-ir-receiver",
+  "className": "IRReceiverElement",
+  "sourceFile": "ir-receiver-element.ts",
+  "metrics": {
+    "width": "16.178mm",
+    "height": "23.482mm",
+    "viewBox": "0 0 61.1 88.7"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 3,
+    "pins": [
+      {
+        "name": "GND",
+        "x": 20.977,
+        "y": 87.75,
+        "number": 1
+      },
+      {
+        "name": "VCC",
+        "x": 30.578,
+        "y": 87.75,
+        "number": 2
+      },
+      {
+        "name": "DAT",
+        "x": 40.18,
+        "y": 87.75,
+        "number": 3
+      }
+    ]
+  },
+  "properties": []
+}

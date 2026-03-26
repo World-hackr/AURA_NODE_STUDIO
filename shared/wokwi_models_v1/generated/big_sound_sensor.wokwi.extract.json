@@ -1,0 +1,52 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "big_sound_sensor",
+  "tagName": "wokwi-big-sound-sensor",
+  "className": "BigSoundSensorElement",
+  "sourceFile": "big-sound-sensor-element.ts",
+  "metrics": {
+    "width": "37.056mm",
+    "height": "13.346mm",
+    "viewBox": "0 0 140 50.4"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 4,
+    "pins": [
+      {
+        "name": "AOUT",
+        "x": 0,
+        "y": 11,
+        "number": 1
+      },
+      {
+        "name": "GND",
+        "x": 0,
+        "y": 20.5,
+        "number": 2
+      },
+      {
+        "name": "VCC",
+        "x": 0,
+        "y": 30.5,
+        "number": 3
+      },
+      {
+        "name": "DOUT",
+        "x": 0,
+        "y": 40.5,
+        "number": 4
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "led1",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "led2",
+      "defaultRaw": "false"
+    }
+  ]
+}

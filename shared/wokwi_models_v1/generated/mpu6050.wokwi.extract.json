@@ -1,0 +1,64 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "mpu6050",
+  "tagName": "wokwi-mpu6050",
+  "className": "MPU6050Element",
+  "sourceFile": "mpu6050-element.ts",
+  "metrics": {
+    "width": "21.6mm",
+    "height": "16.2mm",
+    "viewBox": "0 0 81.6 61.2"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 8,
+    "pins": [
+      {
+        "name": "INT",
+        "x": 7.28,
+        "y": 5.78
+      },
+      {
+        "name": "AD0",
+        "x": 16.9,
+        "y": 5.78
+      },
+      {
+        "name": "XCL",
+        "x": 26.4,
+        "y": 5.78
+      },
+      {
+        "name": "XDA",
+        "x": 36,
+        "y": 5.78
+      },
+      {
+        "name": "SDA",
+        "x": 45.6,
+        "y": 5.78
+      },
+      {
+        "name": "SCL",
+        "x": 55.2,
+        "y": 5.78
+      },
+      {
+        "name": "GND",
+        "x": 64.8,
+        "y": 5.78
+      },
+      {
+        "name": "VCC",
+        "x": 74.4,
+        "y": 5.78
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "led1",
+      "defaultRaw": "false"
+    }
+  ]
+}

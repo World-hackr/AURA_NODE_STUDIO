@@ -1,0 +1,220 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "arduino_nano",
+  "tagName": "wokwi-arduino-nano",
+  "className": "ArduinoNanoElement",
+  "sourceFile": "arduino-nano-element.ts",
+  "metrics": {
+    "width": "44.9mm",
+    "height": "17.8mm",
+    "viewBox": "-1.4 0 44.9 17.8"
+  },
+  "pinInfo": {
+    "status": "parsed",
+    "count": 36,
+    "pins": [
+      {
+        "name": "12",
+        "x": 19.7,
+        "y": 4.8
+      },
+      {
+        "name": "11",
+        "x": 29.3,
+        "y": 4.8
+      },
+      {
+        "name": "10",
+        "x": 38.9,
+        "y": 4.8
+      },
+      {
+        "name": "9",
+        "x": 48.5,
+        "y": 4.8
+      },
+      {
+        "name": "8",
+        "x": 58.1,
+        "y": 4.8
+      },
+      {
+        "name": "7",
+        "x": 67.7,
+        "y": 4.8
+      },
+      {
+        "name": "6",
+        "x": 77.3,
+        "y": 4.8
+      },
+      {
+        "name": "5",
+        "x": 86.9,
+        "y": 4.8
+      },
+      {
+        "name": "4",
+        "x": 96.5,
+        "y": 4.8
+      },
+      {
+        "name": "3",
+        "x": 106.1,
+        "y": 4.8
+      },
+      {
+        "name": "2",
+        "x": 115.7,
+        "y": 4.8
+      },
+      {
+        "name": "GND.2",
+        "x": 125.3,
+        "y": 4.8
+      },
+      {
+        "name": "RESET.2",
+        "x": 134.9,
+        "y": 4.8
+      },
+      {
+        "name": "0",
+        "x": 144.5,
+        "y": 4.8
+      },
+      {
+        "name": "1",
+        "x": 154.1,
+        "y": 4.8
+      },
+      {
+        "name": "13",
+        "x": 19.7,
+        "y": 62.4
+      },
+      {
+        "name": "3.3V",
+        "x": 29.3,
+        "y": 62.4
+      },
+      {
+        "name": "AREF",
+        "x": 38.9,
+        "y": 62.4
+      },
+      {
+        "name": "A0",
+        "x": 48.5,
+        "y": 62.4
+      },
+      {
+        "name": "A1",
+        "x": 58.1,
+        "y": 62.4
+      },
+      {
+        "name": "A2",
+        "x": 67.7,
+        "y": 62.4
+      },
+      {
+        "name": "A3",
+        "x": 77.3,
+        "y": 62.4
+      },
+      {
+        "name": "A4",
+        "x": 86.9,
+        "y": 62.4
+      },
+      {
+        "name": "A5",
+        "x": 96.5,
+        "y": 62.4
+      },
+      {
+        "name": "A6",
+        "x": 106.1,
+        "y": 62.4
+      },
+      {
+        "name": "A7",
+        "x": 115.7,
+        "y": 62.4
+      },
+      {
+        "name": "5V",
+        "x": 125.3,
+        "y": 62.4
+      },
+      {
+        "name": "RESET",
+        "x": 134.9,
+        "y": 62.4
+      },
+      {
+        "name": "GND.1",
+        "x": 144.5,
+        "y": 62.4
+      },
+      {
+        "name": "VIN",
+        "x": 154.1,
+        "y": 62.4
+      },
+      {
+        "name": "12.2",
+        "x": 163.7,
+        "y": 43.2
+      },
+      {
+        "name": "5V.2",
+        "x": 154.1,
+        "y": 43.2
+      },
+      {
+        "name": "13.2",
+        "x": 163.7,
+        "y": 33.6
+      },
+      {
+        "name": "11.2",
+        "x": 154.1,
+        "y": 33.6
+      },
+      {
+        "name": "RESET.3",
+        "x": 163.7,
+        "y": 24
+      },
+      {
+        "name": "GND.3",
+        "x": 154.1,
+        "y": 24
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "led13",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "ledRX",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "ledTX",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "ledPower",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "resetPressed",
+      "defaultRaw": "false"
+    }
+  ]
+}

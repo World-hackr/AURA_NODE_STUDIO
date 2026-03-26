@@ -1,0 +1,13 @@
+{
+  "schema": "aura.behavior_profile.v1",
+  "id": "potentiometer",
+  "family": "input",
+  "targetId": "handle_primary",
+  "signalName": "value",
+  "valueMin": 0,
+  "valueMax": 1023,
+  "defaultValue": 512,
+  "angleMin": -135,
+  "angleMax": 135,
+  "detentCount": 24
+}

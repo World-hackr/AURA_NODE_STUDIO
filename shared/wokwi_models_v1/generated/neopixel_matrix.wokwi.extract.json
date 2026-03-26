@@ -1,0 +1,45 @@
+{
+  "schema": "aura.wokwi_source_extract.v1",
+  "id": "neopixel_matrix",
+  "tagName": "wokwi-neopixel-matrix",
+  "className": "NeopixelMatrixElement",
+  "sourceFile": "neopixel-matrix-element.ts",
+  "metrics": {
+    "width": "${width}mm",
+    "height": "${height}mm",
+    "viewBox": "0 0 ${width} ${height}"
+  },
+  "pinInfo": {
+    "status": "unparsed",
+    "count": 0,
+    "pins": []
+  },
+  "properties": [
+    {
+      "name": "rows",
+      "defaultRaw": "8"
+    },
+    {
+      "name": "cols",
+      "defaultRaw": "8"
+    },
+    {
+      "name": "rowSpacing",
+      "decorator": "{ attribute: 'rowspacing' }",
+      "defaultRaw": "1"
+    },
+    {
+      "name": "colSpacing",
+      "decorator": "{ attribute: 'colspacing' }",
+      "defaultRaw": "1"
+    },
+    {
+      "name": "blurLight",
+      "defaultRaw": "false"
+    },
+    {
+      "name": "animation",
+      "defaultRaw": "false"
+    }
+  ]
+}

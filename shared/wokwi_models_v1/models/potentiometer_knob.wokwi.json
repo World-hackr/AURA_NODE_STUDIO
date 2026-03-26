@@ -1,0 +1,43 @@
+{
+  "schema": "aura.wokwi_part.v1",
+  "libraryItemId": "potentiometer_knob",
+  "title": "Potentiometer",
+  "wokwi": {
+    "tagName": "wokwi-potentiometer",
+    "modulePath": "vendor_reference/wokwi-elements/dist/esm/potentiometer-element.js",
+    "naturalSizePx": {
+      "width": 76,
+      "height": 76
+    },
+    "allowOuterRotation": true
+  },
+  "pins": {
+    "labels": ["GND", "SIG", "VCC"],
+    "anchors": [
+      { "id": "GND", "x": 29, "y": 68.5 },
+      { "id": "SIG", "x": 39, "y": 68.5 },
+      { "id": "VCC", "x": 49, "y": 68.5 }
+    ]
+  },
+  "runtime": {
+    "defaults": {
+      "profileId": "potentiometer",
+      "signalName": "value",
+      "targetId": "handle_primary",
+      "valueMin": 0,
+      "valueMax": 1023,
+      "defaultValue": 512,
+      "angleMin": -135,
+      "angleMax": 135,
+      "detentCount": 24
+    },
+    "staticProps": {},
+    "propBindings": [
+      { "elementProp": "min", "from": "valueMin", "transform": "direct" },
+      { "elementProp": "max", "from": "valueMax", "transform": "direct" },
+      { "elementProp": "value", "from": "defaultValue", "transform": "direct" },
+      { "elementProp": "startDegree", "from": "angleMin", "transform": "direct" },
+      { "elementProp": "endDegree", "from": "angleMax", "transform": "direct" }
+    ]
+  }
+}

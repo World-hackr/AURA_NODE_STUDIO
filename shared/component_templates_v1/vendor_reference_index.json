@@ -1,0 +1,111 @@
+{
+  "schema": "aura.vendor_reference_index.v1",
+  "version": 1,
+  "families": [
+    {
+      "templateId": "resistor_smd",
+      "variantId": "r_0603",
+      "label": "R_0603",
+      "wokwi": {
+        "status": "direct",
+        "paths": [
+          "vendor_reference/wokwi-elements/src/resistor-element.ts"
+        ]
+      },
+      "kicad": {
+        "status": "direct",
+        "paths": [
+          "vendor_reference/kicad-footprints/Resistor_SMD.pretty/R_0603_1608Metric.kicad_mod"
+        ]
+      },
+      "auraGap": [
+        "final_style_rules",
+        "flat_finish_rules"
+      ]
+    },
+    {
+      "templateId": "capacitor_smd",
+      "variantId": "c_0603",
+      "label": "C_0603",
+      "wokwi": {
+        "status": "missing_direct_element",
+        "paths": []
+      },
+      "kicad": {
+        "status": "direct",
+        "paths": [
+          "vendor_reference/kicad-footprints/Capacitor_SMD.pretty/C_0603_1608Metric.kicad_mod"
+        ]
+      },
+      "auraGap": [
+        "capacitor_visual_language",
+        "flat_finish_rules"
+      ]
+    },
+    {
+      "templateId": "ic_package",
+      "variantId": "soic_16",
+      "label": "SOIC-16",
+      "wokwi": {
+        "status": "missing_direct_element",
+        "paths": []
+      },
+      "kicad": {
+        "status": "direct",
+        "paths": [
+          "vendor_reference/kicad-footprints/Package_SO.pretty/SOIC-16_3.9x9.9mm_P1.27mm.kicad_mod"
+        ]
+      },
+      "auraGap": [
+        "package_visual_language",
+        "repeat_family_growth",
+        "pin1_mark_rules"
+      ]
+    },
+    {
+      "templateId": "pin_header",
+      "variantId": "pinheader_1x8",
+      "label": "Header 1x8",
+      "wokwi": {
+        "status": "partial_pattern_reference",
+        "paths": [
+          "vendor_reference/wokwi-elements/src/patterns/pins-female.ts",
+          "vendor_reference/wokwi-elements/src/utils/show-pins-element.ts"
+        ]
+      },
+      "kicad": {
+        "status": "direct",
+        "paths": [
+          "vendor_reference/kicad-footprints/Connector_PinHeader_2.54mm.pretty/PinHeader_1x08_P2.54mm_Vertical.kicad_mod"
+        ]
+      },
+      "auraGap": [
+        "male_header_visuals",
+        "grid_growth_rules",
+        "socket_vs_pin_family_rules"
+      ]
+    },
+    {
+      "templateId": "usb_connector",
+      "variantId": "usb_micro_b",
+      "label": "USB Micro-B",
+      "wokwi": {
+        "status": "indirect_board_reference",
+        "paths": [
+          "vendor_reference/wokwi-elements/src/arduino-nano-element.ts",
+          "vendor_reference/wokwi-elements/src/arduino-uno-element.ts"
+        ]
+      },
+      "kicad": {
+        "status": "direct",
+        "paths": [
+          "vendor_reference/kicad-footprints/Connector_USB.pretty/USB_Micro-B_Molex_105017-0001.kicad_mod"
+        ]
+      },
+      "auraGap": [
+        "standalone_connector_visual_language",
+        "shell_and_tab_rules"
+      ]
+    }
+  ]
+}

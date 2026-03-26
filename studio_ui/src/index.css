@@ -27,12 +27,15 @@
   }
 
   .studio-inline-switch {
-    @apply inline-flex items-center gap-1 rounded-full border border-white bg-black p-0.5;
+    @apply inline-grid items-center gap-1 rounded-full border border-white bg-black p-0.5;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 15.5rem;
     background-color: rgba(0, 0, 0, 0.92);
   }
 
   .mode-switch-button {
-    @apply inline-flex h-5 items-center justify-center rounded-full px-2 font-mono text-[8px] uppercase tracking-[0.14em] text-aura-muted transition;
+    @apply inline-flex h-5 w-full min-w-0 items-center justify-center rounded-full px-2 font-mono text-[8px] uppercase tracking-[0.14em] text-aura-muted transition;
+    white-space: nowrap;
   }
 
   .mode-switch-button-active {
@@ -48,18 +51,22 @@
   .editor-workspace {
     @apply grid h-full min-h-0;
     gap: clamp(8px, 0.8vw, 12px);
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .workspace-banner {
-    @apply flex items-start justify-between gap-4 rounded-[18px] border border-white bg-black px-4 py-3;
+    @apply flex items-center justify-between gap-3 rounded-[18px] border border-white bg-black px-4 py-3;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.05),
       inset 0 0 0 1px rgba(255, 255, 255, 0.02);
   }
 
   .workspace-banner-main {
-    @apply flex min-w-0 flex-1 flex-col gap-2;
+    @apply flex min-w-0 flex-[0_1_23rem] flex-col gap-1.5;
+  }
+
+  .workspace-banner-center {
+    @apply flex min-w-0 flex-1 items-center justify-center;
   }
 
   .workspace-banner-side {
@@ -68,6 +75,15 @@
 
   .workspace-banner-switch {
     @apply flex justify-end;
+    min-width: 15.5rem;
+  }
+
+  .workspace-toolbar-main {
+    @apply flex min-w-0 flex-wrap items-center justify-center gap-1.5;
+  }
+
+  .workspace-toolbar-creator {
+    @apply gap-1;
   }
 
   .workspace-title {
@@ -79,11 +95,11 @@
   }
 
   .workspace-meta-strip {
-    @apply flex flex-wrap items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-aura-muted;
+    @apply flex flex-wrap items-center gap-1 font-mono text-[9px] uppercase tracking-[0.14em] text-aura-muted;
   }
 
   .workspace-meta-strip > span {
-    @apply rounded-full border border-white/20 px-2 py-1;
+    @apply rounded-full border border-white/20 px-2 py-[0.28rem];
     background-color: rgba(255, 255, 255, 0.03);
   }
 
@@ -220,6 +236,30 @@
 
   .studio-pill {
     @apply inline-flex h-4 min-w-5 items-center justify-center rounded-full border border-white px-1.5 font-mono text-[8px] uppercase tracking-[0.12em] text-white;
+  }
+
+  .studio-pill-clean {
+    border-color: rgba(150, 255, 196, 0.42);
+    color: rgba(220, 255, 232, 0.95);
+    background-color: rgba(150, 255, 196, 0.07);
+  }
+
+  .studio-pill-accent {
+    border-color: rgba(167, 212, 255, 0.42);
+    color: rgba(224, 240, 255, 0.95);
+    background-color: rgba(167, 212, 255, 0.07);
+  }
+
+  .studio-pill-warn {
+    border-color: rgba(255, 224, 144, 0.44);
+    color: rgba(255, 241, 207, 0.95);
+    background-color: rgba(255, 224, 144, 0.07);
+  }
+
+  .studio-pill-danger {
+    border-color: rgba(255, 132, 132, 0.48);
+    color: rgba(255, 218, 218, 0.95);
+    background-color: rgba(255, 132, 132, 0.07);
   }
 
   .editor-eyebrow {
@@ -371,6 +411,25 @@
 
   .studio-compact-status-chip {
     @apply inline-flex h-5 items-center justify-center rounded-full border border-white/20 px-2 font-mono text-[8px] uppercase tracking-[0.14em] text-aura-muted;
+  }
+
+  .studio-category-strip {
+    @apply grid grid-cols-4 gap-1.5;
+  }
+
+  .studio-category-tab {
+    @apply inline-flex h-9 items-center justify-center rounded-xl border border-white/20 bg-white/[0.03] text-aura-muted transition;
+  }
+
+  .studio-category-tab:hover {
+    border-color: rgba(255, 255, 255, 0.92);
+    color: #ffffff;
+  }
+
+  .studio-category-tab-active {
+    border-color: #ffffff;
+    background-color: #ffffff;
+    color: #000000;
   }
 
   .studio-quick-row:hover {
@@ -564,12 +623,62 @@
     @apply flex items-center gap-2 rounded-xl border border-white bg-black px-2 py-1 shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm;
   }
 
+  .workspace-banner-center .canvas-toolgroup {
+    @apply gap-1.5 rounded-[11px] px-1.5 py-0.5;
+    box-shadow: none;
+  }
+
+  .workspace-banner-center .creator-banner-toolgroup {
+    @apply gap-1 rounded-[10px] px-1 py-0.5;
+  }
+
+  .workspace-banner-center .canvas-toolgroup-label {
+    @apply pl-0.5 text-[7px] tracking-[0.16em];
+  }
+
+  .workspace-banner-center .canvas-icon-button {
+    @apply h-6 w-6 rounded-md;
+  }
+
+  .workspace-banner-center .canvas-text-button {
+    @apply h-6 rounded-md px-1.5 text-[7px] tracking-[0.14em];
+  }
+
+  .workspace-banner-center .canvas-slider {
+    width: 54px;
+  }
+
+  .workspace-banner-center .canvas-sep {
+    @apply mx-0.5 h-4;
+  }
+
+  .workspace-banner-center .creator-banner-toolgroup .canvas-slider {
+    width: 68px;
+  }
+
   .canvas-toolgroup-label {
     @apply pl-1 font-mono text-[8px] uppercase tracking-[0.18em] text-aura-muted;
   }
 
   .canvas-text-chip {
     @apply inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/[0.04] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-white;
+  }
+
+  .canvas-status-strip {
+    @apply flex items-center gap-1.5 rounded-xl border border-white bg-black px-1.5 py-1 shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm;
+  }
+
+  .canvas-status-strip .canvas-text-chip {
+    @apply gap-1 rounded-md px-2 py-[0.28rem] text-[8px];
+  }
+
+  .wokwi-stage-part {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    overflow: visible;
   }
 
   .canvas-mode-banner {
@@ -748,7 +857,9 @@
   .creator-preview-card > svg {
     display: block;
     overflow: hidden;
-    background-color: #000000;
+    background-color: transparent;
+    position: relative;
+    z-index: 1;
   }
 
   .creator-preview-title {
@@ -797,6 +908,15 @@
 
   .creator-choice-button {
     @apply inline-flex min-h-[2.15rem] items-center justify-center rounded-xl border border-white bg-black px-2 py-1.5 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-white transition disabled:cursor-not-allowed disabled:opacity-45;
+  }
+
+  .creator-source-card {
+    @apply rounded-xl border bg-black px-3 py-3;
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  .creator-source-dot {
+    @apply inline-flex h-2.5 w-2.5 rounded-full border border-white/20;
   }
 
   .creator-list-row {
@@ -871,6 +991,14 @@
 
     .workspace-banner {
       @apply flex-col items-start;
+    }
+
+    .workspace-banner-main {
+      @apply w-full flex-none;
+    }
+
+    .workspace-banner-center {
+      @apply w-full justify-start;
     }
 
     .workspace-banner-side {
